@@ -186,10 +186,6 @@
             <nav class="nav-menu">
 
                 <button class="nav-btn active" data-target="dashboard">Dashboard</button>
-                <button class="nav-btn" data-target="hr-mgmt">HR & Employees</button>
-                <button class="nav-btn" data-target="supervision-hub"><i class="fa-solid fa-shield-halved"></i> Supervision</button>
-                <button class="nav-btn" data-target="sme-business">Accounts</button>
-                <button class="nav-btn" data-target="transport-hub" id="nav-transport"><i class="fa-solid fa-truck"></i> Transport</button>
                 <button class="nav-btn" data-target="secretary-hub"><i class="fa-solid fa-clipboard-list"></i> Secretary Hub <span id="sec-global-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none; box-shadow:0 0 5px rgba(239,68,68,0.5);">0</span></button>
                 <button class="nav-btn accounts-only" data-target="accounts-hub" style="display:none;"><i class="fa-solid fa-file-invoice-dollar"></i> Accounts Hub</button>
                 <button class="nav-btn dos-only" data-target="dos-hub" style="display:none;"><i class="fa-solid fa-graduation-cap"></i> DOS Hub</button>
@@ -215,76 +211,31 @@
                     <div id="live-clock-dash" style="font-family: 'Courier New', monospace; color: var(--primary); font-size: 1.2rem; font-weight: bold;">00:00:00</div>
                 </header>
 
-                <!-- Financial Intelligence Cards -->
-                <div class="finance-intel" style="margin-bottom: 28px;">
-                    <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-sack-dollar"></i> Financial Intelligence</h3>
-                    <div class="stats-grid finance-cards-grid">
-                        <div class="stat-card finance-card" style="border-left: 4px solid #10B981;">
-                            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Today's Revenue</div>
-                            <div id="fi-today-income" style="font-size: 1.4rem; font-weight: 800; color: #10B981; margin: 6px 0;">UGX 0</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8;">Expenses: <span id="fi-today-expense" style="color: #EF4444;">UGX 0</span></div>
-                            <div style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Net: <span id="fi-today-profit">UGX 0</span></div>
-                        </div>
-                        <div class="stat-card finance-card" style="border-left: 4px solid #6366F1;">
-                            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">This Week</div>
-                            <div id="fi-week-income" style="font-size: 1.4rem; font-weight: 800; color: #6366F1; margin: 6px 0;">UGX 0</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8;">Expenses: <span id="fi-week-expense" style="color: #EF4444;">UGX 0</span></div>
-                            <div style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Net: <span id="fi-week-profit">UGX 0</span></div>
-                        </div>
-                        <div class="stat-card finance-card" style="border-left: 4px solid #F59E0B;">
-                            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">This Month</div>
-                            <div id="fi-month-income" style="font-size: 1.4rem; font-weight: 800; color: #F59E0B; margin: 6px 0;">UGX 0</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8;">Expenses: <span id="fi-month-expense" style="color: #EF4444;">UGX 0</span></div>
-                            <div style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Net: <span id="fi-month-profit">UGX 0</span></div>
-                        </div>
-                        <div class="stat-card finance-card" style="border-left: 4px solid #EC4899;">
-                            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">All-Time</div>
-                            <div id="fi-total-income" style="font-size: 1.4rem; font-weight: 800; color: #EC4899; margin: 6px 0;">UGX 0</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8;">Expenses: <span id="fi-total-expense" style="color: #EF4444;">UGX 0</span></div>
-                            <div style="font-size: 0.85rem; font-weight: 700; margin-top: 4px;">Net: <span id="fi-total-profit">UGX 0</span></div>
-                        </div>
-                    </div>
-                    <div id="fi-as-of" style="text-align:right; margin-top:6px; font-size:0.7rem; color:var(--text-muted);">—</div>
-                </div>
-
-                <!-- Low Stock Alerts -->
-                <div id="low-stock-panel" class="low-stock-panel hidden" style="margin-bottom: 28px; padding: 20px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px;">
-                    <h3 style="color: #EF4444; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock Alerts <span id="low-stock-count" class="badge" style="background: rgba(239,68,68,0.15); color: #EF4444; font-size: 0.75rem;">0</span></h3>
-                    <div id="low-stock-items" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-                </div>
-
-                <!-- Upcoming Pay Alerts -->
-                <div id="upcoming-pay-panel" class="hidden" style="margin-bottom: 28px; padding: 20px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px;">
-                    <h3 style="color: #6366F1; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><i class="fa-solid fa-money-check-dollar"></i> Upcoming Pay (Next 3 Days) <span id="upcoming-pay-count" class="badge" style="background: rgba(99,102,241,0.15); color: #6366F1; font-size: 0.75rem;">0</span></h3>
-                    <div id="upcoming-pay-items" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-                </div>
-
-
-                <div class="products-grid dash-layout-grid" style="gap: 24px; align-items: start;">
-                    <!-- Timetable and Notice Boards removed per user request -->
-                </div>
-
-                <!-- Front Desk Messages (visible to everyone EXCEPT secretary) -->
-                <div id="desk-messages-panel" class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border); margin-top:25px; display:none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                        <h3 style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-envelope-open-text"></i> Front Desk Messages <span id="dash-msg-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; display:none;">0</span></h3>
-                        <button class="sm-btn primary" onclick="document.getElementById('reply-msg-modal').classList.remove('hidden')"><i class="fa-solid fa-envelope"></i>️ Reply to Desk</button>
-                    </div>
-                    <div id="dash-messages-list" style="display:flex; flex-direction:column; gap:10px; max-height:350px; overflow-y:auto;">
-                        <p style="color:var(--text-muted); text-align:center; padding:20px;">No messages from the front desk.</p>
-                    </div>
-                </div>
-
-                <!-- Published Customer Reviews Ticker -->
-                <div id="dash-reviews-panel" class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border); margin-top:25px;">
-                    <h3 style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><i class="fa-solid fa-star" style="color:#F59E0B;"></i> Customer Reviews</h3>
-                    <div id="dash-reviews-list" style="display:flex; gap:16px; overflow-x:auto; padding-bottom:10px;">
-                        <p style="color:var(--text-muted); font-size:0.85rem;">No reviews published yet.</p>
-                    </div>
-                </div>
-
-
-                <!-- 3. Hardware Radar (Network Monitoring) -->
+                
+<!-- School Statistics Cards -->
+<div class="finance-intel" style="margin-bottom: 28px;">
+    <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-school"></i> School Overview</h3>
+    <div class="stats-grid finance-cards-grid">
+        <div class="stat-card finance-card" style="border-left: 4px solid #10B981;">
+            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Total Students</div>
+            <div id="dash-total-students" style="font-size: 1.4rem; font-weight: 800; color: #10B981; margin: 6px 0;">0</div>
+        </div>
+        <div class="stat-card finance-card" style="border-left: 4px solid #6366F1;">
+            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Active Teachers</div>
+            <div id="dash-total-teachers" style="font-size: 1.4rem; font-weight: 800; color: #6366F1; margin: 6px 0;">0</div>
+        </div>
+        <div class="stat-card finance-card" style="border-left: 4px solid #F59E0B;">
+            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Pending Apps</div>
+            <div id="dash-pending-apps" style="font-size: 1.4rem; font-weight: 800; color: #F59E0B; margin: 6px 0;">0</div>
+        </div>
+        <div class="stat-card finance-card" style="border-left: 4px solid #EC4899;">
+            <div style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Total Fees</div>
+            <div id="dash-total-fees" style="font-size: 1.4rem; font-weight: 800; color: #EC4899; margin: 6px 0;">UGX 0</div>
+        </div>
+    </div>
+</div>
+<!-- End School Statistics Cards -->
+<!-- 3. Hardware Radar (Network Monitoring) -->
                 <!-- Presence Intelligence -->
                 <div id="presence-intelligence" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
                     <div class="stat-card" style="border-left: 4px solid var(--success); padding: 20px;">

@@ -1,4 +1,4 @@
-﻿const BASE_URL =
+const BASE_URL =
   window.location.protocol === "file:" ||
   window.location.hostname === "127.0.0.1" ||
   window.location.hostname === "localhost"
@@ -619,20 +619,7 @@ function initNavigation() {
           if (typeof window.loadShiftTimetable === "function")
             window.loadShiftTimetable();
         }
-        if (targetId === "supervision-hub") {
-          setTimeout(() => switchSupervisionView("attendance"), 50);
-        }
-        if (targetId === "sme-business") {
-          loadTransactions();
-        }
-          switchPOSView("register");
-        }
-        if (targetId === "hr-mgmt") {
-          loadEmployees();
-          loadRoles();
-          loadInventory();
-          loadUserAccounts();
-        }
+
         if (targetId === "secretary-hub") {
           loadSecretaryHub();
         }
@@ -1407,22 +1394,35 @@ async function loadUpcomingPay() {
 async function loadDashboard() {
   startLiveClock();
 
-  // 1. Warm up the database with a single lightweight query to avoid connection storms (thundering herd)
-  await loadPresenceSummary();
+  // Load school overview stats
+  try {
+    const res = await fetchAuth(`${API_URL}/dashboard/stats`);
+    if (res.ok) {
+      const data = await res.json();
+      const studEl = document.getElementById("dash-total-students");
+      const teachEl = document.getElementById("dash-total-teachers");
+      const appEl = document.getElementById("dash-pending-apps");
+      const feesEl = document.getElementById("dash-total-fees");
+      if (studEl) studEl.innerText = data.total_students ?? 0;
+      if (teachEl) teachEl.innerText = data.total_teachers ?? 0;
+      if (appEl) appEl.innerText = data.pending_apps ?? 0;
+      if (feesEl) feesEl.innerText = "UGX " + ((data.total_fees || 0)).toLocaleString();
+    }
+  } catch (err) {
+    console.error("School stats load error:", err);
+  }
 
-  // 2. Once the DB connection pool is warm, load the rest concurrently
-  // NOTE: loadDayTimetable is assigned to window.loadDayTimetable by the IIFE at the bottom of this file.
+  // Warm up DB then load the rest
+  await loadPresenceSummary();
   Promise.all([
     loadHardwareRadar(),
-    loadFinanceIntelligence(),
-    loadUpcomingPay(),
-    loadLowStockAlerts(),
     loadDeskMessages(),
     loadPublishedReviews(),
   ]).catch((err) => console.error("Dashboard load error:", err));
 
-  startRadarAutoRefresh(); // Start 30-second auto-refresh for the hardware radar
+  startRadarAutoRefresh();
 }
+
 
 async function loadPublishedReviews() {
   const list = document.getElementById("dash-reviews-list");
@@ -1923,13 +1923,8 @@ function initSockets() {
       ) {
         window.loadShiftTimetable();
       }
-    } else if (data.module === "deliveries") {
-      if (typeof loadDeliveries === "function") loadDeliveries();
-      if (typeof loadPendingCOD === "function") loadPendingCOD();
-    } else if (data.module === "products") {
-      cachedProducts = []; // Bust cache so next POS scan fetches fresh data with additional_barcodes
-      if (USER_PERMISSIONS.can_see_pos && !window._skipProductReload)
     } else if (data.module === "logo" || data.module === "settings") {
+
       loadBrandLogo();
       loadBusinessConfig();
     } else if (data.module === "roles") {

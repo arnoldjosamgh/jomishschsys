@@ -330,8 +330,30 @@ app.post("/api/push/broadcast", authenticateToken, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Dashboard Stats (School Overview)
+app.get("/api/dashboard/stats", authenticateToken, (req, res) => {
+  const results = {};
+  let pending = 4;
+  const done = () => { if (--pending === 0) res.json(results); };
+
+  db.get("SELECT COUNT(*) as c FROM students WHERE status = 'ACTIVE'", [], (e, r) => {
+    results.total_students = (r && r.c) || 0; done();
+  });
+  db.get("SELECT COUNT(*) as c FROM users WHERE role = 'Teacher' AND (is_active IS NULL OR is_active = 1)", [], (e, r) => {
+    results.total_teachers = (r && r.c) || 0; done();
+  });
+  db.get("SELECT COUNT(*) as c FROM applications WHERE status = 'PENDING'", [], (e, r) => {
+    results.pending_apps = (r && r.c) || 0; done();
+  });
+  db.get("SELECT COALESCE(SUM(amount), 0) as t FROM fees WHERE status = 'PAID'", [], (e, r) => {
+    results.total_fees = (r && r.t) || 0; done();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
 // 1. Employee Management
 app.get("/api/employees", authenticateToken, (req, res) => {
+
   const schema = getSchema();
   const cached = getCache(schema, "employees");
   if (cached) return res.json(cached);
