@@ -141,7 +141,10 @@ if (config.dbType === 'postgres') {
         }
         return schemaName;
     };
-    console.log('Using PostgreSQL database at', config.postgres.host);
+    const _pgHost = (() => { try { return new URL(config.postgres.connectionString).hostname; } catch(e) { return config.postgres.host || 'neon'; } })();
+    console.log('[DB] Using PostgreSQL database at', _pgHost);
+    // Initialise tables on startup (function is hoisted, db is already assigned)
+    setImmediate(() => initDb());
 } else {
     // Guard: if sqlite3 failed to load (e.g. native compile error on Linux/Railway),
     // throw a clear error instead of crashing with a confusing TypeError.
