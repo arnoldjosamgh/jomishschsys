@@ -1,0 +1,24 @@
+# render.yaml — Jomish Business Suite Deployment Configuration
+# Deploy to Render.com by linking your GitHub repository.
+# See: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: jomishsuite
+    env: node
+    region: oregon  # Change to: frankfurt, singapore, ohio, etc.
+    plan: free      # Render free tier. Upgrade to "starter" for always-on hosting.
+    buildCommand: npm install --omit=optional
+    startCommand: npm run server
+    healthCheckPath: /api/system/status
+
+    # Environment variables — set these in the Render dashboard after deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3005
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random string
+      - key: DATABASE_URL
+        sync: false  # You must manually paste your Neon Postgres connection string here

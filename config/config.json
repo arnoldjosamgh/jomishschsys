@@ -1,0 +1,16 @@
+{
+  "port": 3005,
+  "appName": "Jomish Business Suite 2026 1.0",
+  "mDNS_name": "business-system",
+  "dbType": "sqlite",
+  "sqlite": {
+    "dbName": "jomish.db"
+  },
+  "postgres": {
+    "host": "db",
+    "port": 5432,
+    "user": "jomish_admin",
+    "password": "jomish_secure_pass_2026",
+    "database": "jomish_suite"
+  }
+}

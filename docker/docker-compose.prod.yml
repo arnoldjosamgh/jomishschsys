@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  hr-pos-security:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: hr-pos-security:latest
+    container_name: hr-pos-security
+    restart: always
+    # Read-only root filesystem for hardening
+    read_only: true
+    # Port mapping: Host 8080 -> Container 3005
+    ports:
+      - "8080:3005"
+    environment:
+      - NODE_ENV=production
+      - DB_TYPE=sqlite
+    # Volume for data persistence and temporary node-modules usage (if needed)
+    volumes:
+      - hr_data_volume:/usr/src/app/data
+      - /tmp # Needed for some node scripts since root is read-only
+    networks:
+      - jomish-bridge
+
+networks:
+  jomish-bridge:
+    driver: bridge
+
+volumes:
+  hr_data_volume:
+    external: false

@@ -1,0 +1,52 @@
+# Environment Variables
+.env
+.env.local
+
+# Database files (ALL locations)
+*.db
+*.db-wal
+*.db-shm
+data/*.db
+data/*.db-wal
+data/*.db-shm
+backend/*.db
+
+# Log files
+*.log
+data/*.log
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+updates/staging/
+updates/update_temp.zip
+
+# WhatsApp session (browser cache — changes constantly, no need to track)
+whatsapp-session/
+
+# SQLite files
+data/*.sqlite
+
+# Backup folder
+backup/
+
+# Large binary/media files
+*.pdf
+*.exe
+*.zip
+*.png
+*.ico
+
+# Windows scripts (local only)
+*.vbs
+*.bat
+
+# Electron dist artifacts
+dist/
+Temp*.txt
+temp.txt
+products_test.json
+server_stderr.log
+server_stdout.log

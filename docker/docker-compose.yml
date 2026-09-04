@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: jomish-db
+    restart: always
+    environment:
+      POSTGRES_USER: jomish_admin
+      POSTGRES_PASSWORD: jomish_secure_pass_2026
+      POSTGRES_DB: jomish_suite
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: jomish-app
+    restart: always
+    ports:
+      - "3005:3005"
+    environment:
+      - DB_TYPE=postgres
+      - PGHOST=db
+      - PGUSER=jomish_admin
+      - PGPASSWORD=jomish_secure_pass_2026
+      - PGDATABASE=jomish_suite
+      - PGPORT=5432
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Leave a Review</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{--primary:#6366f1;--star:#F59E0B;--star-empty:#D1D5DB;--bg:#F1F5F9;--surface:#fff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--success:#10b981;--danger:#ef4444}
+        [data-theme="dark"]{--bg:#0f172a;--surface:#1e293b;--text:#f1f5f9;--text-muted:#94a3b8;--border:#334155;--star-empty:#475569}
+        html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+        body{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+        [data-theme="dark"] body{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%)}
+        .shell{width:100%;max-width:480px;min-height:100vh;background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+        @media(min-width:481px){body{align-items:center}.shell{min-height:auto;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.18)}}
+
+        /* header */
+        .rev-header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-align:center;padding:40px 24px 32px;position:relative}
+        .theme-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center}
+        .logo-wrap{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:2.4rem;margin:0 auto 16px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+        .logo-img{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.5);display:none;margin:0 auto 16px}
+        .logo-img.visible{display:block}
+        .co-name{font-size:1.6rem;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+        .co-sub{font-size:.92rem;opacity:.85;margin-top:4px}
+
+        /* body */
+        .rev-body{flex:1;padding:36px 24px 28px;display:flex;flex-direction:column}
+
+        /* screens */
+        #scr-loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 24px}
+        #scr-error{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 24px;text-align:center}
+        #scr-success{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px 24px;text-align:center}
+        #scr-form{display:none;flex:1;flex-direction:column}
+
+        .spinner{width:52px;height:52px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .9s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* STEP 1 – stars */
+        #step-rate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0}
+        .s1-heading{font-size:1.6rem;font-weight:900;margin-bottom:6px}
+        .s1-sub{font-size:.95rem;color:var(--text-muted);margin-bottom:38px}
+
+        .star-row{display:flex;justify-content:center;gap:8px;margin-bottom:20px}
+        .star{background:none;border:none;cursor:pointer;font-size:4rem;line-height:1;color:var(--star-empty);transition:color .18s,transform .18s,filter .18s;padding:2px 4px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;animation:pulse 1.8s ease-in-out infinite}
+        .star:nth-child(1){animation-delay:0s}
+        .star:nth-child(2){animation-delay:.08s}
+        .star:nth-child(3){animation-delay:.16s}
+        .star:nth-child(4){animation-delay:.24s}
+        .star:nth-child(5){animation-delay:.32s}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+        .star-row.picked .star,.star-row:hover .star{animation:none}
+        .star.lit{color:var(--star);filter:drop-shadow(0 0 10px rgba(245,158,11,.6));animation:none}
+        .star:hover{transform:scale(1.22);color:var(--star)}
+        .star:active{transform:scale(.9)}
+
+        .tap-hint{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--primary);font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;animation:bounce 1.4s ease-in-out infinite;margin-bottom:4px}
+        .tap-hint i{font-size:1.4rem}
+        @keyframes bounce{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(-7px);opacity:.55}}
+        .tap-hint.gone{display:none}
+
+        .rating-pill{margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:800;font-size:1.1rem;padding:11px 30px;border-radius:50px;box-shadow:0 4px 20px rgba(99,102,241,.4);display:flex;align-items:center;gap:8px;opacity:0;transform:scale(.8);transition:opacity .25s,transform .25s;pointer-events:none}
+        .rating-pill.show{opacity:1;transform:scale(1)}
+
+        .cont-btn{margin-top:30px;width:100%;padding:18px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;font-size:1.1rem;font-weight:800;cursor:pointer;display:none;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 30px rgba(99,102,241,.4);transition:transform .15s;-webkit-tap-highlight-color:transparent}
+        .cont-btn.show{display:flex}
+        .cont-btn:active{transform:scale(.97)}
+
+        /* STEP 2 – form */
+        #step-form{display:none}
+        #step-form.on{display:block;animation:slideIn .35s cubic-bezier(.25,.46,.45,.94) both}
+        @keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        .s2-rating{text-align:center;margin-bottom:28px;padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.07));border-radius:16px;border:1px solid rgba(99,102,241,.14)}
+        .s2-stars{font-size:2.4rem;color:var(--star);letter-spacing:3px;filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}
+        .s2-label{font-size:1rem;font-weight:800;color:var(--primary);margin-top:4px}
+        .change-btn{background:none;border:none;color:var(--text-muted);font-size:.8rem;cursor:pointer;margin-top:6px;text-decoration:underline;padding:0}
+
+        .flabel{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:8px;display:block}
+        .fgroup{margin-bottom:18px}
+        textarea,input[type=text]{width:100%;padding:14px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:.95rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+        textarea{min-height:118px;resize:vertical}
+        textarea:focus,input[type=text]:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+        .char-count{text-align:right;font-size:.7rem;color:var(--text-muted);margin-top:4px}
+        .anon-row{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer}
+        .anon-row input{width:18px;height:18px;accent-color:var(--primary);cursor:pointer}
+        .anon-row span{font-size:.88rem;color:var(--text-muted)}
+        .sub-btn{width:100%;padding:17px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;font-size:1.05rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 30px rgba(99,102,241,.4);margin-top:8px;-webkit-tap-highlight-color:transparent}
+        .sub-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+        .sub-btn:not(:disabled):active{transform:scale(.97)}
+
+        /* success */
+        .suc-emoji{font-size:5.5rem;animation:popIn .55s cubic-bezier(.175,.885,.32,1.275) both}
+        @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+        .suc-title{font-size:1.8rem;font-weight:900;color:var(--success)}
+        .suc-stars{font-size:2.2rem;color:var(--star);letter-spacing:4px;margin-top:-4px}
+        .suc-sub{font-size:.95rem;color:var(--text-muted);line-height:1.6}
+        .suc-close{font-size:.8rem;color:var(--text-muted);margin-top:6px}
+
+        /* error */
+        .err-emoji{font-size:3.5rem}
+        .err-title{font-size:1.2rem;font-weight:800;color:var(--danger)}
+        .err-sub{font-size:.9rem;color:var(--text-muted);line-height:1.5}
+
+        footer{text-align:center;padding:14px;border-top:1px solid var(--border);font-size:.7rem;color:var(--text-muted)}
+    </style>
+</head>
+<body>
+<div class="shell">
+
+    <!-- Header -->
+    <div class="rev-header">
+        <button class="theme-btn" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        <img id="logo-img" class="logo-img" src="" alt="Logo">
+        <div id="logo-icon" class="logo-wrap">?</div>
+        <div class="co-name" id="co-name">Loading...</div>
+        <div class="co-sub">How was your experience today?</div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="scr-loading">
+        <div class="spinner"></div>
+        <p style="color:var(--text-muted);font-size:.9rem">Just a moment...</p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="scr-error">
+        <div class="err-emoji">??</div>
+        <div class="err-title">Invalid Link</div>
+        <p class="err-sub">This review link is not valid.<br>Please scan the QR code again.</p>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="scr-success">
+        <div class="suc-emoji">??</div>
+        <div class="suc-title">Thank You!</div>
+        <div class="suc-stars" id="suc-stars">?????</div>
+        <p class="suc-sub">Your review has been received.<br>We truly appreciate your feedback!</p>
+        <p class="suc-close">You may now close this page.</p>
+    </div>
+
+    <!-- FORM BODY -->
+    <div id="scr-form" class="rev-body">
+
+        <!-- Step 1: Stars -->
+        <div id="step-rate">
+            <div class="s1-heading">Rate Your Experience</div>
+            <div class="s1-sub">Tap the stars below to get started</div>
+
+            <div class="star-row" id="star-row">
+                <button class="star" data-val="1" onclick="setRating(1)" aria-label="1 star">?</button>
+                <button class="star" data-val="2" onclick="setRating(2)" aria-label="2 stars">?</button>
+                <button class="star" data-val="3" onclick="setRating(3)" aria-label="3 stars">?</button>
+                <button class="star" data-val="4" onclick="setRating(4)" aria-label="4 stars">?</button>
+                <button class="star" data-val="5" onclick="setRating(5)" aria-label="5 stars">?</button>
+            </div>
+
+            <div class="tap-hint" id="tap-hint">
+                <i class="fa-solid fa-hand-pointer"></i>
+                Tap a star to rate
+            </div>
+
+            <div class="rating-pill" id="rating-pill">
+                <i class="fa-solid fa-star"></i>
+                <span id="pill-text">—</span>
+            </div>
+
+            <button class="cont-btn" id="cont-btn" onclick="goStep2()">
+                Continue &nbsp;<i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Step 2: Form -->
+        <div id="step-form">
+            <div class="s2-rating">
+                <div class="s2-stars" id="s2-stars">?????</div>
+                <div class="s2-label" id="s2-label">Excellent!</div>
+                <button class="change-btn" onclick="goStep1()"><i class="fa-solid fa-pen-to-square"></i> Change rating</button>
+            </div>
+
+            <form id="review-form" onsubmit="submitReview(event)">
+                <div class="fgroup">
+                    <label class="flabel">Your Feedback <span style="color:var(--danger)">*</span></label>
+                    <textarea id="review-text" placeholder="Tell us about your experience…" maxlength="1000" oninput="updateCount(this)" required></textarea>
+                    <div class="char-count"><span id="char-count">0</span> / 1000</div>
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Your Name <span style="font-weight:400;text-transform:none">(optional)</span></label>
+                    <input type="text" id="reviewer-name" placeholder="e.g. John D." maxlength="60">
+                    <label class="anon-row">
+                        <input type="checkbox" id="anon-check" onchange="toggleAnon(this)">
+                        <span>Submit anonymously</span>
+                    </label>
+                </div>
+                <button type="submit" class="sub-btn" id="submit-btn">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Review
+                </button>
+            </form>
+        </div>
+
+    </div><!-- /rev-body -->
+
+    <footer>Powered by <strong>Jomish Business Suite</strong></footer>
+</div>
+
+<script>
+    // Theme
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('jomish_theme') || 'light');
+    function toggleTheme() {
+        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', n);
+        localStorage.setItem('jomish_theme', n);
+    }
+
+    const LABELS = ['','Poor ??','Fair ??','Good ??','Great ??','Excellent! ??'];
+    let rating = 0;
+    const token = new URLSearchParams(location.search).get('token') || '';
+
+    function showScr(id) {
+        ['scr-loading','scr-error','scr-success','scr-form'].forEach(s => {
+            const el = document.getElementById(s);
+            if (!el) return;
+            el.style.display = s === id ? 'flex' : 'none';
+        });
+    }
+
+    function setRating(val) {
+        rating = val;
+        document.getElementById('star-row').classList.add('picked');
+        document.querySelectorAll('.star').forEach(b => b.classList.toggle('lit', +b.dataset.val <= val));
+        document.getElementById('pill-text').textContent = LABELS[val];
+        document.getElementById('rating-pill').classList.add('show');
+        document.getElementById('tap-hint').classList.add('gone');
+        document.getElementById('cont-btn').classList.add('show');
+    }
+
+    // Hover preview
+    document.querySelectorAll('.star').forEach(btn => {
+        btn.addEventListener('mouseover', () => {
+            const v = +btn.dataset.val;
+            document.querySelectorAll('.star').forEach(b => {
+                b.style.color = +b.dataset.val <= v ? 'var(--star)' : '';
+            });
+        });
+        btn.addEventListener('mouseleave', () => {
+            document.querySelectorAll('.star').forEach(b => { b.style.color = ''; });
+        });
+    });
+
+    function goStep2() {
+        if (!rating) return;
+        document.getElementById('step-rate').style.display = 'none';
+        const f = document.getElementById('step-form');
+        f.classList.add('on');
+        document.getElementById('s2-stars').textContent = '?'.repeat(rating) + '?'.repeat(5 - rating);
+        document.getElementById('s2-label').textContent = LABELS[rating];
+    }
+
+    function goStep1() {
+        document.getElementById('step-form').classList.remove('on');
+        document.getElementById('step-rate').style.display = 'flex';
+    }
+
+    function toggleAnon(cb) {
+        const n = document.getElementById('reviewer-name');
+        n.disabled = cb.checked; n.value = '';
+        n.placeholder = cb.checked ? 'Anonymous' : 'e.g. John D.';
+    }
+
+    function updateCount(el) {
+        document.getElementById('char-count').textContent = el.value.length;
+    }
+
+    async function submitReview(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submit-btn');
+        const text = document.getElementById('review-text').value.trim();
+        const isAnon = document.getElementById('anon-check').checked;
+        const name = isAnon ? '' : document.getElementById('reviewer-name').value.trim();
+        if (!text) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+        try {
+            const res = await fetch('/api/review/' + token, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({reviewer_name: name, review_text: text, rating})
+            });
+            if (res.ok) {
+                document.getElementById('suc-stars').textContent = '?'.repeat(rating) + '?'.repeat(5 - rating);
+                showScr('scr-success');
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.error || 'Failed to submit. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Review';
+            }
+        } catch(ex) {
+            alert('Network error. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Review';
+        }
+    }
+
+    async function init() {
+        if (!token) { showScr('scr-error'); return; }
+        try {
+            const res = await fetch('/api/review/' + token);
+            if (!res.ok) { showScr('scr-error'); return; }
+            const data = await res.json();
+            document.getElementById('co-name').textContent = data.company_name || 'Our Business';
+            document.title = 'Rate Us — ' + (data.company_name || 'Our Business');
+            try { let finalLogo = '/favicon.png'; const lr = await fetch('/api/settings/logo'); if (lr.ok) { const ld = await lr.json(); if (ld.logo) finalLogo = ld.logo; } const img = document.getElementById('logo-img'); img.src = finalLogo; img.classList.add('visible'); img.onload = () => { document.getElementById('logo-icon').style.display = 'none'; }; } catch(_) { const img = document.getElementById('logo-img'); img.src = '/favicon.png'; img.classList.add('visible'); img.onload = () => { document.getElementById('logo-icon').style.display = 'none'; }; }
+            showScr('scr-form');
+        } catch(e) { showScr('scr-error'); }
+    }
+
+    init();
+</script>
+</body>
+</html>
+

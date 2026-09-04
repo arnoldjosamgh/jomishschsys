@@ -1,0 +1,293 @@
+module.exports = function(app, db, io, asyncLocalStorage) {
+    function getSchema() {
+        return asyncLocalStorage.getStore() || "public";
+    }
+
+    // Apply for school
+    app.post("/api/school/students/apply", (req, res) => {
+        const { first_name, last_name, email, phone, grade, parent_name, parent_phone } = req.body;
+        const query = `INSERT INTO students (first_name, last_name, email, phone, grade, parent_name, parent_phone, status) VALUES (?,?,?,?,?,?,?,'PENDING')`;
+        db.run(query, [first_name, last_name, email, phone, grade, parent_name, parent_phone], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            const student_id = this.lastID;
+            db.run(`INSERT INTO applications (student_id) VALUES (?)`, [student_id], function(err2) {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json({ success: true, message: "Application submitted successfully", student_id });
+            });
+        });
+    });
+
+    // Get pending applications
+    app.get("/api/school/applications", (req, res) => {
+        const query = `
+            SELECT a.id as app_id, a.application_date, a.status, a.fee_paid,
+                   s.*
+            FROM applications a
+            JOIN students s ON a.student_id = s.id
+            ORDER BY a.application_date DESC
+        `;
+        db.all(query, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+
+    // Approve application (Accounts)
+    app.post("/api/school/applications/approve", (req, res) => {
+        const { app_id, fee_amount, recorded_by } = req.body;
+        
+        db.get(`SELECT student_id FROM applications WHERE id = ?`, [app_id], (err, row) => {
+            if (err || !row) return res.status(500).json({ error: err ? err.message : "Application not found" });
+            const student_id = row.student_id;
+
+            db.serialize(() => {
+                db.run(`UPDATE applications SET status = 'APPROVED', fee_paid = 1 WHERE id = ?`, [app_id]);
+                db.run(`UPDATE students SET status = 'ACTIVE' WHERE id = ?`, [student_id]);
+                db.run(`INSERT INTO fees (student_id, amount, fee_type, status, paid_at, recorded_by) VALUES (?, ?, 'REGISTRATION', 'PAID', CURRENT_TIMESTAMP, ?)`, [student_id, fee_amount, recorded_by], (err2) => {
+                    if (err2) return res.status(500).json({ error: err2.message });
+                    res.json({ success: true, message: "Application approved and fee recorded." });
+                });
+            });
+        });
+    });
+
+    // Clock In/Out
+    app.post("/api/school/attendance/clock", (req, res) => {
+        const { barcode, type } = req.body; // type is 'IN' or 'OUT'
+        
+        // Find student
+        db.get(`SELECT id FROM students WHERE barcode = ? OR student_id = ?`, [barcode, barcode], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!row) return res.status(404).json({ error: "Student not found" });
+            
+            db.run(`INSERT INTO attendance_logs (user_type, user_id, scan_type, status) VALUES ('STUDENT', ?, ?, 'PRESENT')`, [row.id, type], function(err2) {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json({ success: true, message: `Clocked ${type} successfully` });
+            });
+        });
+    });
+
+    // List all students
+    app.get("/api/school/students", (req, res) => {
+        db.all(`SELECT * FROM students ORDER BY last_name`, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+
+    // --- NEW ENDPOINTS FOR ROLES ---
+
+    // Subjects
+    app.get("/api/school/subjects", (req, res) => {
+        db.all(`SELECT * FROM subjects ORDER BY name`, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+
+    app.post("/api/school/subjects", (req, res) => {
+        const { name, code } = req.body;
+        db.run(`INSERT INTO subjects (name, code) VALUES (?, ?)`, [name, code], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, subject_id: this.lastID });
+        });
+    });
+
+    // Marks
+    app.post("/api/school/marks", (req, res) => {
+        const { student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64 } = req.body;
+        // Upsert or insert depending on if we want to overwrite
+        // For simplicity, just insert for now
+        db.run(`INSERT INTO marks (student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64) VALUES (?,?,?,?,?,?,?,?)`, 
+            [student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, mark_id: this.lastID });
+        });
+    });
+
+    app.get("/api/school/marks", (req, res) => {
+        const { student_id, term, year } = req.query;
+        let query = `SELECT m.*, s.name as subject_name FROM marks m LEFT JOIN subjects s ON m.subject_id = s.id WHERE 1=1`;
+        let params = [];
+        if (student_id) { query += ` AND m.student_id = ?`; params.push(student_id); }
+        if (term) { query += ` AND m.term = ?`; params.push(term); }
+        if (year) { query += ` AND m.year = ?`; params.push(year); }
+        
+        db.all(query, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+
+    // Notes
+    app.post("/api/school/notes", (req, res) => {
+        const { student_id, teacher_id, note_text } = req.body;
+        db.run(`INSERT INTO student_notes (student_id, teacher_id, note_text) VALUES (?,?,?)`, 
+            [student_id, teacher_id, note_text], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            // Push Notification placeholder
+            if (io) io.emit("dos_notification", { type: "new_note", student_id, note_id: this.lastID });
+            
+            res.json({ success: true, note_id: this.lastID });
+        });
+    });
+
+    app.get("/api/school/notes", (req, res) => {
+        db.all(`SELECT n.*, s.first_name, s.last_name FROM student_notes n LEFT JOIN students s ON n.student_id = s.id ORDER BY n.created_at DESC`, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+
+    // Reports Generation (Auto Calculate Totals and Average)
+    app.post("/api/school/reports/generate", (req, res) => {
+        const { term, year } = req.body;
+        
+        // Complex query to sum marks and rank them
+        const query = `
+            SELECT student_id, SUM(score) as total_score, AVG(score) as average_score
+            FROM marks
+            WHERE term = ? AND year = ?
+            GROUP BY student_id
+            ORDER BY total_score DESC
+        `;
+        
+        db.all(query, [term, year], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            let pos = 1;
+            let count = 0;
+            
+            db.serialize(() => {
+                rows.forEach(r => {
+                    db.run(`INSERT INTO reports (student_id, term, year, total_score, average_score, position) 
+                            VALUES (?,?,?,?,?,?)`, 
+                            [r.student_id, term, year, r.total_score, r.average_score, pos], (err2) => {
+                                if (err2) console.error("Error inserting report:", err2.message);
+                            });
+                    pos++;
+                });
+                res.json({ success: true, message: `Generated reports for ${rows.length} students.` });
+            });
+        });
+    });
+
+    app.get("/api/school/reports", (req, res) => {
+        const { term, year } = req.query;
+        db.all(`SELECT r.*, s.first_name, s.last_name FROM reports r LEFT JOIN students s ON r.student_id = s.id WHERE r.term = ? AND r.year = ? ORDER BY r.position ASC`, [term, year], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+    });
+    
+    app.post("/api/school/reports/sign", (req, res) => {
+        const { report_id, dos_id } = req.body;
+        db.run(`UPDATE reports SET signed_by_dos = ? WHERE id = ?`, [dos_id, report_id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        });
+    });
+
+    // ==========================================
+    // Accounts / Finance (SchoolPay Integration)
+    // ==========================================
+
+    // Configure Term Fees
+    app.post("/api/school/term-fees", (req, res) => {
+        const { term, year, amount } = req.body;
+        db.run(`INSERT INTO term_fees (term, year, amount) VALUES (?, ?, ?) ON CONFLICT(term, year) DO UPDATE SET amount = excluded.amount`,
+            [term, year, amount], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        });
+    });
+
+    app.get("/api/school/term-fees", (req, res) => {
+        const { term, year } = req.query;
+        db.get(`SELECT amount FROM term_fees WHERE term = ? AND year = ?`, [term, year], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ amount: row ? row.amount : 0 });
+        });
+    });
+
+    // Bulk Import Payments (SchoolPay)
+    app.post("/api/school/payments/bulk-import", (req, res) => {
+        const { payments, term, year, recorded_by } = req.body; // payments: [{ student_id, amount, date }]
+        
+        if (!payments || !Array.isArray(payments)) return res.status(400).json({ error: 'Invalid payments data' });
+
+        let insertedCount = 0;
+        let processedCount = 0;
+
+        const checkDone = () => {
+            processedCount++;
+            if (processedCount === payments.length) {
+                res.json({ success: true, inserted: insertedCount });
+            }
+        };
+
+        if (payments.length === 0) return res.json({ success: true, inserted: 0 });
+
+        payments.forEach(p => {
+            // Find student by student_id or barcode/ID string if they pasted the raw string
+            db.get(`SELECT id FROM students WHERE student_id = ? OR id = ?`, [p.student_id, p.student_id], (err, student) => {
+                if (student) {
+                    db.run(`INSERT INTO fees (student_id, amount, fee_type, status, paid_at, recorded_by, term, year, source)
+                            VALUES (?, ?, 'Tuition', 'PAID', ?, ?, ?, ?, 'SchoolPay')`,
+                        [student.id, p.amount, p.date || new Date().toISOString(), recorded_by, term, year], (err2) => {
+                            if (!err2) insertedCount++;
+                            checkDone();
+                    });
+                } else {
+                    // Student not found, skip
+                    checkDone();
+                }
+            });
+        });
+    });
+
+    // Fee Defaulters Report
+    app.get("/api/school/payments/reports", (req, res) => {
+        const { term, year, filter } = req.query; // filter: 'all', '100', '50', 'unpaid'
+        
+        db.get(`SELECT amount FROM term_fees WHERE term = ? AND year = ?`, [term, year], (err, tf) => {
+            if (err) return res.status(500).json({ error: err.message });
+            const expectedAmount = tf ? tf.amount : 0;
+
+            db.all(`
+                SELECT s.id, s.first_name, s.last_name, s.student_id, 
+                       COALESCE(SUM(f.amount), 0) as total_paid
+                FROM students s
+                LEFT JOIN fees f ON s.id = f.student_id AND f.term = ? AND f.year = ? AND f.status = 'PAID'
+                GROUP BY s.id
+            `, [term, year], (err2, students) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+
+                const report = students.map(s => {
+                    const percentage = expectedAmount > 0 ? (s.total_paid / expectedAmount) * 100 : 0;
+                    return {
+                        ...s,
+                        expected: expectedAmount,
+                        balance: expectedAmount - s.total_paid,
+                        percentage: percentage
+                    };
+                });
+
+                let filtered = report;
+                if (filter === '100') {
+                    filtered = report.filter(s => s.percentage >= 100);
+                } else if (filter === '50') {
+                    // Paid less than 100% but more than 0
+                    filtered = report.filter(s => s.percentage < 100 && s.percentage > 0);
+                } else if (filter === 'unpaid') {
+                    filtered = report.filter(s => s.percentage === 0);
+                }
+
+                res.json(filtered);
+            });
+        });
+    });
+
+};

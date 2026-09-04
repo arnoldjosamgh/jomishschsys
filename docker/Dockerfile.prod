@@ -1,0 +1,52 @@
+# STAGE 1: BUILD & OBFUSCATE
+FROM node:20-slim AS builder
+
+WORKDIR /build
+
+# Install obfuscation tools
+RUN npm install -g javascript-obfuscator terser clean-css-cli html-minifier-terser
+
+# Copy source code
+COPY package*.json ./
+COPY public ./public
+COPY backend ./backend
+
+# 1. Obfuscate Frontend JS
+RUN find public -name "*.js" -exec javascript-obfuscator {} --output {} --compact true --self-defending false --string-array true \;
+
+# 2. Minify Frontend CSS
+RUN find public -name "*.css" -exec cleancss -o {} {} \;
+
+# 3. Minify Frontend HTML
+RUN find public -name "*.html" -exec html-minifier-terser --collapse-whitespace --remove-comments --minify-js true --minify-css true -o {} {} \;
+
+# 4. Lightly Minify Backend (Stability First)
+RUN find backend -name "*.js" -exec terser {} -o {} --compress --mangle \;
+
+# STAGE 2: HARDENED RUNTIME
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+# Install production dependencies
+COPY package*.json ./
+RUN npm install --omit=dev && npm cache clean --force
+
+# Copy obfuscated application from builder
+COPY --from=builder /build/public ./public
+COPY --from=builder /build/backend ./backend
+COPY config.json ./
+
+# Create data directory for SQLite volume mapping
+RUN mkdir -p /usr/src/app/data
+
+# SECURITY HARDENING: Remove shells and dangerous binaries
+RUN rm -rf /bin/sh /bin/ash /usr/bin/npm /usr/local/bin/npm /usr/local/bin/docker-entrypoint.sh
+
+# Environment Setup
+ENV NODE_ENV=production
+EXPOSE 3005
+
+# Run the app
+USER node
+CMD [ "node", "backend/server.js" ]

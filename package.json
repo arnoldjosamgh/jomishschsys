@@ -1,0 +1,51 @@
+{
+  "name": "jomish-business-suite-2026",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend/server.js",
+  "bin": "backend/server.js",
+  "scripts": {
+    "start": "electron electron-main.js",
+    "server": "node backend/server.js",
+    "build": "pkg backend/server.js --targets node18-win-x64 --output dist/unified-jomish-suite.exe",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "config/**/*",
+      "node_modules/sqlite3/build/Release/*.node"
+    ],
+    "scripts": [
+      "backend/**/*.js"
+    ]
+  },
+  "keywords": [],
+  "author": "Jomish Enterprise",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@point-of-sale/receipt-printer-encoder": "^3.0.0",
+    "bcryptjs": "^3.0.3",
+    "bonjour-service": "^1.3.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "imap-simple": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mailparser": "^3.9.8",
+    "nodemailer": "^8.0.7",
+    "pg": "^8.20.0",
+    "socket.io": "^4.8.3",
+    "web-push": "^3.6.7",
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode": "^1.5.3",
+    "archiver": "^7.0.1"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^6.0.1",
+    "electron": "^30.0.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  }
+}

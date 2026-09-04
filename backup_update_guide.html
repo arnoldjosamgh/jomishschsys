@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jomish Business Suite — Backup and Update Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-color: #ffffff;
+            padding: 20mm;
+            max-width: 210mm; /* A4 Width */
+            margin: 0 auto;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6mm;
+            margin-bottom: 8mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-title h1 {
+            font-size: 24pt;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title p {
+            font-size: 10pt;
+            color: var(--text-muted);
+            margin-top: 1mm;
+            font-weight: 500;
+        }
+
+        .header-version {
+            text-align: right;
+            font-size: 9pt;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .header-version strong {
+            color: var(--primary);
+        }
+
+        h2.section-title {
+            font-size: 16pt;
+            border-left: 4px solid var(--primary);
+            padding-left: 3mm;
+            margin: 6mm 0 4mm 0;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        p.intro {
+            font-size: 11pt;
+            color: var(--text-muted);
+            margin-bottom: 6mm;
+        }
+
+        .grid-two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6mm;
+            margin-bottom: 6mm;
+        }
+
+        .card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 5mm;
+        }
+
+        .card h3 {
+            font-size: 12pt;
+            color: var(--primary);
+            margin-bottom: 2mm;
+            display: flex;
+            align-items: center;
+            gap: 2mm;
+        }
+
+        .card p {
+            font-size: 9.5pt;
+            color: var(--text-muted);
+            margin-bottom: 3mm;
+        }
+
+        ul, ol {
+            padding-left: 5mm;
+            margin-bottom: 4mm;
+        }
+
+        li {
+            font-size: 9.5pt;
+            color: var(--text-dark);
+            margin-bottom: 1.5mm;
+        }
+
+        .code-box {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 3mm 4mm;
+            border-radius: 8px;
+            font-size: 8.5pt;
+            margin: 2mm 0 4mm 0;
+            overflow-x: auto;
+            border: 1px solid #1e293b;
+        }
+
+        .alert {
+            display: flex;
+            gap: 3mm;
+            padding: 4mm;
+            border-radius: var(--radius);
+            margin-bottom: 6mm;
+            font-size: 9.5pt;
+        }
+
+        .alert-info {
+            background-color: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            color: #312e81;
+        }
+
+        .alert-warning {
+            background-color: var(--warning-light);
+            border-left: 4px solid var(--warning);
+            color: #78350f;
+        }
+
+        .alert-success {
+            background-color: var(--success-light);
+            border-left: 4px solid var(--success);
+            color: #064e3b;
+        }
+
+        .footer {
+            margin-top: 10mm;
+            border-top: 1px solid var(--border);
+            padding-top: 4mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8pt;
+            color: var(--text-muted);
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        @media print {
+            body {
+                padding: 10mm 15mm;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1 -->
+    <header>
+        <div class="header-title">
+            <h1>Jomish Business Suite</h1>
+            <p>Enterprise Operations & Administration Manual</p>
+        </div>
+        <div class="header-version">
+            System Version: <strong>1.0.0</strong><br>
+            Codename: <strong>Genesis</strong>
+        </div>
+    </header>
+
+    <p class="intro">
+        This document outlines the standard operational procedures for securing corporate data via local database backups and applying software updates safely without disrupting operations.
+    </p>
+
+    <div class="alert alert-info">
+        <strong>💡 Control Center Shortcut:</strong> Double-click the <code>scripts/Jomish_Suite_Launcher.bat</code> utility in the application folder to access a guided terminal menu containing automated database backup and server health checks.
+    </div>
+
+    <h2 class="section-title">📂 Database Backup Procedures</h2>
+
+    <div class="grid-two">
+        <div class="card">
+            <h3>🗄️ Option A: SQLite (Standalone)</h3>
+            <p>Standalone deployments run on an embedded SQLite database. Backing up SQLite simply involves copying the database file.</p>
+            <ol>
+                <li>Open the Jomish Suite launcher (Option 7) or execute in Node:</li>
+            </ol>
+            <div class="code-box">node tools/backup.js [dest-folder]</div>
+            <p>If no destination folder is supplied, backups are timestamped and saved in the <code>data/backups/</code> folder.</p>
+        </div>
+
+        <div class="card">
+            <h3>🐳 Option B: PostgreSQL (Docker)</h3>
+            <p>Enterprise deployments utilize a PostgreSQL server inside a Docker container. Backups require a database dump.</p>
+            <ol>
+                <li>Launch the Control Center batch file.</li>
+                <li>Press <strong>7</strong> to run the automated database dump script.</li>
+            </ol>
+            <p>This runs the native export command under the hood, writing the output SQL file:</p>
+            <div class="code-box">docker exec jomish-db pg_dump ...</div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>⚠️ Crucial Security Action:</strong> After creating a backup, copy the generated <code>.db</code> and <code>.json</code> (or <code>.sql</code>) files immediately to a separate physical USB flash drive or secure cloud storage.
+    </div>
+
+    <h2 class="section-title">🔄 Database Restore Procedures</h2>
+    <p class="intro">
+        If a hardware failure occurs, restore your database by running the restore engine script. This automatically creates a safety copy of the current state before replacing it.
+    </p>
+    <ol>
+        <li>Shutdown the server and run the restore script by passing the path of your backup file:</li>
+    </ol>
+    <div class="code-box">node tools/restore.js C:\path\to\your_backup.db</div>
+    <div class="alert alert-success">
+        <strong>✅ Safety Guarantee:</strong> The restore engine saves your current database state as a safety duplicate (e.g. <code>jomish_pre_restore_timestamp.db</code>) before applying the backup.
+    </div>
+
+    <div class="footer">
+        <span>Jomish Suite — Operations & Administration</span>
+        <span>Page 1 of 2</span>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page-break"></div>
+
+    <header>
+        <div class="header-title">
+            <h1>Jomish Business Suite</h1>
+            <p>Enterprise Operations & Administration Manual</p>
+        </div>
+        <div class="header-version">
+            System Version: <strong>1.0.0</strong><br>
+            Codename: <strong>Genesis</strong>
+        </div>
+    </header>
+
+    <h2 class="section-title">🚀 System Update Procedures</h2>
+    <p class="intro">
+        Updates are delivered in two formats depending on the architecture: Container updates (Docker) or Schema updates (JavaScript). Both preserve your business transaction history.
+    </p>
+
+    <div class="card" style="margin-bottom: 6mm;">
+        <h3>🐳 1. Secure Container Updates (Docker Fortress)</h3>
+        <p>
+            To update the server application while maintaining safe sandboxed rules:
+        </p>
+        <ol>
+            <li>Download the encrypted update archive (<code>update.tar</code>) provided by Jomish.</li>
+            <li>Place <code>update.tar</code> directly in the project root folder.</li>
+            <li>Double-click the <code>scripts/Update_Jomish_Suite.bat</code> utility.</li>
+        </ol>
+        <p>The system will automatically:</p>
+        <ul>
+            <li>Validate that the ports are clear.</li>
+            <li>Decommission the old running container.</li>
+            <li>Load the new image and launch the container with secure <code>--read-only</code> flags.</li>
+        </ul>
+    </div>
+
+    <div class="card" style="margin-bottom: 6mm;">
+        <h3>⚡ 2. Schema and Migrations Updates (JavaScript)</h3>
+        <p>
+            If the update includes new tables, fields, or database index improvements, run the schema update engine:
+        </p>
+        <ol>
+            <li>Download the schema migration files and place them in the <code>updates/</code> directory.</li>
+            <li>Execute the update engine via the terminal:</li>
+        </ol>
+        <div class="code-box">node tools/apply-update.js</div>
+        <p>
+            This checks all pending updates, applies them sequentially to your database, and bumps the system metadata version, ensuring **zero data loss**.
+        </p>
+    </div>
+
+    <h2 class="section-title">📋 Best Practices Checklist</h2>
+    <div class="grid-two" style="margin-bottom: 0;">
+        <div class="card" style="background-color: #faf5ff; border-color: #e9d5ff;">
+            <h3 style="color: #6b21a8;">🔒 Database Safeguards</h3>
+            <ul>
+                <li>Create local backups <strong>weekly</strong>.</li>
+                <li>Keep backups on a separate flash drive.</li>
+                <li>Run a system health check prior to restoring.</li>
+                <li>Double check database integrity before deleting backups.</li>
+            </ul>
+        </div>
+        <div class="card" style="background-color: #faf5ff; border-color: #e9d5ff;">
+            <h3 style="color: #6b21a8;">⚙️ Update Rules</h3>
+            <ul>
+                <li>Always create a backup **before** updating.</li>
+                <li>Ensure Docker Desktop is running before launching container updates.</li>
+                <li>Review the update console log for any schema conflicts.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer" style="margin-top: 15mm;">
+        <span>Jomish Suite — Operations & Administration</span>
+        <span>Page 2 of 2</span>
+    </div>
+
+</body>
+</html>

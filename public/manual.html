@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Jomish 1.0 Genesis — Technician Manual</title>
+<style>
+@media print{.no-print{display:none}body{font-size:11pt}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;color:#1a1a2e;line-height:1.6;padding:40px;max-width:900px;margin:0 auto;background:#fff}
+h1{font-size:28px;text-align:center;margin-bottom:4px;color:#0c0c1a}
+h2{font-size:20px;margin:28px 0 12px;padding:8px 14px;background:#1a1a2e;color:#fff;border-radius:6px}
+h3{font-size:15px;margin:16px 0 8px;color:#1a1a2e;border-bottom:2px solid #dde2e8;padding-bottom:4px}
+p,li{margin-bottom:6px;font-size:13px}
+ul,ol{padding-left:24px;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12px}
+th,td{border:1px solid #ccc;padding:6px 10px;text-align:left}
+th{background:#1a1a2e;color:#fff;font-weight:600}
+tr:nth-child(even){background:#f5f5fa}
+code{background:#eee;padding:2px 6px;border-radius:3px;font-size:12px;font-family:Consolas,monospace}
+pre{background:#1a1a2e;color:#0f0;padding:14px;border-radius:6px;font-size:11px;overflow-x:auto;margin:8px 0 14px;font-family:Consolas,monospace}
+.subtitle{text-align:center;color:#666;font-size:13px;margin-bottom:20px}
+.warn{background:#fff3cd;border-left:4px solid #ffc107;padding:8px 12px;margin:8px 0;font-size:12px;border-radius:4px}
+.danger{background:#f8d7da;border-left:4px solid #dc3545;padding:8px 12px;margin:8px 0;font-size:12px;border-radius:4px}
+.info{background:#d1ecf1;border-left:4px solid #17a2b8;padding:8px 12px;margin:8px 0;font-size:12px;border-radius:4px}
+.btn-print{position:fixed;top:20px;right:20px;padding:12px 24px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+.btn-print:hover{background:#333}
+hr{border:none;border-top:1px solid #ddd;margin:20px 0}
+.page-break{page-break-before:always}
+</style>
+</head><body>
+<button class="btn-print no-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+
+<h1>JOMISH 1.0 GENESIS</h1>
+<p class="subtitle"><strong>Technician Manual</strong> — Confidential<br>Technician Password: <code>Jomish9!!</code> &nbsp;|&nbsp; Port: <code>3005</code> &nbsp;|&nbsp; May 2026</p>
+<hr>
+
+<h2>1. System Overview</h2>
+<p>Self-contained business suite. Runs locally on Windows with Node.js. No internet needed after setup.</p>
+<table><tr><th>Component</th><th>Tech</th></tr>
+<tr><td>Backend</td><td>Node.js + Express 5</td></tr>
+<tr><td>Database</td><td>SQLite (file-based)</td></tr>
+<tr><td>Frontend</td><td>HTML/CSS/JS (Neumorphic UI)</td></tr>
+<tr><td>Real-time</td><td>Socket.IO</td></tr>
+<tr><td>Auth</td><td>JWT + bcrypt</td></tr></table>
+
+<h2>2. Folder Structure</h2>
+<pre>unified-jomish-suite/
+├── Start_Jomish_Suite.vbs    ← Only launcher (visible to users)
+├── Unlock_System.vbs         ← Password: Jomish9!!
+├── Lock_System.vbs           ← Hides everything
+├── backup/
+│   ├── Backup_Data.vbs       ← Monthly backup (password)
+│   └── Restore_Backup.vbs    ← Restore after crash (password)
+├── updates/
+│   ├── Apply_Update.vbs      ← Apply updates (password)
+│   ├── Enable_Startup.vbs    ← Auto-start with Windows
+│   └── Disable_Startup.vbs
+├── backend/server.js         ← HIDDEN after lock
+├── public/                   ← HIDDEN after lock
+├── tools/                    ← HIDDEN after lock
+├── data/jomish.db            ← THE DATABASE
+└── config/config.json        ← Port settings</pre>
+
+<h2>3. Installation (New Computer)</h2>
+<ol>
+<li>Install <strong>Node.js</strong> from nodejs.org (LTS 20+)</li>
+<li>Copy <code>unified-jomish-suite</code> folder to client PC</li>
+<li>Double-click <strong>Start_Jomish_Suite.vbs</strong> (first run installs dependencies)</li>
+<li>Login with default credentials, change passwords</li>
+<li>Configure business name/logo in Settings</li>
+<li>Run <strong>Lock_System.vbs</strong> to hide source code</li>
+<li>Optionally run <strong>Enable_Startup.vbs</strong> for auto-start</li>
+</ol>
+
+<h2>4. Starting the System</h2>
+<p>Double-click <code>Start_Jomish_Suite.vbs</code>. It does:</p>
+<ol>
+<li>Kills all running node processes</li>
+<li>Installs dependencies if missing</li>
+<li>Starts server silently (no terminal)</li>
+<li>Polls server until ready (up to 18 seconds)</li>
+<li>Opens Chrome/Edge in <strong>kiosk mode</strong> (fullscreen, no address bar)</li>
+<li>Goes directly to login page</li>
+</ol>
+<div class="info">The minimize button (dark circle, top-right) is the ONLY way users can minimize the app.</div>
+
+<h2>5. Lock / Unlock System</h2>
+<h3>Lock (After Deployment)</h3>
+<p>Run <code>Lock_System.vbs</code> — hides all internal folders using <code>attrib +h +s</code>. Even "Show hidden files" won't reveal them.</p>
+<h3>Unlock (For Maintenance)</h3>
+<p>Run <code>Unlock_System.vbs</code> → Enter <code>Jomish9!!</code> → All folders visible. Run Lock again when done.</p>
+
+<h2>6. User Accounts & Roles</h2>
+<table><tr><th>Username</th><th>Password</th><th>Role</th></tr>
+<tr><td>admin</td><td>admin123</td><td>CEO</td></tr>
+<tr><td>hr_manager</td><td>hr123</td><td>HR</td></tr>
+<tr><td>cashier1</td><td>cash123</td><td>Cashier</td></tr>
+<tr><td>security1</td><td>sec123</td><td>Security</td></tr>
+<tr><td>reception1</td><td>rec123</td><td>Reception</td></tr></table>
+<div class="warn">Change these passwords immediately after deployment!</div>
+
+<table><tr><th>Module</th><th>CEO</th><th>HR</th><th>Cashier</th><th>Security</th><th>Reception</th></tr>
+<tr><td>Dashboard</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td></tr>
+<tr><td>HR</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td></tr>
+<tr><td>Attendance</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-check"></i></td></tr>
+<tr><td>Finance</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td></tr>
+<tr><td>POS</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td></tr>
+<tr><td>Secretary</td><td><i class="fa-solid fa-check"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-xmark"></i></td><td><i class="fa-solid fa-check"></i></td></tr></table>
+
+<div class="page-break"></div>
+
+<h2>7. Modules</h2>
+<h3>Dashboard</h3><p>Staff count, attendance summary, quick actions, communication hub.</p>
+<h3>HR & Employees</h3><p>Recruitment, termination (nullifies credentials), business setup (name/logo/roles).</p>
+<h3>QR Attendance</h3><p>Camera or barcode scanner check-in/out. USB HID scanners must send Enter after scan.</p>
+<h3>Point of Sale</h3><p>Product tiles → click to add to cart → PAY NOW auto-scrolls to numpad → enter cash → CONFIRM. Receipt auto-generates.</p>
+<h3>Inventory</h3><p>Add products with photo, auto-barcode generation, label printing (38×25mm stickers).</p>
+<h3>Accounts</h3><p>Revenue/expenses, daily summaries, financial intelligence (CEO/HR only).</p>
+<h3>Secretary Hub</h3><p>Calendar, IMAP email inbox, internal staff messaging with real-time notifications.</p>
+<h3>Kiosk Terminal</h3><p>URL: <code>http://[ip]:3005/kiosk.html</code>. Login-gated, 30-min auto-logout, navy/gold aesthetic.</p>
+
+<h2>8. Barcode Labels (38×25mm)</h2>
+<pre>┌──────── 38mm ────────┐
+│  PRODUCT NAME  (3mm) │  5pt bold
+│  UGX 5,000    (5.5mm)│  4.5pt
+│ ║║║║║║║║║║║║║║║║║║║║ │
+│ ║║║║║║║║║║║║║║║║║║║║ │  11mm tall CODE128
+│ ║║║║║║║║║║║║║║║║║║║║ │  1.5mm margins
+│   1 0 0 0 0 1        │  6pt courier
+│       JOMISH         │  2.5pt footer
+└──────────────────────┘  25mm</pre>
+<p>Format: CODE128. Auto-generated from product ID. Each stock unit gets unique number. Output: multi-page PDF.</p>
+
+<h2>9. Dark Mode</h2>
+<p>Click <strong>"Light / Dark"</strong> in sidebar. Saved to localStorage. Greyish dark neumorphic (#2a2d32 base).</p>
+
+<div class="page-break"></div>
+
+<h2>10. Monthly Backup</h2>
+<ol>
+<li>Insert flash drive</li>
+<li>Open <code>backup/</code> folder</li>
+<li>Double-click <strong>Backup_Data.vbs</strong></li>
+<li>Enter password: <code>Jomish9!!</code></li>
+<li>Select flash drive in folder picker</li>
+<li>Wait for completion — server auto-restarts</li>
+<li>Store flash drive safely</li>
+</ol>
+<p>Creates: <code>jomish_backup_YYYY-MM-DD_HH-MM.db</code> + <code>.json</code> metadata file.</p>
+
+<h2>11. Restore After Crash</h2>
+<ol>
+<li>Install system on new/repaired computer (Section 3)</li>
+<li>Open <code>backup/</code> folder</li>
+<li>Double-click <strong>Restore_Backup.vbs</strong></li>
+<li>Enter password: <code>Jomish9!!</code></li>
+<li>Select <code>.db</code> file from flash drive</li>
+<li>Confirm data loss warning</li>
+<li>System restores and starts automatically</li>
+</ol>
+<div class="danger"><strong>Data between the backup date and the crash date is LOST.</strong> A red banner will appear in the app to acknowledge this.</div>
+<p>Safety: current DB is saved as <code>jomish_pre_restore_*.db</code> before overwriting.</p>
+
+<h2>12. Applying Updates</h2>
+<ol>
+<li>Send client the update file (e.g. <code>update_1.1_feature.js</code>)</li>
+<li>Client drops it into <code>updates/</code> folder</li>
+<li>Double-click <strong>Apply_Update.vbs</strong> → password → done</li>
+</ol>
+<h3>Writing Update Files</h3>
+<p>Name: <code>update_[version]_[description].js</code></p>
+<pre>module.exports = function(db, done) {
+    db.run(`ALTER TABLE employees ADD COLUMN dept TEXT DEFAULT 'General'`,
+    (err) => {
+        if (err && err.message.includes('duplicate')) return done(null);
+        if (err) return done(err);
+        done(null);
+    });
+};</pre>
+<p>Rules: Always idempotent. Never DROP/DELETE. Use IF NOT EXISTS. Call done() when finished.</p>
+
+<div class="page-break"></div>
+
+<h2>13. Troubleshooting</h2>
+<table><tr><th>Problem</th><th>Fix</th></tr>
+<tr><td>Server failed to start</td><td>Check <code>data\server.log</code>. Kill node: <code>taskkill /F /IM node.exe</code></td></tr>
+<tr><td>Port 3005 in use</td><td><code>taskkill /F /IM node.exe</code> then restart</td></tr>
+<tr><td>Login: Invalid credentials</td><td>Clear localStorage: F12 → Console → <code>localStorage.clear()</code></td></tr>
+<tr><td>Blank white screen</td><td>F12 → Console for errors. Check Network tab for failed loads</td></tr>
+<tr><td>Products appear twice</td><td>Fixed in v1.0. Check _skipProductReload flag in app.js</td></tr>
+<tr><td>Scanner not working</td><td>Must be USB HID mode, must send Enter key after scan</td></tr>
+<tr><td>Slow performance</td><td>Check DB size. Reduce image sizes. Close extra tabs</td></tr>
+<tr><td>Dark mode not saving</td><td>Check localStorage is not being cleared</td></tr>
+<tr><td>Fullscreen keeps returning</td><td>By design. Use minimize button (top-right circle)</td></tr>
+<tr><td>Account terminated error</td><td>Account was deactivated. Cannot be reactivated. Create new.</td></tr>
+<tr><td>No users can login</td><td>Run: <code>node scripts/seed-users.js</code></td></tr>
+<tr><td>Forgot tech password</td><td>Right-click any VBS → Edit → line 7 has the password</td></tr></table>
+
+<h2>14. Network Access</h2>
+<p>From any device on the same WiFi/LAN:</p>
+<pre>http://[computer-name].local:3005     (mDNS)
+http://192.168.x.x:3005               (IP address)</pre>
+<p>Kiosk: <code>http://[ip]:3005/kiosk.html</code></p>
+
+<h2>15. Server Config</h2>
+<p>File: <code>config/config.json</code></p>
+<pre>{ "port": 3005, "mDNS_name": "business-system", "db": "sqlite" }</pre>
+<p>JWT Secret: <code>jomish_super_secret_key</code> (in server.js line 24). Changing it invalidates all sessions.</p>
+
+<h2>16. Emergency Procedures</h2>
+<table><tr><th>Scenario</th><th>Action</th></tr>
+<tr><td>Computer dead</td><td>New PC → install Node → copy folder → restore backup</td></tr>
+<tr><td>DB corrupted</td><td>Check data/ for pre_restore copies or restore from flash</td></tr>
+<tr><td>All locked out</td><td><code>node scripts/seed-users.js</code></td></tr>
+<tr><td>Full reset (destroys data)</td><td>Delete data/jomish.db* files → restart server</td></tr></table>
+
+<hr>
+<h2>Quick Reference Card</h2>
+<table><tr><th>Action</th><th>How</th></tr>
+<tr><td>Start</td><td><code>Start_Jomish_Suite.vbs</code></td></tr>
+<tr><td>Lock source</td><td><code>Lock_System.vbs</code></td></tr>
+<tr><td>Unlock</td><td><code>Unlock_System.vbs</code> → Jomish9!!</td></tr>
+<tr><td>Backup</td><td><code>backup/Backup_Data.vbs</code> → Jomish9!! → pick drive</td></tr>
+<tr><td>Restore</td><td><code>backup/Restore_Backup.vbs</code> → Jomish9!! → pick .db</td></tr>
+<tr><td>Update</td><td>Drop .js in updates/ → <code>Apply_Update.vbs</code> → Jomish9!!</td></tr>
+<tr><td>Auto-start ON</td><td><code>updates/Enable_Startup.vbs</code></td></tr>
+<tr><td>Auto-start OFF</td><td><code>updates/Disable_Startup.vbs</code></td></tr>
+<tr><td>Kill server</td><td><code>taskkill /F /IM node.exe</code></td></tr>
+<tr><td>Network access</td><td><code>http://[name].local:3005</code></td></tr>
+<tr><td>Kiosk</td><td><code>http://[ip]:3005/kiosk.html</code></td></tr>
+<tr><td>Dark mode</td><td>Sidebar → "Light / Dark" button</td></tr></table>
+
+<p style="text-align:center;margin-top:30px;color:#999;font-size:11px"><em>Jomish 1.0 Genesis — Confidential Technician Manual — Do not distribute to clients</em></p>
+</body></html>

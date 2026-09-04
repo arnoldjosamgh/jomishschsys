@@ -1,0 +1,36 @@
+/**
+ * EXAMPLE UPDATE FILE — Template
+ * 
+ * Save as: updates/update_1.1_description.js
+ * Naming: update_[version]_[description].js
+ * 
+ * Updates run in alphabetical order, so version numbers keep order.
+ * The database is NOT cleared — only new columns/tables/data are added.
+ */
+
+module.exports = function(db, done) {
+    // Example: Add a new column to an existing table
+    // db.run(`ALTER TABLE employees ADD COLUMN department TEXT DEFAULT 'General'`, (err) => {
+    //     if (err && err.message.includes('duplicate column')) {
+    //         // Column already exists — skip gracefully
+    //         return done(null);
+    //     }
+    //     if (err) return done(err);
+    //     console.log('   Added department column to employees');
+    //     done(null);
+    // });
+
+    // Example: Create a new table
+    // db.run(`CREATE TABLE IF NOT EXISTS new_feature (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     name TEXT,
+    //     created_at TEXT DEFAULT (datetime('now'))
+    // )`, (err) => {
+    //     if (err) return done(err);
+    //     done(null);
+    // });
+
+    // This template does nothing — replace with actual changes
+    console.log('   Template update — no changes made');
+    done(null);
+};
