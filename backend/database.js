@@ -48,6 +48,9 @@ const CURRENT_VERSION = 201;
 
 if (config.dbType === 'postgres') {
     const poolConfig = { ...config.postgres, max: 100, idleTimeoutMillis: 30000 };
+    if (poolConfig.ssl !== false) {
+        poolConfig.ssl = { rejectUnauthorized: false };
+    }
     const pool = new Pool(poolConfig);
     
     // Compatibility Wrapper for Postgres to mimic sqlite3 API
@@ -474,7 +477,7 @@ function runMigrations(fromVersion) {
         db.run('ALTER TABLE fees ADD COLUMN term TEXT', [], () => {});
         db.run('ALTER TABLE fees ADD COLUMN year TEXT', [], () => {});
         db.run('ALTER TABLE fees ADD COLUMN source TEXT', [], () => {});
-        db.run('INSERT OR REPLACE INTO system_info (key, value) VALUES (?, ?)', ["version", "201"]);
+        db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "201"]);
     }
 }
 
