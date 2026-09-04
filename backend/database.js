@@ -213,6 +213,12 @@ if (config.dbType === 'postgres') {
 
         sqliteInstance.dbPath = dbPath;
         sqliteDbCache.set(safePrefix, sqliteInstance);
+        
+        // Initialize/update schema for this database
+        setImmediate(() => {
+            asyncLocalStorage.run(safePrefix, () => initDb());
+        });
+        
         return sqliteInstance;
     }
 
@@ -445,9 +451,13 @@ function runMigrations(fromVersion) {
             ['Accounts', 0, 0, 0, 1, 0],
             ['DOS', 0, 0, 1, 0, 1]
         ];
+        db.run('ALTER TABLE roles_config ADD COLUMN can_see_admin INTEGER DEFAULT 0', [], () => {});
+        db.run('ALTER TABLE roles_config ADD COLUMN can_see_headteacher INTEGER DEFAULT 0', [], () => {});
+        db.run('ALTER TABLE roles_config ADD COLUMN can_see_teacher INTEGER DEFAULT 0', [], () => {});
+        db.run('ALTER TABLE roles_config ADD COLUMN can_see_accounts INTEGER DEFAULT 0', [], () => {});
         db.run('ALTER TABLE roles_config ADD COLUMN can_see_dos INTEGER DEFAULT 0', [], (err) => {
             // Ignore error if column already exists
-            seedRoles.forEach(r => db.run('INSERT INTO roles_config (role_name, can_see_admin, can_see_headteacher, can_see_teacher, can_see_accounts, can_see_dos) VALUES (?,?,?,?,?,?) ON CONFLICT(role_name) DO UPDATE SET can_see_dos = excluded.can_see_dos', r));
+            seedRoles.forEach(r => db.run('INSERT INTO roles_config (role_name, can_see_admin, can_see_headteacher, can_see_teacher, can_see_accounts, can_see_dos) VALUES (?,?,?,?,?,?) ON CONFLICT(role_name) DO UPDATE SET can_see_dos = excluded.can_see_dos, can_see_admin = excluded.can_see_admin, can_see_headteacher = excluded.can_see_headteacher, can_see_teacher = excluded.can_see_teacher, can_see_accounts = excluded.can_see_accounts', r));
         });
         db.run('ALTER TABLE marks ADD COLUMN exam_photo_base64 TEXT', [], () => {}); // Safe addition
         db.run('ALTER TABLE fees ADD COLUMN term TEXT', [], () => {});
