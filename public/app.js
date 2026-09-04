@@ -537,9 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCloseScan.addEventListener("click", () => window.closeScanSession());
 
   // POS Search
-  const posSearch = document.getElementById("pos-search");
-  if (posSearch)
-    posSearch.addEventListener("input", (e) => loadPOSProducts(e.target.value));
 
   // SME Finance Search
   const smeSearch = document.getElementById("sme-search");
@@ -628,7 +625,6 @@ function initNavigation() {
         if (targetId === "sme-business") {
           loadTransactions();
         }
-        if (targetId === "pos-terminal") {
           switchPOSView("register");
         }
         if (targetId === "hr-mgmt") {
@@ -710,7 +706,6 @@ function switchPOSView(viewName) {
     }
     const b = document.getElementById("pos-nav-register");
     if (b) b.classList.add("active");
-    loadPOSProducts();
   } else if (viewName === "stock") {
     const el = document.getElementById("pos-stock-view");
     if (el) {
@@ -728,7 +723,6 @@ function switchPOSView(viewName) {
     }
     const b = document.getElementById("pos-nav-expenses");
     if (b) b.classList.add("active");
-    loadPOSExpenses();
   } else if (viewName === "credits") {
     const el = document.getElementById("pos-credits-view");
     if (el) {
@@ -1184,91 +1178,6 @@ async function updateEmployeePermission(empId, permKey, isChecked, checkboxEl) {
 }
 
 // ==== POS EXPENSES ====
-async function loadPOSExpenses() {
-  const tbody = document.getElementById("pos-expenses-tbody");
-  if (!tbody) return;
-  tbody.innerHTML =
-    '<tr><td colspan="4" style="text-align:center; padding:30px; color:#94A3B8;">Loading...</td></tr>';
-
-  try {
-    const res = await fetchAuth(`${API_URL}/transactions`);
-    const data = await res.json();
-
-    // Filter only EXPENSE type transactions
-    const expenses = (data.transactions || []).filter(
-      (t) => t.type === "EXPENSE",
-    );
-
-    // Compute totals
-    const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
-    const todayEAT = new Date(Date.now() + EAT_OFFSET_MS)
-      .toISOString()
-      .split("T")[0];
-
-    let todayTotal = 0,
-      allTotal = 0;
-    expenses.forEach((t) => {
-      const amt = parseFloat(t.amount) || 0;
-      allTotal += amt;
-      const txDate = new Date(
-        String(t.transaction_date).replace(" ", "T") +
-          (t.transaction_date.includes("Z") ? "" : "Z"),
-      );
-      const txDateEAT = new Date(txDate.getTime() + EAT_OFFSET_MS)
-        .toISOString()
-        .split("T")[0];
-      if (txDateEAT === todayEAT) todayTotal += amt;
-    });
-
-    // Update summary pills
-    const todayEl = document.getElementById("pos-exp-today");
-    const totalEl = document.getElementById("pos-exp-total");
-    if (todayEl) todayEl.textContent = `UGX ${todayTotal.toLocaleString()}`;
-    if (totalEl) totalEl.textContent = `UGX ${allTotal.toLocaleString()}`;
-
-    // Populate table
-    tbody.innerHTML = "";
-    if (expenses.length === 0) {
-      tbody.innerHTML =
-        '<tr><td colspan="4" style="text-align:center; padding:40px; color:#94A3B8;">No expenses recorded yet.</td></tr>';
-      return;
-    }
-
-    expenses.forEach((t) => {
-      // Parse description: "Category | Note" format
-      const parts = (t.description || "").split(" | ");
-      const category = parts.length > 1 ? parts[0] : "General";
-      const desc = parts.length > 1 ? parts[1] : t.description || "—";
-
-      const categoryColors = {
-        Supplies: "#F59E0B",
-        Utilities: "#6366F1",
-        Transport: "#10B981",
-        Maintenance: "#EC4899",
-        "Staff Welfare": "#8B5CF6",
-        General: "#94A3B8",
-        Other: "#64748B",
-      };
-      const catColor = categoryColors[category] || "#94A3B8";
-
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
-      tr.innerHTML = `
-                <td style="padding:12px; font-size:0.82rem; color:#94A3B8; white-space:nowrap;">${formatDisplayDate(t.transaction_date, true)}</td>
-                <td style="padding:12px;">
-                    <span style="background:${catColor}22; color:${catColor}; border:1px solid ${catColor}44; padding:3px 9px; border-radius:20px; font-size:0.72rem; font-weight:600; white-space:nowrap;">${category}</span>
-                </td>
-                <td style="padding:12px; font-size:0.88rem; color:var(--text);">${desc}</td>
-                <td style="padding:12px; text-align:right; font-weight:700; color:#EF4444; white-space:nowrap;">UGX ${parseFloat(t.amount).toLocaleString()}</td>
-            `;
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error("Load POS Expenses Error:", e);
-    tbody.innerHTML =
-      '<tr><td colspan="4" style="text-align:center; padding:30px; color:#EF4444;">Failed to load expenses.</td></tr>';
-  }
-}
 
 async function handlePOSExpenseSubmit(e) {
   e.preventDefault();
@@ -1307,7 +1216,6 @@ async function handlePOSExpenseSubmit(e) {
         "success",
       );
       e.target.reset();
-      loadPOSExpenses();
       loadDashboard(); // Refresh financial intelligence cards
     } else {
       const data = await res.json();
@@ -2021,7 +1929,6 @@ function initSockets() {
     } else if (data.module === "products") {
       cachedProducts = []; // Bust cache so next POS scan fetches fresh data with additional_barcodes
       if (USER_PERMISSIONS.can_see_pos && !window._skipProductReload)
-        loadPOSProducts();
     } else if (data.module === "logo" || data.module === "settings") {
       loadBrandLogo();
       loadBusinessConfig();
@@ -2161,7 +2068,6 @@ function enforceRBAC() {
     '[data-target="supervision-hub"]',
   );
   const navSME = document.querySelector('[data-target="sme-business"]');
-  const navPOS = document.querySelector('[data-target="pos-terminal"]');
   const navTransport = document.querySelector('[data-target="transport-hub"]');
   const navSecretary = document.querySelector('[data-target="secretary-hub"]');
   const navTechHub = document.querySelector('[data-target="tech-hub"]');
@@ -2338,7 +2244,6 @@ function enforceRBAC() {
       navSupervision.style.display =
         perms.qr || perms.schedules ? "block" : "none";
     if (navSME) navSME.style.display = perms.sme ? "block" : "none";
-    if (navPOS) navPOS.style.display = perms.pos ? "block" : "none";
     if (navTransport)
       navTransport.style.display = perms.transport ? "block" : "none";
     if (navSecretary)
@@ -2367,7 +2272,6 @@ function enforceRBAC() {
       navSupervision.style.display =
         p.can_see_attendance || p.can_see_schedules ? "block" : "none";
     if (navSME) navSME.style.display = p.can_see_sme ? "block" : "none";
-    if (navPOS) navPOS.style.display = p.can_see_pos ? "block" : "none";
     if (navTransport)
       navTransport.style.display = p.can_see_transport ? "block" : "none";
     if (navSecretary)
@@ -3478,82 +3382,6 @@ function getCategoryIcon(cat) {
 }
 
 // ==== POS HANDLERS & RECEIPT ====
-async function loadPOSProducts(searchTerm = "") {
-  try {
-    const res = await fetchAuth(`${API_URL}/products`);
-    if (!res.ok) {
-      const err = await res.json();
-      alert("POS Load Error: " + err.error);
-      return;
-    }
-    const data = await res.json();
-    cachedProducts = data.products || []; // Refresh cache for barcode scanner
-    const grid = document.getElementById("pos-products");
-    if (!grid) return;
-    grid.innerHTML = "";
-
-    let filtered = data.products || [];
-    if (searchTerm) {
-      const lowTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          (p.name || "").toLowerCase().includes(lowTerm) ||
-          (p.category || "").toLowerCase().includes(lowTerm),
-      );
-    }
-
-    if (filtered.length === 0) {
-      grid.innerHTML =
-        '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);"><h3>No Items Found</h3><p>Try searching for something else or check your inventory.</p></div>';
-      return;
-    }
-    filtered.forEach((p) => {
-      const prodName = p.name || "Unnamed";
-      const prodPrice = Number(p.price) || 0;
-      const prodStock = Number(p.stock) || 0;
-      const prodCat = p.category || "General";
-
-      const card = document.createElement("div");
-      card.className = `product-card ${prodStock <= 0 ? "empty" : ""}`;
-
-      const catClass = `category-${prodCat.toLowerCase()}`;
-      let imageHtml;
-      if (p.photo_base64 && p.photo_base64.length > 50) {
-        imageHtml = `<div class="product-img-container">
-                    <img src="${p.photo_base64}" alt="${prodName}" loading="lazy">
-                </div>`;
-      } else {
-        const initial = prodName[0].toUpperCase();
-        imageHtml = `<div class="product-img-container placeholder ${catClass}">
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                        <span style="font-size:2rem;">${getCategoryIcon(prodCat)}</span>
-                        <span style="font-size:1.1rem;font-weight:700;opacity:0.8;">${initial}</span>
-                    </div>
-                    <button onclick="event.stopPropagation();quickUploadPhoto(${p.id})" 
-                        style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:white;padding:4px 8px;border-radius:6px;font-size:0.7rem;cursor:pointer;backdrop-filter:blur(4px);">
-                        <i class="fa-solid fa-camera"></i> Add Photo
-                    </button>
-                </div>`;
-      }
-
-      card.innerHTML = `
-                ${imageHtml}
-                <div class="product-info">
-                    <h4>${prodName}</h4>
-                    <div class="price">UGX ${prodPrice.toLocaleString()}</div>
-                    <div class="stock" style="display:flex;justify-content:space-between;align-items:center;">
-                        <span>${prodStock > 0 ? "In Stock: " + prodStock : "\u26a0\ufe0f Out of Stock"}</span>
-                        ${p.barcode ? `<span style="font-size:0.6rem;background:rgba(99,102,241,0.15);color:var(--primary);padding:2px 6px;border-radius:4px;">#${p.barcode}</span>` : ""}
-                    </div>
-                </div>
-            `;
-      if (prodStock > 0) card.onclick = () => addToCart(p);
-      grid.appendChild(card);
-    });
-  } catch (e) {
-    console.error("POS Load Error:", e);
-  }
-}
 
 // Quick photo upload from POS tiles
 function quickUploadPhoto(productId) {
@@ -3581,7 +3409,6 @@ function quickUploadPhoto(productId) {
       });
       if (res.ok) {
         showToast(`Photo uploaded!`, "success");
-        loadPOSProducts();
         loadInventory();
       } else {
         alert("Failed to upload photo");
@@ -3682,35 +3509,7 @@ async function stopProductScanner() {
   document.getElementById("product-scanner-modal").classList.add("hidden");
 }
 
-function addToCart(p, scannedBarcode = null) {
-  const existing = posCart.find((i) => i.id === p.id);
-  if (existing) {
-    if (existing.qty < p.stock) {
-      existing.qty += 1;
-      if (scannedBarcode && !isNaN(scannedBarcode)) {
-        if (!existing.barcodes) existing.barcodes = [];
-        existing.barcodes.push(scannedBarcode);
-      }
-    }
-  } else {
-    const item = { ...p, qty: 1 };
-    if (scannedBarcode && !isNaN(scannedBarcode)) {
-      item.barcodes = [scannedBarcode];
-    } else {
-      item.barcodes = [];
-    }
-    posCart.push(item);
-  }
-  renderCart();
-}
 
-function updateCartQty(id, delta) {
-  const item = posCart.find((i) => i.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) posCart = posCart.filter((i) => i.id !== id);
-  renderCart();
-}
 
 function setCartQty(id, val) {
   const qty = parseInt(val);
@@ -3723,44 +3522,6 @@ function setCartQty(id, val) {
   renderCart();
 }
 
-function renderCart() {
-  window.posCart = posCart; // keep window reference in sync
-  const container = document.getElementById("cart-items");
-  container.innerHTML = "";
-  let subtotal = 0;
-  posCart.forEach((item) => {
-    subtotal += item.price * item.qty;
-    const el = document.createElement("div");
-    el.className = "cart-item";
-    const thumbHtml =
-      item.photo_base64 && item.photo_base64.length > 50
-        ? `<img src="${item.photo_base64}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">`
-        : `<div style="width:36px;height:36px;border-radius:6px;background:var(--background);display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid var(--border);">${getCategoryIcon(item.category)}</div>`;
-    el.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;">
-                ${thumbHtml}
-                <div class="cart-item-info"><strong>${item.name}</strong><span>UGX ${item.price.toFixed(0)}</span></div>
-            </div>
-            <div class="cart-item-controls">
-                <button class="qty-btn" onclick="updateCartQty(${item.id}, -1)">-</button>
-                <input type="number" min="1" value="${item.qty}" 
-                    style="width:48px; text-align:center; background:var(--background); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:0.95rem; font-weight:700; padding:4px 0;"
-                    onchange="setCartQty(${item.id}, this.value)"
-                    oninput="setCartQty(${item.id}, this.value)">
-                <button class="qty-btn" onclick="updateCartQty(${item.id}, 1)">+</button>
-            </div>`;
-    container.appendChild(el);
-  });
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax;
-  document.getElementById("cart-subtotal").textContent =
-    `UGX ${subtotal.toFixed(0)}`;
-  document.getElementById("cart-tax").textContent = `UGX ${tax.toFixed(0)}`;
-  document.getElementById("cart-total").textContent = `UGX ${total.toFixed(0)}`;
-  document
-    .getElementById("btn-checkout")
-    .setAttribute("data-total", total.toFixed(0));
-}
 
 // ==== CASH PAYMENT NUMPAD ENGINE ====
 
@@ -3956,7 +3717,6 @@ async function confirmPayment() {
 
       posCart = [];
       renderCart();
-      loadPOSProducts();
       loadDashboard();
       loadTransactions();
     } else {
@@ -4135,7 +3895,6 @@ async function getInvoice() {
 
       posCart = [];
       renderCart();
-      loadPOSProducts();
       loadDashboard();
       loadTransactions();
     } else {
@@ -6691,7 +6450,6 @@ function triggerPhotoUpload(productId) {
       if (res.ok) {
         alert("Product photo updated!");
         loadInventory();
-        loadPOSProducts();
       } else {
         const data = await res.json();
         alert("Error: " + (data.error || "Failed to update photo"));
@@ -6715,7 +6473,6 @@ async function submitBulkStock(id, amount) {
       const data = await res.json();
       cachedProducts = []; // Clear cache so scanner picks up new ranges
       loadInventory();
-      loadPOSProducts();
       loadDashboard();
       if (data.new_labels) {
         const { count } = data.new_labels;
@@ -6843,7 +6600,6 @@ window.closeScanSession = function () {
   // Refresh inventory to show newly registered items
   window._skipProductReload = true;
   loadInventory();
-  loadPOSProducts();
   setTimeout(() => {
     window._skipProductReload = false;
   }, 2000);
@@ -6974,7 +6730,6 @@ async function deleteProduct(id) {
   if (res.ok) {
     alert("Product Deleted.");
     loadInventory();
-    loadPOSProducts();
   } else {
     alert("Failed to delete product.");
   }
@@ -7085,7 +6840,6 @@ async function handleEditProduct(e) {
       document.getElementById("form-edit-product").reset();
       document.getElementById("edit-prod-preview").style.display = "none";
       loadInventory();
-      loadPOSProducts();
     } else {
       const data = await res.json();
       alert("Error: " + (data.error || "Update failed"));
@@ -7369,7 +7123,6 @@ async function handleUpdateAccess(e) {
 
 function autoRedirect() {
   if (USER_ROLE === "Cashier" || USER_ROLE === "Finance Manager") {
-    const posBtn = document.querySelector('[data-target="pos-terminal"]');
     if (posBtn && posBtn.style.display !== "none") {
       posBtn.click();
     } else {
@@ -9219,7 +8972,6 @@ async function handleGlobalBarcode(code) {
   }
 
   // Check if POS terminal is the active section
-  const posSection = document.getElementById("pos-terminal");
   const isPOSActive = posSection && posSection.classList.contains("active");
 
   if (isPOSActive) {
