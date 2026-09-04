@@ -499,14 +499,119 @@
                 </header>
 
                 <div class="tab-scroller no-print">
-                    <button class="nav-btn active" id="btn-sec-calendar" onclick="switchSecretaryView('calendar')" style="border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-calendar-days"></i> Company Calendar</button>
+                    <button class="nav-btn active" id="btn-sec-students" onclick="switchSecretaryView('students')" style="border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-users"></i> Students <span id="pending-students-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none;">0</span></button>
+                    <button class="nav-btn" id="btn-sec-calendar" onclick="switchSecretaryView('calendar')" style="border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-calendar-days"></i> Company Calendar</button>
                     <button class="nav-btn" id="btn-sec-inbox" onclick="switchSecretaryView('inbox')" style="border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-envelope"></i> Email Inbox <span id="unread-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none;">0</span></button>
                     <button class="nav-btn" id="btn-sec-messages" onclick="switchSecretaryView('messages')" style="border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-comment-dots"></i> Staff Messages <span id="msg-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none;">0</span></button>
                     <button class="nav-btn" id="btn-sec-meet" onclick="switchSecretaryView('meet')" style="background:linear-gradient(135deg,#DB4437,#F4B400); color:#fff; border:none; border-radius: 30px; white-space: nowrap;"><i class="fa-solid fa-video"></i> Google Meet</button>
                 </div>
 
+                <!-- =========  STUDENTS VIEW  ========= -->
+                <div id="sec-students-view" class="sec-sub-view">
+
+                    <!-- Top action bar -->
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:24px;">
+                        <button class="primary-btn" id="btn-open-add-student" onclick="openAddStudentModal()">
+                            <i class="fa-solid fa-user-plus"></i> Add Student
+                        </button>
+                        <button class="primary-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);" onclick="generateRegLink()" id="btn-gen-reg-link">
+                            <i class="fa-solid fa-link"></i> Share Registration Link
+                        </button>
+                        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Filter:</label>
+                            <select id="student-status-filter" onchange="loadStudents()" style="padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.85rem;">
+                                <option value="">All</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Reg link result box -->
+                    <div id="reg-link-box" style="display:none; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:none;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#86efac; text-transform:uppercase; margin-bottom:8px;"><i class="fa-solid fa-link"></i> Shareable Registration Link (valid 7 days)</div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input id="reg-link-url" type="text" readonly style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(34,197,94,0.3); border-radius:8px; color:var(--text); font-size:0.85rem; font-family:monospace;" />
+                            <button onclick="copyRegLink()" class="sm-btn success"><i class="fa-solid fa-copy"></i> Copy</button>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">Share this link with students/parents. They fill in the form and their application appears here as PENDING.</div>
+                    </div>
+
+                    <!-- Student table -->
+                    <div class="card" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+                        <div class="table-container">
+                            <table id="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Grade</th>
+                                        <th>Parent / Contact</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-tbody">
+                                    <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =========  Add Student Modal  ========= -->
+                <div id="add-student-modal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
+                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; max-width:520px; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative; animation:fadeInUp 0.3s ease;">
+                        <button onclick="closeAddStudentModal()" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.08); border:none; color:var(--text); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.1rem;">&#x2715;</button>
+                        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> Add New Student</h2>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">Student is added directly as ACTIVE.</p>
+                        <form id="form-add-student" onsubmit="submitAddStudent(event)">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">First Name *</label>
+                                    <input type="text" id="add-s-fname" required placeholder="First name" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Last Name *</label>
+                                    <input type="text" id="add-s-lname" required placeholder="Last name" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Email</label>
+                                    <input type="email" id="add-s-email" placeholder="student@email.com" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Phone</label>
+                                    <input type="tel" id="add-s-phone" placeholder="+256 700 000 000" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                                <div style="grid-column:1/-1;">
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Class / Grade</label>
+                                    <select id="add-s-grade" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
+                                        <option value="">-- Select Grade --</option>
+                                        <option>S1</option><option>S2</option><option>S3</option>
+                                        <option>S4</option><option>S5</option><option>S6</option>
+                                        <option>P1</option><option>P2</option><option>P3</option>
+                                        <option>P4</option><option>P5</option><option>P6</option><option>P7</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Parent / Guardian Name</label>
+                                    <input type="text" id="add-s-pname" placeholder="Parent name" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px;">Parent Phone</label>
+                                    <input type="tel" id="add-s-pphone" placeholder="+256 700 000 000" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);" />
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-submit-add-student" class="primary-btn" style="width:100%; margin-top:20px;"><i class="fa-solid fa-check"></i> Add Student</button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Calendar View -->
-                <div id="sec-calendar-view" class="sec-sub-view">
+                <div id="sec-calendar-view" class="sec-sub-view" style="display:none;">
                     <div class="calendar-header" style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
                         <button class="secondary-btn sm-btn" onclick="navigateCalendar(-1)">ΓùÇ</button>
                         <h2 id="cal-month-title" style="min-width:220px; text-align:center; font-size:1.4rem;"></h2>

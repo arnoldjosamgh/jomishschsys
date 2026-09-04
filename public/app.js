@@ -7615,6 +7615,8 @@ function loadSecretaryHub() {
 }
 
 function switchSecretaryView(view) {
+  document.getElementById("sec-students-view").style.display =
+    view === "students" ? "block" : "none";
   document.getElementById("sec-calendar-view").style.display =
     view === "calendar" ? "block" : "none";
   document.getElementById("sec-inbox-view").style.display =
@@ -7638,6 +7640,8 @@ function switchSecretaryView(view) {
     }
   }
 
+  const studBtn = document.getElementById("btn-sec-students");
+  if (studBtn) studBtn.classList.toggle("active", view === "students");
   const calBtn = document.getElementById("btn-sec-calendar");
   if (calBtn) calBtn.classList.toggle("active", view === "calendar");
   const inboxBtn = document.getElementById("btn-sec-inbox");
@@ -7649,6 +7653,7 @@ function switchSecretaryView(view) {
   const meetBtn = document.getElementById("btn-sec-meet");
   if (meetBtn) meetBtn.classList.toggle("active", view === "meet");
 
+  if (view === "students") loadStudents();
   if (view === "calendar") renderCalendar();
   if (view === "inbox") {
     loadEmails();
@@ -7677,6 +7682,205 @@ function switchSecretaryView(view) {
     window.focus();
     document.body.focus();
   }
+}
+
+// ==========================================
+// SECRETARY HUB: STUDENTS LOGIC
+// ==========================================
+
+async function loadStudents() {
+  const tbody = document.getElementById("students-tbody");
+  if (!tbody) return;
+
+  const statusFilter = document.getElementById("student-status-filter").value;
+  let url = "/api/students";
+  if (statusFilter) url += `?status=${statusFilter}`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+    });
+    if (!res.ok) throw new Error("Failed to load students");
+    const students = await res.json();
+    
+    // Update badge for pending students
+    const pendingCount = students.filter(s => s.status === 'PENDING').length;
+    const badge = document.getElementById("pending-students-badge");
+    if (badge) {
+      if (pendingCount > 0) {
+        badge.textContent = pendingCount;
+        badge.style.display = "inline";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
+    if (students.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No students found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = students.map(s => {
+      let statusBadge = "";
+      let actions = "";
+      if (s.status === "ACTIVE") {
+        statusBadge = `<span style="background:rgba(34,197,94,0.15); color:#22c55e; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">ACTIVE</span>`;
+        actions = `<button class="sm-btn danger" onclick="deleteStudent(${s.id})"><i class="fa-solid fa-trash"></i> Delete</button>`;
+      } else if (s.status === "PENDING") {
+        statusBadge = `<span style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">PENDING</span>`;
+        actions = `
+          <div style="display:flex; gap:6px;">
+            <button class="sm-btn success" onclick="updateStudentStatus(${s.id}, 'ACTIVE')"><i class="fa-solid fa-check"></i> Approve</button>
+            <button class="sm-btn danger" onclick="updateStudentStatus(${s.id}, 'REJECTED')"><i class="fa-solid fa-xmark"></i> Reject</button>
+          </div>
+        `;
+      } else if (s.status === "REJECTED") {
+        statusBadge = `<span style="background:rgba(239,68,68,0.15); color:#ef4444; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">REJECTED</span>`;
+        actions = `<button class="sm-btn" onclick="updateStudentStatus(${s.id}, 'ACTIVE')">Restore</button>`;
+      } else {
+        statusBadge = `<span>${s.status}</span>`;
+      }
+
+      return `
+        <tr>
+          <td><strong>${s.student_id || "N/A"}</strong></td>
+          <td>${s.first_name} ${s.last_name}</td>
+          <td>${s.grade || "N/A"}</td>
+          <td>${s.parent_name || "N/A"} <br><small style="color:var(--text-muted);">${s.parent_phone || ""}</small></td>
+          <td>${s.email || "N/A"}</td>
+          <td>${statusBadge}</td>
+          <td>${actions}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--danger);">Error loading students.</td></tr>`;
+  }
+}
+
+async function updateStudentStatus(id, status) {
+  if (!confirm(`Are you sure you want to mark this application as ${status}?`)) return;
+  try {
+    const res = await fetch(`/api/students/${id}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      loadStudents(); // refresh
+      // refresh dashboard stats too if function exists
+      if(typeof loadDashboard === 'function') loadDashboard();
+    } else {
+      alert(data.error || "Failed to update status.");
+    }
+  } catch (err) {
+    alert("Network error.");
+  }
+}
+
+async function deleteStudent(id) {
+  if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) return;
+  try {
+    const res = await fetch(`/api/students/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    });
+    if (res.ok) {
+      loadStudents();
+      if(typeof loadDashboard === 'function') loadDashboard();
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to delete student.");
+    }
+  } catch (err) {
+    alert("Network error.");
+  }
+}
+
+function openAddStudentModal() {
+  document.getElementById("form-add-student").reset();
+  document.getElementById("add-student-modal").classList.remove("hidden");
+}
+
+function closeAddStudentModal() {
+  document.getElementById("add-student-modal").classList.add("hidden");
+}
+
+async function submitAddStudent(e) {
+  e.preventDefault();
+  const btn = document.getElementById("btn-submit-add-student");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
+  const body = {
+    first_name: document.getElementById("add-s-fname").value.trim(),
+    last_name: document.getElementById("add-s-lname").value.trim(),
+    email: document.getElementById("add-s-email").value.trim(),
+    phone: document.getElementById("add-s-phone").value.trim(),
+    grade: document.getElementById("add-s-grade").value,
+    parent_name: document.getElementById("add-s-pname").value.trim(),
+    parent_phone: document.getElementById("add-s-pphone").value.trim()
+  };
+
+  try {
+    const res = await fetch("/api/students", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      closeAddStudentModal();
+      loadStudents();
+      if(typeof loadDashboard === 'function') loadDashboard();
+    } else {
+      alert(data.error || "Failed to add student.");
+    }
+  } catch (err) {
+    alert("Network error.");
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> Add Student';
+}
+
+async function generateRegLink() {
+  const btn = document.getElementById("btn-gen-reg-link");
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/students/reg-link", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById("reg-link-url").value = data.link;
+      document.getElementById("reg-link-box").style.display = "block";
+    } else {
+      alert(data.error || "Failed to generate link.");
+    }
+  } catch (err) {
+    alert("Network error.");
+  }
+  btn.innerHTML = origText;
+  btn.disabled = false;
+}
+
+function copyRegLink() {
+  const input = document.getElementById("reg-link-url");
+  input.select();
+  document.execCommand("copy");
+  alert("Link copied to clipboard!");
 }
 
 async function loadMeetingOptions() {

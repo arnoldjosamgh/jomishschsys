@@ -5862,3 +5862,142 @@ require('./school_routes')(app, db, io, asyncLocalStorage);
   setTimeout(checkPayrollDue, 10000); // Give DB time to initialize
   setInterval(checkPayrollDue, 24 * 60 * 60 * 1000);
 })();
+
+// ============================================================
+//  STUDENT MANAGEMENT ROUTES
+// ============================================================
+
+// GET all students (secretary / admin)
+app.get("/api/students", authenticateToken, (req, res) => {
+  const { status } = req.query;
+  let sql = "SELECT * FROM students ORDER BY created_at DESC";
+  let params = [];
+  if (status) {
+    sql = "SELECT * FROM students WHERE status = ? ORDER BY created_at DESC";
+    params = [status];
+  }
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// POST add student directly (secretary)
+app.post("/api/students", authenticateToken, (req, res) => {
+  const { first_name, last_name, email, phone, grade, parent_name, parent_phone } = req.body;
+  if (!first_name || !last_name)
+    return res.status(400).json({ error: "First name and last name are required." });
+
+  const studentId = "STU" + Date.now();
+  db.run(
+    `INSERT INTO students (first_name, last_name, email, phone, grade, student_id, parent_name, parent_phone, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')`,
+    [first_name, last_name, email || null, phone || null, grade || null, studentId, parent_name || null, parent_phone || null],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: this.lastID, student_id: studentId });
+    }
+  );
+});
+
+// PUT approve or reject a pending student application
+app.put("/api/students/:id/status", authenticateToken, (req, res) => {
+  const { status } = req.body; // 'ACTIVE' or 'REJECTED'
+  if (!["ACTIVE", "REJECTED", "PENDING"].includes(status))
+    return res.status(400).json({ error: "Invalid status." });
+
+  db.run(
+    `UPDATE students SET status = ? WHERE id = ?`,
+    [status, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: "Student not found." });
+      res.json({ success: true });
+    }
+  );
+});
+
+// DELETE a student
+app.delete("/api/students/:id", authenticateToken, (req, res) => {
+  db.run(`DELETE FROM students WHERE id = ?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// POST generate a shareable self-registration link token
+app.post("/api/students/reg-link", authenticateToken, (req, res) => {
+  const crypto = require("crypto");
+  const token = crypto.randomBytes(24).toString("hex");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+  // Store as onboarding_token type record reusing same table but type student_reg
+  db.run(
+    `INSERT INTO onboarding_tokens (token, company_prefix, company_name, business_email, expires_at, used)
+     VALUES (?, 'student_reg', 'Student Registration', ?, ?, 0)`,
+    [token, req.user.email || "secretary", expiresAt],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const baseUrl = req.protocol + "://" + req.get("host");
+      res.json({ token, link: `${baseUrl}/student-register.html?token=${token}`, expires_at: expiresAt });
+    }
+  );
+});
+
+// GET validate a student reg token (called by public registration page)
+app.get("/api/students/reg-token/:token", (req, res) => {
+  db.get(
+    `SELECT * FROM onboarding_tokens WHERE token = ? AND company_prefix = 'student_reg' AND used = 0`,
+    [req.params.token],
+    (err, row) => {
+      if (err || !row) return res.status(404).json({ error: "Invalid or expired registration link." });
+      if (new Date(row.expires_at) < new Date())
+        return res.status(410).json({ error: "This registration link has expired." });
+      res.json({ valid: true });
+    }
+  );
+});
+
+// POST public student self-registration (no auth required, requires valid token)
+app.post("/api/students/self-register", async (req, res) => {
+  const { token, first_name, last_name, email, phone, grade, parent_name, parent_phone } = req.body;
+  if (!token || !first_name || !last_name)
+    return res.status(400).json({ error: "Token, first name, and last name are required." });
+
+  // Validate token
+  const row = await new Promise((resolve) =>
+    db.get(
+      `SELECT * FROM onboarding_tokens WHERE token = ? AND company_prefix = 'student_reg' AND used = 0`,
+      [token],
+      (e, r) => resolve(r)
+    )
+  );
+
+  if (!row) return res.status(403).json({ error: "Invalid registration link." });
+  if (new Date(row.expires_at) < new Date())
+    return res.status(410).json({ error: "This registration link has expired." });
+
+  const studentId = "APP" + Date.now();
+  db.run(
+    `INSERT INTO students (first_name, last_name, email, phone, grade, student_id, parent_name, parent_phone, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
+    [first_name, last_name, email || null, phone || null, grade || null, studentId, parent_name || null, parent_phone || null],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      // Insert an application record
+      const sid = this.lastID;
+      db.run(
+        `INSERT INTO applications (student_id, status) VALUES (?, 'PENDING')`,
+        [sid],
+        () => {}
+      );
+      // Notify secretary via push
+      const schema = getSchema();
+      sendPushToRole("Secretary", {
+        title: "New Student Application",
+        body: `${first_name} ${last_name} applied for admission.`,
+        type: "notice", icon: "/favicon.png", tag: "new-student-" + sid, url: "/"
+      }, schema).catch(() => {});
+      res.json({ success: true, message: "Application submitted! The school will contact you soon." });
+    }
+  );
+});

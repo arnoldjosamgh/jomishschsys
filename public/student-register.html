@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Registration</title>
+  <link rel="icon" href="/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(34,197,94,0.08) 0%, transparent 50%);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      animation: fadeUp 0.5s ease;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .logo-area {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      border-radius: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 25px rgba(99,102,241,0.4);
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .section-title {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .field label {
+      display: block; font-size: 0.75rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .field input, .field select {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit; font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    .field select option { background: #1e293b; }
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 24px;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(99,102,241,0.45); }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    /* Success / Error states */
+    .msg-box {
+      border-radius: 12px; padding: 16px 20px;
+      font-size: 0.9rem; font-weight: 500;
+      display: none; align-items: center; gap: 12px; margin-top: 16px;
+    }
+    .msg-box.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .msg-box.success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .msg-box.show { display: flex; }
+    /* Invalid token screen */
+    #invalid-screen { display: none; text-align: center; }
+    #invalid-screen i { font-size: 3rem; color: var(--danger); margin-bottom: 16px; }
+    #invalid-screen h2 { margin-bottom: 8px; }
+    #invalid-screen p { color: var(--muted); font-size: 0.9rem; }
+    /* Success screen */
+    #success-screen { display: none; text-align: center; }
+    #success-screen i { font-size: 3.5rem; color: var(--success); margin-bottom: 16px; animation: pop 0.4s ease; }
+    @keyframes pop { 0%{transform:scale(0);} 70%{transform:scale(1.15);} 100%{transform:scale(1);} }
+    #success-screen h2 { margin-bottom: 8px; }
+    #success-screen p { color: var(--muted); font-size: 0.9rem; }
+    #loading-screen { text-align: center; padding: 40px 0; }
+    .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.1); border-top-color:var(--primary); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-area">
+    <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+    <h1>Student Registration</h1>
+    <p class="subtitle">Fill in the form below to apply for admission</p>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <p style="color:var(--muted)">Verifying registration link…</p>
+  </div>
+
+  <!-- Invalid token -->
+  <div id="invalid-screen">
+    <i class="fa-solid fa-circle-xmark"></i>
+    <h2>Link Invalid or Expired</h2>
+    <p>This registration link is no longer valid. Please contact the school for a new link.</p>
+  </div>
+
+  <!-- Success -->
+  <div id="success-screen">
+    <i class="fa-solid fa-circle-check"></i>
+    <h2>Application Submitted!</h2>
+    <p>Thank you! Your application has been received. The school will contact you soon.</p>
+  </div>
+
+  <!-- Registration Form -->
+  <form id="reg-form" style="display:none;" onsubmit="handleSubmit(event)">
+    <div class="section-title"><i class="fa-solid fa-user"></i> Student Information</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>First Name *</label>
+        <input type="text" id="first_name" required placeholder="e.g. John" />
+      </div>
+      <div class="field">
+        <label>Last Name *</label>
+        <input type="text" id="last_name" required placeholder="e.g. Doe" />
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="student@email.com" />
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" placeholder="+256 700 000 000" />
+      </div>
+      <div class="field full">
+        <label>Class / Grade Applying For</label>
+        <select id="grade">
+          <option value="">-- Select Grade --</option>
+          <option>S1</option><option>S2</option><option>S3</option>
+          <option>S4</option><option>S5</option><option>S6</option>
+          <option>P1</option><option>P2</option><option>P3</option>
+          <option>P4</option><option>P5</option><option>P6</option><option>P7</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="divider" />
+    <div class="section-title"><i class="fa-solid fa-user-tie"></i> Parent / Guardian</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Parent / Guardian Name</label>
+        <input type="text" id="parent_name" placeholder="e.g. Jane Doe" />
+      </div>
+      <div class="field">
+        <label>Parent / Guardian Phone *</label>
+        <input type="tel" id="parent_phone" required placeholder="+256 700 000 000" />
+      </div>
+    </div>
+
+    <div id="error-box" class="msg-box error"><i class="fa-solid fa-triangle-exclamation"></i><span id="error-text"></span></div>
+
+    <button type="submit" class="submit-btn" id="submit-btn">
+      <i class="fa-solid fa-paper-plane"></i> Submit Application
+    </button>
+  </form>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+
+  async function init() {
+    if (!token) { showInvalid(); return; }
+    try {
+      const r = await fetch(`/api/students/reg-token/${token}`);
+      if (!r.ok) { showInvalid(); return; }
+      document.getElementById("loading-screen").style.display = "none";
+      document.getElementById("reg-form").style.display = "block";
+    } catch { showInvalid(); }
+  }
+
+  function showInvalid() {
+    document.getElementById("loading-screen").style.display = "none";
+    document.getElementById("invalid-screen").style.display = "block";
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+    document.getElementById("error-box").classList.remove("show");
+
+    const body = {
+      token,
+      first_name: document.getElementById("first_name").value.trim(),
+      last_name:  document.getElementById("last_name").value.trim(),
+      email:       document.getElementById("email").value.trim(),
+      phone:       document.getElementById("phone").value.trim(),
+      grade:       document.getElementById("grade").value,
+      parent_name: document.getElementById("parent_name").value.trim(),
+      parent_phone:document.getElementById("parent_phone").value.trim(),
+    };
+
+    try {
+      const r = await fetch("/api/students/self-register", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        document.getElementById("error-text").textContent = data.error || "Something went wrong.";
+        document.getElementById("error-box").classList.add("show");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+        return;
+      }
+      document.getElementById("reg-form").style.display = "none";
+      document.getElementById("success-screen").style.display = "block";
+    } catch {
+      document.getElementById("error-text").textContent = "Network error. Please try again.";
+      document.getElementById("error-box").classList.add("show");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
