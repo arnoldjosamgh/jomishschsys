@@ -29,12 +29,17 @@ if (process.env.DATABASE_URL) {
     console.log('[DB] Using DATABASE_URL (Neon/Render Postgres mode).');
 } else if (process.env.DB_TYPE) {
     config.dbType = process.env.DB_TYPE;
-    if (config.dbType === 'postgres' && config.postgres) {
+    if (config.dbType === 'postgres') {
+        config.postgres = config.postgres || {};
         config.postgres.host = process.env.PGHOST || config.postgres.host;
         config.postgres.user = process.env.PGUSER || config.postgres.user;
         config.postgres.password = process.env.PGPASSWORD || config.postgres.password;
         config.postgres.database = process.env.PGDATABASE || config.postgres.database;
         config.postgres.port = process.env.PGPORT || config.postgres.port;
+        // Default to SSL true for cloud (Neon/Render) unless explicitly disabled in config.json
+        if (config.postgres.ssl !== false) {
+            config.postgres.ssl = { rejectUnauthorized: false };
+        }
     }
 }
 
