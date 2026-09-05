@@ -7210,17 +7210,23 @@ async function loadSystemStatus() {
       troubleshootUrl.innerText = window.location.origin;
     }
 
-    const staffCount = document.getElementById("total-staff-status");
-    if (staffCount) {
-      const empRes = await fetch(`${API_URL}/employees`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jomish_token")}`,
-        },
-      });
-      if (empRes.ok) {
-        const empData = await empRes.json();
-        staffCount.innerText = (empData.employees?.length || 0) + " Members";
+    // Staff count — wrapped separately so it never breaks the status update above
+    try {
+      const staffCount = document.getElementById("total-staff-status");
+      if (staffCount) {
+        const empRes = await fetch(`${API_URL}/employees`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jomish_token")}`,
+            "x-company-prefix": localStorage.getItem("jomish_prefix") || "",
+          },
+        });
+        if (empRes.ok) {
+          const empData = await empRes.json();
+          staffCount.innerText = (empData.employees?.length || 0) + " Members";
+        }
       }
+    } catch (empErr) {
+      console.warn("Staff count fetch skipped:", empErr.message);
     }
   } catch (e) {
     console.error("System status fetch failed", e);
@@ -7231,6 +7237,7 @@ async function loadSystemStatus() {
     }
   }
 }
+
 
 async function handleAutoSchedule() {
   // Legacy prompt-based auto-schedule replaced by Smart Scheduler.
