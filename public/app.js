@@ -7702,7 +7702,7 @@ async function loadStudents() {
 
   try {
     const res = await fetch(url, {
-      headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      headers: { Authorization: "Bearer " + localStorage.getItem("jomish_token") },
     });
     if (!res.ok) throw new Error("Failed to load students");
     const students = await res.json();
@@ -7770,7 +7770,7 @@ async function updateStudentStatus(id, status) {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token")
+        Authorization: "Bearer " + localStorage.getItem("jomish_token")
       },
       body: JSON.stringify({ status })
     });
