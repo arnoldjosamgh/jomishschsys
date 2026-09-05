@@ -1402,11 +1402,9 @@ async function loadDashboard() {
       const studEl = document.getElementById("dash-total-students");
       const teachEl = document.getElementById("dash-total-teachers");
       const appEl = document.getElementById("dash-pending-apps");
-      const feesEl = document.getElementById("dash-total-fees");
       if (studEl) studEl.innerText = data.total_students ?? 0;
       if (teachEl) teachEl.innerText = data.total_teachers ?? 0;
       if (appEl) appEl.innerText = data.pending_apps ?? 0;
-      if (feesEl) feesEl.innerText = "UGX " + ((data.total_fees || 0)).toLocaleString();
     }
   } catch (err) {
     console.error("School stats load error:", err);
@@ -1462,9 +1460,8 @@ async function loadPresenceSummary() {
   try {
     const res = await fetchAuth(`${API_URL}/attendance/summary`);
     const data = await res.json();
-    document.getElementById("stat-present-count").innerText = data.present;
-    document.getElementById("stat-sick-count").innerText = data.sick;
-    document.getElementById("stat-total-count").innerText = data.total;
+    const totalEl = document.getElementById("stat-total-count");
+    if (totalEl) totalEl.innerText = data.total;
   } catch (e) {
     console.error("Presence intelligence failure", e);
   }
@@ -7693,7 +7690,7 @@ async function loadStudents() {
   if (!tbody) return;
 
   const statusFilter = document.getElementById("student-status-filter").value;
-  let url = "/api/students";
+  let url = "/api/school/students";
   if (statusFilter) url += `?status=${statusFilter}`;
 
   try {
@@ -10238,6 +10235,7 @@ window.closeCodModal = function () {
 };
 
 window.loadPendingCOD = async function () {
+  return; // COD bubble removed
   try {
     const res = await fetchAuth(`${API_URL}/deliveries/pending-cod`);
     if (res.ok) {

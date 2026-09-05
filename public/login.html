@@ -13,20 +13,20 @@ window.onunhandledrejection = function(e) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Primary Meta Tags -->
-    <title>Sign In - Jomish Business Suite</title>
-    <meta name="title" content="Sign In - Jomish Business Suite">
-    <meta name="description" content="All-in-one business management platform for HR, POS, SME and more.">
+    <title>Sign In - School System</title>
+    <meta name="title" content="Sign In - School System">
+    <meta name="description" content="All-in-one school management platform.">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Sign In - Jomish Business Suite">
-    <meta property="og:description" content="All-in-one business management platform for HR, POS, SME and more.">
+    <meta property="og:title" content="Sign In - School System">
+    <meta property="og:description" content="All-in-one school management platform.">
     <meta property="og:image" content="/favicon.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="Sign In - Jomish Business Suite">
-    <meta property="twitter:description" content="All-in-one business management platform for HR, POS, SME and more.">
+    <meta property="twitter:title" content="Sign In - School System">
+    <meta property="twitter:description" content="All-in-one school management platform.">
     <meta property="twitter:image" content="/favicon.png">
     <link rel="icon" type="image/png" href="favicon.png?v=2">
     <link rel="manifest" href="/manifest.json">
@@ -34,7 +34,7 @@ window.onunhandledrejection = function(e) {
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Jomish">
+    <meta name="apple-mobile-web-app-title" content="SchoolSystem">
     <link rel="apple-touch-icon" href="/favicon.png">
     <script src="kiosk-lock.js"></script>
     <style>
@@ -55,7 +55,7 @@ window.onunhandledrejection = function(e) {
         .brand-section{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;gap:10px}
         .brand-logo-wrap{width:68px;height:68px;background:rgba(0,229,255,0.08);border:1.5px solid rgba(0,229,255,0.2);border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}
         .brand-logo-wrap img#login-logo{display:none;width:100%;height:100%;object-fit:cover;border-radius:16px}
-        .brand-logo-placeholder{font-size:1.8rem}
+        .brand-logo-placeholder{font-size:1.8rem; color: var(--cyan);}
         .brand-name{font-size:1.3rem;font-weight:800;letter-spacing:-.3px;text-align:center;color:var(--text)}
         .brand-name span{background:linear-gradient(135deg,var(--cyan),var(--magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .brand-tagline{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:500}
@@ -92,12 +92,13 @@ window.onunhandledrejection = function(e) {
     <div class="card-wrap">
         <div class="login-card">
             <div class="brand-section">
-                <div class="brand-logo-wrap" id="logo-wrap" style="background:transparent; border:none;">
-                    <img src="favicon.png" alt="Jomish Logo" style="width:100%; height:100%; object-fit:contain; display:block;">
+                <div class="brand-logo-wrap">
+                    <i class="fa-solid fa-school brand-logo-placeholder" id="logo-placeholder"></i>
+                    <img id="login-logo" alt="Company Logo">
                 </div>
                 <div>
-                    <div class="brand-name"><span>Jomish Workforce</span></div>
-                    <div class="brand-tagline">Enterprise Platform</div>
+                    <div class="brand-name"><span>School</span> System</div>
+                    <div class="brand-tagline">Secure Authentication Area</div>
                 </div>
             </div>
 

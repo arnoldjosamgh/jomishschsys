@@ -278,7 +278,17 @@ if (config.dbType === 'postgres') {
                 const prefix = asyncLocalStorage.getStore() || 'public';
                 const activeDb = openSqliteDb(prefix);
                 if (typeof activeDb[method] !== 'function') return undefined;
-                return activeDb[method](...args);
+                
+                const wrappedArgs = args.map(arg => {
+                    if (typeof arg === 'function') {
+                        return function(...cbArgs) {
+                            return asyncLocalStorage.run(prefix, () => arg.apply(this, cbArgs));
+                        };
+                    }
+                    return arg;
+                });
+
+                return activeDb[method](...wrappedArgs);
             };
         }
     });
@@ -410,6 +420,26 @@ const schema = [
         id SERIAL PRIMARY KEY, student_id INTEGER, term TEXT, year TEXT,
         total_score REAL, average_score REAL, position INTEGER,
         pdf_path TEXT, signed_by_dos INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS classes (
+        id SERIAL PRIMARY KEY, name TEXT UNIQUE, grade_level TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS teacher_assignments (
+        id SERIAL PRIMARY KEY, teacher_id INTEGER, class_id INTEGER, subject_id INTEGER,
+        UNIQUE(teacher_id, class_id, subject_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS class_attendance (
+        id SERIAL PRIMARY KEY, student_id INTEGER, class_id INTEGER, subject_id INTEGER,
+        teacher_id INTEGER, date TEXT, status TEXT,
+        UNIQUE(student_id, class_id, subject_id, date)
+    )`,
+    `CREATE TABLE IF NOT EXISTS school_events (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        event_date TEXT,
+        event_type TEXT,
+        description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`
 ];

@@ -6,12 +6,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const teacherBtn = document.querySelector('.nav-btn.teacher-only');
     const accBtn = document.querySelector('.nav-btn.accounts-only');
 
+
     // Single-hub roles — users who only need one focused area
     const singleHubRoles = {
         'DOS':      { btn: dosBtn,     target: 'dos-hub',      label: 'DOS Hub' },
         'Teacher':  { btn: teacherBtn, target: 'teacher-hub',  label: 'Teacher Hub' },
         'Accounts': { btn: accBtn,     target: 'accounts-hub', label: 'Accounts Hub' },
     };
+
+    if (role === 'Secretary' || role === 'Secretary Hub') {
+        // Secretary is not single hub, but they shouldn't see other main tabs 
+        // We handle their nav in app.js or here
+        setTimeout(() => {
+            const tabsToHide = ['dashboard', 'transport-hub', 'accounts-hub', 'dos-hub', 'teacher-hub'];
+            tabsToHide.forEach(tab => {
+                const btn = document.querySelector(`button[data-target="${tab}"]`);
+                if(btn) btn.style.display = 'none';
+            });
+            // Auto click secretary hub if not already there
+            const secBtn = document.querySelector('button[data-target="secretary-hub"]');
+            if(secBtn) secBtn.click();
+        }, 400);
+    }
+
 
     if (singleHubRoles[role]) {
         const { btn, target, label } = singleHubRoles[role];
@@ -102,7 +119,136 @@ window.handleSchoolLogout = function() {
     window.location.replace('login.html');
 };
 
-// View switchers
+
+window.switchSecretaryView = function(viewName) {
+    document.querySelectorAll('.sec-sub-view').forEach(v => v.classList.add('hidden'));
+    const targetView = document.getElementById('sec-' + viewName + '-view');
+    if (targetView) targetView.classList.remove('hidden');
+    
+    document.querySelectorAll('#secretary-hub .nav-btn').forEach(b => b.classList.remove('active'));
+    const targetBtn = document.getElementById('btn-sec-' + viewName);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    if (viewName === 'students') {
+        // Refresh students if needed
+    } else if (viewName === 'timetable') {
+        loadClassTimetable();
+    } else if (viewName === 'calendar') {
+        loadSchoolEvents();
+    }
+};
+
+window.loadSchoolEvents = async function() {
+    const tbody = document.getElementById('school-events-tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading events...</td></tr>';
+    
+    const events = await apiGet('/events');
+    tbody.innerHTML = '';
+    
+    if(!events || events.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No upcoming events.</td></tr>';
+        return;
+    }
+    
+    events.forEach(e => {
+        let typeBadgeColor = 'var(--primary)';
+        if (e.event_type === 'Holiday') typeBadgeColor = 'var(--success)';
+        if (e.event_type === 'Exam Period') typeBadgeColor = 'var(--warning)';
+        if (e.event_type === 'Visitation Day') typeBadgeColor = 'var(--info)';
+        
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${e.event_date}</strong></td>
+                <td>${e.title}</td>
+                <td><span style="background:${typeBadgeColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem;">${e.event_type}</span></td>
+                <td>${e.description || '-'}</td>
+                <td>
+                    <button class="danger-btn sm-btn" onclick="deleteSchoolEvent(${e.id})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+};
+
+window.submitSchoolEvent = async function() {
+    const title = document.getElementById('ev-title').value;
+    const event_date = document.getElementById('ev-date').value;
+    const event_type = document.getElementById('ev-type').value;
+    const description = document.getElementById('ev-desc').value;
+    
+    if (!title || !event_date || !event_type) return alert("Please fill the required fields.");
+    
+    const res = await apiPost('/events', { title, event_date, event_type, description });
+    if (res.success) {
+        alert("Event added!");
+        document.getElementById('form-add-school-event').reset();
+        loadSchoolEvents();
+    } else {
+        alert("Error adding event: " + res.error);
+    }
+};
+
+window.deleteSchoolEvent = async function(id) {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+    const token = localStorage.getItem('jomish_token');
+    const prefix = localStorage.getItem('jomish_prefix') || '';
+    const res = await fetch('/api/school/events/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token, 'x-company-prefix': prefix }
+    });
+    const data = await res.json();
+    if (data.success) {
+        loadSchoolEvents();
+    } else {
+        alert("Error deleting event: " + data.error);
+    }
+};
+
+window.loadClassTimetable = async function() {
+    const table = document.getElementById('school-timetable-table').querySelector('tbody');
+    table.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading timetable...</td></tr>';
+    
+    // In a real app we would call /api/school/timetable
+    // For now we'll mock it based on classes and assignments
+    const assignments = await apiGet('/teacher-assignments');
+    table.innerHTML = '';
+    
+    if(!assignments || assignments.length === 0) {
+        table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No timetable records found.</td></tr>';
+        return;
+    }
+    
+    assignments.forEach(a => {
+        table.innerHTML += `
+            <tr>
+                <td>Any Time (Mock)</td>
+                <td>${a.class_name || 'N/A'}</td>
+                <td>${a.subject_name || 'N/A'}</td>
+                <td>Teacher #${a.teacher_id}</td>
+            </tr>
+        `;
+    });
+};
+
+// --- NEW TEACHER HUB LOGIC ---
+
+window.switchTeacherView = function(viewName) {
+    document.querySelectorAll('.teacher-sub-view').forEach(v => v.classList.add('hidden'));
+    const targetView = document.getElementById('teacher-' + viewName + '-view');
+    if (targetView) targetView.classList.remove('hidden');
+    document.querySelectorAll('#teacher-hub .nav-btn').forEach(b => b.classList.remove('active'));
+    
+    const targetBtn = document.getElementById('btn-teacher-' + viewName);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    if (viewName === 'marks') {
+        loadTeacherClassesForMarks();
+    } else if (viewName === 'notes') {
+        loadStudentsForNotes();
+    }
+};
+
 window.switchDOSView = function(viewName) {
     document.querySelectorAll('.dos-sub-view').forEach(v => v.classList.add('hidden'));
     document.getElementById('dos-' + viewName + '-view').classList.remove('hidden');
@@ -111,123 +257,256 @@ window.switchDOSView = function(viewName) {
     
     if (viewName === 'marks') loadAllMarks();
     if (viewName === 'notes') loadTeacherNotes();
+    if (viewName === 'missing') loadMissingStudents();
 };
 
-window.switchTeacherView = function(viewName) {
-    document.querySelectorAll('.teacher-sub-view').forEach(v => v.classList.add('hidden'));
-    document.getElementById('teacher-' + viewName + '-view').classList.remove('hidden');
-    document.querySelectorAll('#teacher-hub .nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-teacher-' + viewName).classList.add('active');
-};
+// ==========================================
+// Teacher - Upload Marks
+// ==========================================
 
-window.switchAccountsView = function(viewName) {
-    document.querySelectorAll('.acc-sub-view').forEach(v => v.classList.add('hidden'));
-    document.getElementById('acc-' + viewName + '-view').classList.remove('hidden');
-    document.querySelectorAll('#accounts-hub .nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-acc-' + viewName).classList.add('active');
-};
-
-// API Fetch wrappers
-async function apiGet(endpoint) {
-    const token = localStorage.getItem('jomish_token');
-    const prefix = localStorage.getItem('jomish_prefix') || '';
-    const res = await fetch('/api/school' + endpoint, {
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'x-company-prefix': prefix
+window.loadTeacherClassesForMarks = async function() {
+    const teacher_id = localStorage.getItem('jomish_user_id') || 1;
+    const assignments = await apiGet(`/teacher-assignments?teacher_id=${teacher_id}`);
+    
+    const classSelect = document.getElementById('t-class-id');
+    classSelect.innerHTML = '<option value="">-- Select Class --</option>';
+    
+    // Unique classes
+    const uniqueClasses = new Map();
+    assignments.forEach(a => {
+        if (a.class_id && !uniqueClasses.has(a.class_id)) {
+            uniqueClasses.set(a.class_id, { id: a.class_id, name: a.class_name });
         }
     });
-    return res.json();
-}
 
-async function apiPost(endpoint, data) {
-    const token = localStorage.getItem('jomish_token');
-    const prefix = localStorage.getItem('jomish_prefix') || '';
-    const res = await fetch('/api/school' + endpoint, {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'x-company-prefix': prefix,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+    uniqueClasses.forEach(c => {
+        classSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
     });
-    return res.json();
-}
 
-// Teacher Functions
-window.submitMarks = async function() {
-    const student_id = document.getElementById('t-student-id').value;
-    const subject_id = document.getElementById('t-subject-id').value;
-    const term = document.getElementById('t-term').value;
-    const year = document.getElementById('t-year').value;
-    const score = document.getElementById('t-score').value;
-    const grade = document.getElementById('t-grade').value;
+    document.getElementById('t-subject-id').disabled = true;
+    document.getElementById('t-student-id').disabled = true;
+};
+
+window.onTeacherClassChange = async function() {
+    const class_id = document.getElementById('t-class-id').value;
+    const subjectSelect = document.getElementById('t-subject-id');
+    const studentSelect = document.getElementById('t-student-id');
     
-    if (!student_id || !subject_id || !term || !score) {
-        alert("Please fill all required fields");
+    subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+    subjectSelect.disabled = true;
+    studentSelect.disabled = true;
+
+    if (!class_id) return;
+
+    const teacher_id = localStorage.getItem('jomish_user_id') || 1;
+    const assignments = await apiGet(`/teacher-assignments?teacher_id=${teacher_id}&class_id=${class_id}`);
+    
+    // Unique subjects for this class and teacher
+    const uniqueSubjects = new Map();
+    assignments.forEach(a => {
+        if (a.subject_id && !uniqueSubjects.has(a.subject_id)) {
+            uniqueSubjects.set(a.subject_id, { id: a.subject_id, name: a.subject_name });
+        }
+    });
+
+    uniqueSubjects.forEach(s => {
+        subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    });
+
+    subjectSelect.disabled = false;
+};
+
+window.onTeacherSubjectChange = async function() {
+    const class_id = document.getElementById('t-class-id').value;
+    const studentSelect = document.getElementById('t-student-id');
+    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+    studentSelect.disabled = true;
+
+    if (!class_id) return;
+
+    // Load students for this class
+    const students = await apiGet(`/students/by-class?class_id=${class_id}`);
+    students.forEach(s => {
+        studentSelect.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.id})</option>`;
+    });
+
+    studentSelect.disabled = false;
+};
+
+// ==========================================
+// Teacher - Roll Call
+// ==========================================
+
+let currentRollCall = null;
+
+window.startAutoRollCall = async function() {
+    const teacher_id = localStorage.getItem('jomish_user_id') || 1;
+    const res = await apiGet(`/rollcall/active?teacher_id=${teacher_id}`);
+    
+    if (res.error) {
+        alert(res.error);
+        return;
+    }
+
+    currentRollCall = res;
+    
+    document.getElementById('rollcall-manual-pickers').style.display = 'none';
+    document.getElementById('rollcall-session-info').style.display = 'block';
+    document.getElementById('rollcall-session-text').innerHTML = `Auto-detected from Timetable: <strong>${res.class_name}</strong> - <strong>${res.subject_name}</strong>`;
+    
+    loadRollCallStudents(res.class_id);
+};
+
+window.startManualRollCall = async function() {
+    currentRollCall = null;
+    document.getElementById('rollcall-session-info').style.display = 'none';
+    document.getElementById('rollcall-student-list').style.display = 'none';
+    
+    const pickers = document.getElementById('rollcall-manual-pickers');
+    pickers.style.display = 'block';
+    
+    // Load classes
+    const classes = await apiGet('/classes');
+    const classSelect = document.getElementById('rc-class-id');
+    classSelect.innerHTML = '<option value="">-- Select Class --</option>';
+    classes.forEach(c => {
+        classSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    });
+    
+    // Load subjects
+    const subjects = await apiGet('/subjects');
+    const subjectSelect = document.getElementById('rc-subject-id');
+    subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+    subjects.forEach(s => {
+        subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    });
+};
+
+window.loadStudentRollCallList = async function() {
+    const class_id = document.getElementById('rc-class-id').value;
+    const subject_id = document.getElementById('rc-subject-id').value;
+    
+    if (!class_id || !subject_id) return;
+    
+    currentRollCall = { class_id, subject_id };
+    loadRollCallStudents(class_id);
+};
+
+window.loadRollCallStudents = async function(class_id) {
+    const students = await apiGet(`/students/by-class?class_id=${class_id}`);
+    const container = document.getElementById('rollcall-students-container');
+    container.innerHTML = '';
+    
+    if (students.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:var(--text-muted);">No students found in this class.</div>';
+    } else {
+        students.forEach(s => {
+            container.innerHTML += `
+                <div class="rollcall-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border);">
+                    <div style="font-weight:600; color:var(--text);">${s.first_name} ${s.last_name} <span style="color:var(--text-muted); font-size:0.8rem; font-weight:400; margin-left:8px;">ID: ${s.id}</span></div>
+                    <div>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text); font-size:0.85rem;">
+                            <input type="checkbox" class="rollcall-checkbox" data-student-id="${s.id}" style="width:18px; height:18px; accent-color:var(--primary);">
+                            Present
+                        </label>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    document.getElementById('rollcall-student-list').style.display = 'block';
+};
+
+window.markAllPresent = function() {
+    document.querySelectorAll('.rollcall-checkbox').forEach(cb => cb.checked = true);
+};
+
+window.submitRollCall = async function() {
+    if (!currentRollCall || !currentRollCall.class_id || !currentRollCall.subject_id) {
+        return alert("Missing class or subject info.");
+    }
+    
+    const teacher_id = localStorage.getItem('jomish_user_id') || 1;
+    const attendance_records = [];
+    
+    document.querySelectorAll('.rollcall-checkbox').forEach(cb => {
+        const student_id = cb.getAttribute('data-student-id');
+        const status = cb.checked ? 'PRESENT' : 'ABSENT';
+        attendance_records.push({ student_id, status });
+    });
+    
+    if (attendance_records.length === 0) return alert("No students in list.");
+    
+    const payload = {
+        class_id: currentRollCall.class_id,
+        subject_id: currentRollCall.subject_id,
+        teacher_id,
+        attendance_records
+    };
+    
+    const res = await apiPost('/rollcall', payload);
+    if (res.success) {
+        alert("Roll call submitted successfully!");
+        document.getElementById('rollcall-student-list').style.display = 'none';
+        document.getElementById('rollcall-session-info').style.display = 'none';
+        document.getElementById('rollcall-manual-pickers').style.display = 'none';
+    } else {
+        alert("Error: " + res.error);
+    }
+};
+
+window.loadStudentsForNotes = async function() {
+    const select = document.getElementById('t-note-student');
+    const students = await apiGet('/students');
+    select.innerHTML = '<option value="">-- Select Student --</option>';
+    students.forEach(s => {
+        select.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.id})</option>`;
+    });
+};
+
+// ==========================================
+// DOS - Missing Students
+// ==========================================
+
+window.loadMissingStudents = async function() {
+    let date = document.getElementById('dos-missing-date').value;
+    if (!date) {
+        date = new Date().toISOString().split('T')[0];
+        document.getElementById('dos-missing-date').value = date;
+    }
+    
+    const missing = await apiGet(`/missing-students?date=${date}`);
+    const summary = document.getElementById('dos-missing-summary');
+    const tbody = document.querySelector('#dos-missing-table tbody');
+    
+    summary.innerHTML = `
+        <div style="background:rgba(239,68,68,0.1); padding:10px 15px; border-radius:8px; border:1px solid rgba(239,68,68,0.2);">
+            <div style="font-size:1.5rem; font-weight:800; color:#ef4444;">${missing.length}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Total Missing Today</div>
+        </div>
+    `;
+    
+    tbody.innerHTML = '';
+    
+    if (missing.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No missing students reported.</td></tr>';
         return;
     }
     
-    // Process optional exam photo
-    let exam_photo_base64 = null;
-    const fileInput = document.getElementById('t-exam-photo');
-    if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            exam_photo_base64 = e.target.result;
-            sendMarksRequest(exam_photo_base64);
-        };
-        reader.readAsDataURL(file);
-    } else {
-        sendMarksRequest(null);
-    }
-
-    async function sendMarksRequest(photoBase64) {
-        // Hardcode teacher ID or grab from token/localstorage in real app
-        const teacher_id = localStorage.getItem('jomish_user_id') || 1;
-        
-        const res = await apiPost('/marks', { student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64: photoBase64 });
-        if (res.success) {
-            alert("Marks submitted successfully!");
-            document.getElementById('t-student-id').value = '';
-            document.getElementById('t-score').value = '';
-            if (fileInput) fileInput.value = '';
-        } else {
-            alert("Error: " + res.error);
-        }
-    }
+    missing.forEach(m => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${m.first_name} ${m.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">(#${m.student_id})</span></td>
+                <td>${m.class_name || 'N/A'}</td>
+                <td>${m.subject_name || 'N/A'}</td>
+                <td>${new Date(m.date).toLocaleString()}</td>
+            </tr>
+        `;
+    });
 };
 
-window.clockStudent = async function(type) {
-    const barcode = document.getElementById('t-barcode').value;
-    if (!barcode) return alert("Enter barcode");
-    const res = await apiPost('/attendance/clock', { barcode, type });
-    if (res.success) {
-        alert("Attendance recorded: " + type);
-        document.getElementById('t-barcode').value = '';
-    } else {
-        alert("Error: " + res.error);
-    }
-};
-
-window.sendNoteToDOS = async function() {
-    const student_id = document.getElementById('t-note-student').value;
-    const note_text = document.getElementById('t-note-text').value;
-    const teacher_id = localStorage.getItem('jomish_user_id') || 1;
-    
-    if (!student_id || !note_text) return alert("Fill all fields");
-    
-    const res = await apiPost('/notes', { student_id, teacher_id, note_text });
-    if (res.success) {
-        alert("Note sent to DOS");
-        document.getElementById('t-note-student').value = '';
-        document.getElementById('t-note-text').value = '';
-    } else {
-        alert("Error: " + res.error);
-    }
-};
 
 // DOS Functions
 window.generateReports = async function() {
