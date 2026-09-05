@@ -559,14 +559,23 @@ app.post("/api/login", (req, res) => {
           ? parseInt(actualUsername)
           : null;
 
-        let query = `SELECT id, first_name, last_name, email, username, password, role, is_active,
-                COALESCE(is_suspended, 0) as is_suspended,
-                can_see_dashboard, can_see_hr, can_see_attendance, can_see_sme, can_see_pos,
-                can_see_secretary, can_see_transport, can_see_hardware, can_see_system_users, can_see_schedules
-                FROM employees WHERE username = ? OR email = ?`;
+        let query = `SELECT u.id, u.first_name, u.last_name, u.email, u.username, u.password, u.role, u.is_active,
+                0 as is_suspended,
+                (CASE WHEN u.role IN ('Headteacher', 'Admin', 'CEO') THEN 1 ELSE 0 END) as can_see_dashboard,
+                (CASE WHEN u.role IN ('Headteacher', 'Admin', 'HR', 'CEO') THEN 1 ELSE 0 END) as can_see_hr,
+                1 as can_see_attendance,
+                0 as can_see_sme,
+                0 as can_see_pos,
+                (CASE WHEN u.role IN ('Headteacher', 'Admin', 'Secretary', 'CEO') THEN 1 ELSE 0 END) as can_see_secretary,
+                0 as can_see_transport,
+                0 as can_see_hardware,
+                0 as can_see_system_users,
+                (CASE WHEN u.role IN ('Headteacher', 'Admin', 'DOS', 'Teacher', 'CEO') THEN 1 ELSE 0 END) as can_see_schedules
+                FROM users u
+                WHERE u.username = ? OR u.email = ?`;
         let params = [actualUsername, actualUsername];
         if (numericId !== null) {
-          query += ` OR id = ?`;
+          query += ` OR u.id = ?`;
           params.push(numericId);
         }
 
@@ -576,13 +585,23 @@ app.post("/api/login", (req, res) => {
             return res.status(500).json({ error: "Database error" });
           }
           if (!user && numericPart) {
-            // Fallback: try the numeric-only part (e.g. user typed "00001" instead of "SAL00001")
+            // Fallback: try the numeric-only part (e.g. user typed "00001" instead of "SCH00001")
             const numericId2 = parseInt(numericPart);
             db.get(
-              `SELECT id, first_name, last_name, email, username, password, role, is_active, COALESCE(is_suspended, 0) as is_suspended,
-                         can_see_dashboard, can_see_hr, can_see_attendance, can_see_sme, can_see_pos,
-                         can_see_secretary, can_see_transport, can_see_hardware, can_see_system_users, can_see_schedules
-                         FROM employees WHERE username = ? OR (id = ?)`,
+              `SELECT u.id, u.first_name, u.last_name, u.email, u.username, u.password, u.role, u.is_active, 
+                         0 as is_suspended,
+                         (CASE WHEN u.role IN ('Headteacher', 'Admin', 'CEO') THEN 1 ELSE 0 END) as can_see_dashboard,
+                         (CASE WHEN u.role IN ('Headteacher', 'Admin', 'HR', 'CEO') THEN 1 ELSE 0 END) as can_see_hr,
+                         1 as can_see_attendance,
+                         0 as can_see_sme,
+                         0 as can_see_pos,
+                         (CASE WHEN u.role IN ('Headteacher', 'Admin', 'Secretary', 'CEO') THEN 1 ELSE 0 END) as can_see_secretary,
+                         0 as can_see_transport,
+                         0 as can_see_hardware,
+                         0 as can_see_system_users,
+                         (CASE WHEN u.role IN ('Headteacher', 'Admin', 'DOS', 'Teacher', 'CEO') THEN 1 ELSE 0 END) as can_see_schedules
+                         FROM users u 
+                         WHERE u.username = ? OR (u.id = ?)`,
               [numericPart, numericId2],
               async (err2, user2) => {
                 if (err2 || !user2)
