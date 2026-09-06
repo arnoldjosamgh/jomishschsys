@@ -11,6 +11,30 @@ const { AsyncLocalStorage } = require('async_hooks');
 
 const asyncLocalStorage = new AsyncLocalStorage();
 
+// ---- Manual .env loader (no dotenv package required) ----
+// Reads KEY=VALUE pairs from .env in the project root and injects them
+// into process.env only if not already set (so Render/Heroku env vars win).
+try {
+    const envPath = path.join(__dirname, '..', '.env');
+    if (fs.existsSync(envPath)) {
+        const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            const eqIdx = trimmed.indexOf('=');
+            if (eqIdx === -1) continue;
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^[\'"](.*)[\'"]$/, '$1');
+            if (key && !(key in process.env)) {
+                process.env[key] = val;
+            }
+        }
+        console.log('[DB] Loaded .env file.');
+    }
+} catch (e) {
+    console.log('[DB] Could not load .env file:', e.message);
+}
+
 // Load Config
 let config = { dbType: 'sqlite' };
 try {

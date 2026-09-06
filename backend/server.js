@@ -237,9 +237,7 @@ const authenticateToken = (req, res, next) => {
 
 // ==== UNIFIED API ROUTES ====
 
-app.get("/api/system/status", (req, res) => {
-  res.json({ dbType: "sqlite", status: "online" });
-});
+
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PUSH NOTIFICATION ROUTES
