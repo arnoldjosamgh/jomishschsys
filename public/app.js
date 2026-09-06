@@ -7697,13 +7697,11 @@ async function loadStudents() {
   if (!tbody) return;
 
   const statusFilter = document.getElementById("student-status-filter").value;
-  let url = "/api/school/students";
+  let url = `${API_URL}/students`;
   if (statusFilter) url += `?status=${statusFilter}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: "Bearer " + localStorage.getItem("jomish_token") },
-    });
+    const res = await fetchAuth(url);
     if (!res.ok) throw new Error("Failed to load students");
     const students = await res.json();
     
@@ -7766,12 +7764,9 @@ async function loadStudents() {
 async function updateStudentStatus(id, status) {
   if (!confirm(`Are you sure you want to mark this application as ${status}?`)) return;
   try {
-    const res = await fetch(`/api/students/${id}/status`, {
+    const res = await fetchAuth(`${API_URL}/students/${id}/status`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("jomish_token")
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status })
     });
     const data = await res.json();
@@ -7790,9 +7785,8 @@ async function updateStudentStatus(id, status) {
 async function deleteStudent(id) {
   if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) return;
   try {
-    const res = await fetch(`/api/students/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    const res = await fetchAuth(`${API_URL}/students/${id}`, {
+      method: "DELETE"
     });
     if (res.ok) {
       loadStudents();
@@ -7832,11 +7826,10 @@ async function submitAddStudent(e) {
   };
 
   try {
-    const res = await fetch("/api/students", {
+    const res = await fetchAuth(`${API_URL}/students`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token")
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(body)
     });
@@ -7862,9 +7855,8 @@ async function generateRegLink() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("/api/students/reg-link", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    const res = await fetchAuth(`${API_URL}/students/reg-link`, {
+      method: "POST"
     });
     const data = await res.json();
     if (res.ok) {

@@ -1,3 +1,30 @@
+// Missing API helpers required for school modules
+window.apiGet = async function(endpoint) {
+    try {
+        const res = await window.fetchAuth(window.API_URL + '/school' + endpoint);
+        if (!res.ok) throw new Error("API Get Failed");
+        return await res.json();
+    } catch (e) {
+        console.error("apiGet Error on " + endpoint, e);
+        return [];
+    }
+};
+
+window.apiPost = async function(endpoint, body) {
+    try {
+        const res = await window.fetchAuth(window.API_URL + '/school' + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("API Post Failed");
+        return await res.json();
+    } catch (e) {
+        console.error("apiPost Error on " + endpoint, e);
+        return { error: e.message };
+    }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     const role = localStorage.getItem("jomish_role");
     const userName = localStorage.getItem("jomish_name") || role;
@@ -130,11 +157,11 @@ window.switchSecretaryView = function(viewName) {
     if (targetBtn) targetBtn.classList.add('active');
 
     if (viewName === 'students') {
-        // Refresh students if needed
+        if (typeof loadStudents === 'function') loadStudents();
     } else if (viewName === 'timetable') {
-        loadClassTimetable();
+        if (typeof loadClassTimetable === 'function') loadClassTimetable();
     } else if (viewName === 'calendar') {
-        loadSchoolEvents();
+        if (typeof loadSchoolEvents === 'function') loadSchoolEvents();
     }
 };
 
@@ -394,7 +421,7 @@ window.loadStudentRollCallList = async function() {
 };
 
 window.loadRollCallStudents = async function(class_id) {
-    const students = await apiGet(`/students/by-class?class_id=${class_id}`);
+    const students = await apiGet(`/students?class_id=${class_id}`);
     const container = document.getElementById('rollcall-students-container');
     container.innerHTML = '';
     
