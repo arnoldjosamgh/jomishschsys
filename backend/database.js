@@ -161,11 +161,15 @@ if (config.dbType === 'postgres') {
         const client = await pool.connect();
         try {
             await client.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-            // Run initialization in this new schema
-            await new Promise((resolve) => {
+            // Run initialization in this new schema and WAIT for all tables to be created
+            await new Promise((resolve, reject) => {
                 asyncLocalStorage.run(schemaName, () => {
-                    initDb();
-                    resolve();
+                    const p = initDb();
+                    if (p && typeof p.then === 'function') {
+                        p.then(resolve).catch(reject);
+                    } else {
+                        setTimeout(resolve, 1500); // fallback
+                    }
                 });
             });
         } finally {
@@ -472,18 +476,22 @@ function initDb() {
     const currentSchema = (typeof asyncLocalStorage !== 'undefined' ? asyncLocalStorage.getStore() : null) || 'public';
     
     if (config.dbType === 'postgres') {
-        let i = 0;
-        function nextTable() {
-            if (i >= schema.length) {
-                checkMigrations();
-                return;
+        // Return a Promise that resolves when ALL tables are created
+        return new Promise((resolve) => {
+            let i = 0;
+            function nextTable() {
+                if (i >= schema.length) {
+                    checkMigrations();
+                    resolve();
+                    return;
+                }
+                db.run(schema[i++], [], (err) => {
+                    if (err) console.error(`[DB Init Error]`, err.message);
+                    nextTable();
+                });
             }
-            db.run(schema[i++], [], (err) => {
-                if (err) console.error(`[DB Init Error]`, err.message);
-                nextTable();
-            });
-        }
-        nextTable();
+            nextTable();
+        });
     } else {
         db.serialize(() => {
             schema.forEach(sql => {
@@ -494,6 +502,7 @@ function initDb() {
             });
             checkMigrations();
         });
+        return Promise.resolve();
     }
 }
 
