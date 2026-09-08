@@ -23,10 +23,12 @@ async function seedDemoTenant(db, asyncLocalStorage) {
     
     await new Promise((resolve) => {
         const runSeed = () => {
-            // Check if already seeded by counting products
+            // First check if the 'products' table exists — this is a business suite table.
+            // If it doesn't exist (e.g. school management system), skip seeding entirely.
             db.get(`SELECT COUNT(*) as cnt FROM products WHERE name LIKE 'Demo%'`, [], (err, row) => {
                 if (err) {
-                    console.error('[SEED] Error checking products:', err.message);
+                    // Table doesn't exist — this is a school system or other non-business-suite app.
+                    // Skip silently — no error logging needed.
                     return resolve();
                 }
                 if (row && row.cnt > 0) {
@@ -50,18 +52,18 @@ async function seedDemoTenant(db, asyncLocalStorage) {
                         [emp.first_name, emp.last_name, emp.role, emp.is_active]);
                 });
 
-                // 2. Insert Demo Products (using correct column names)
+                // 2. Insert Demo Products
                 const products = [
-                    { name: 'Demo - Wireless Mouse', sku: 'WM-01', price: 25.99, stock: 150, category: 'Electronics' },
-                    { name: 'Demo - Mechanical Keyboard', sku: 'MK-02', price: 89.50, stock: 45, category: 'Electronics' },
-                    { name: 'Demo - Ergonomic Chair', sku: 'EC-03', price: 199.99, stock: 12, category: 'Furniture' },
-                    { name: 'Demo - Standing Desk', sku: 'SD-04', price: 350.00, stock: 8, category: 'Furniture' },
-                    { name: 'Demo - Noise Cancelling Headphones', sku: 'NCH-05', price: 120.00, stock: 30, category: 'Electronics' },
-                    { name: 'Demo - Coffee Mug', sku: 'CM-06', price: 12.50, stock: 200, category: 'Office Supplies' },
-                    { name: 'Demo - Notebook 5-pack', sku: 'NB-07', price: 15.00, stock: 100, category: 'Office Supplies' },
-                    { name: 'Demo - Gel Pens (Box of 12)', sku: 'GP-08', price: 8.99, stock: 85, category: 'Office Supplies' },
-                    { name: 'Demo - Desk Lamp', sku: 'DL-09', price: 34.00, stock: 25, category: 'Furniture' },
-                    { name: 'Demo - USB-C Hub', sku: 'UH-10', price: 45.00, stock: 60, category: 'Electronics' }
+                    { name: 'Demo - Wireless Mouse', price: 25.99, stock: 150, category: 'Electronics' },
+                    { name: 'Demo - Mechanical Keyboard', price: 89.50, stock: 45, category: 'Electronics' },
+                    { name: 'Demo - Ergonomic Chair', price: 199.99, stock: 12, category: 'Furniture' },
+                    { name: 'Demo - Standing Desk', price: 350.00, stock: 8, category: 'Furniture' },
+                    { name: 'Demo - Noise Cancelling Headphones', price: 120.00, stock: 30, category: 'Electronics' },
+                    { name: 'Demo - Coffee Mug', price: 12.50, stock: 200, category: 'Office Supplies' },
+                    { name: 'Demo - Notebook 5-pack', price: 15.00, stock: 100, category: 'Office Supplies' },
+                    { name: 'Demo - Gel Pens (Box of 12)', price: 8.99, stock: 85, category: 'Office Supplies' },
+                    { name: 'Demo - Desk Lamp', price: 34.00, stock: 25, category: 'Furniture' },
+                    { name: 'Demo - USB-C Hub', price: 45.00, stock: 60, category: 'Electronics' }
                 ];
                 
                 products.forEach(p => {
@@ -69,7 +71,7 @@ async function seedDemoTenant(db, asyncLocalStorage) {
                         [p.name, p.category, p.price, p.stock]);
                 });
 
-                // 3. Insert Demo Transactions using CORRECT columns: type, description, recorded_by
+                // 3. Insert Demo Transactions
                 const now = new Date();
                 const txTypes = ['INCOME', 'INCOME', 'INCOME', 'EXPENSE', 'INCOME'];
                 const txDescs = ['POS Sale', 'Product Sale', 'Service Revenue', 'Operating Expense', 'Delivery Income'];
@@ -78,15 +80,12 @@ async function seedDemoTenant(db, asyncLocalStorage) {
                     const txDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
                     const amount = parseFloat((Math.random() * 500 + 10).toFixed(2));
                     const typeIdx = Math.floor(Math.random() * txTypes.length);
-                    const txType = txTypes[typeIdx];
-                    const txDesc = txDescs[typeIdx];
-                    const recordedBy = Math.floor(Math.random() * 5) + 1;
                     
                     db.run(`INSERT INTO transactions (amount, type, description, recorded_by, transaction_date, payment_status) VALUES (?, ?, ?, ?, ?, ?)`, 
-                        [amount, txType, txDesc, recordedBy, txDate.toISOString(), 'PAID']);
+                        [amount, txTypes[typeIdx], txDescs[typeIdx], Math.floor(Math.random() * 5) + 1, txDate.toISOString(), 'PAID']);
                 }
 
-                // 4. Insert Demo Attendance using CORRECT table and columns: attendance_logs
+                // 4. Insert Demo Attendance
                 for (let empId = 1; empId <= 5; empId++) {
                     for (let d = 0; d < 7; d++) {
                         const dayDate = new Date(now.getTime() - (d * 24 * 60 * 60 * 1000));

@@ -5803,15 +5803,17 @@ server
       }
     }
 
-    // Migration: add nickname column if it doesn't exist yet
-    db.run(`ALTER TABLE employees ADD COLUMN nickname TEXT`, (err) => {
-      if (err && !(err.message || "").includes("duplicate column")) {
-        console.warn("[MIGRATION] nickname column:", err.message);
-      } else if (!err) {
-        console.log(
-          "[MIGRATION] employees.nickname column added successfully.",
-        );
-      }
+    // Migration: add nickname column to employees if the table exists
+    // (school management system does not have an employees table — skip silently)
+    db.get(`SELECT 1 FROM information_schema.tables WHERE table_name = 'employees' AND table_schema = current_schema()`, [], (err, row) => {
+      if (err || !row) return; // table doesn't exist — skip
+      db.run(`ALTER TABLE employees ADD COLUMN nickname TEXT`, (err2) => {
+        if (err2 && !(err2.message || "").includes("duplicate column") && !(err2.message || "").includes("already exists")) {
+          console.warn("[MIGRATION] nickname column:", err2.message);
+        } else if (!err2) {
+          console.log("[MIGRATION] employees.nickname column added successfully.");
+        }
+      });
     });
 
 
