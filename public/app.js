@@ -7193,14 +7193,27 @@ async function validateSession() {
 }
 
 async function loadSystemStatus() {
+  // Helper to attempt the status fetch with a single retry on failure
+  async function tryFetch(url, attempts = 2) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const r = await fetch(url);
+        if (r.ok) return r;
+      } catch (e) {
+        if (i < attempts - 1) await new Promise(res => setTimeout(res, 2000));
+      }
+    }
+    return null;
+  }
+
   try {
-    const res = await fetch(`${API_URL}/system/status`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await tryFetch(`${API_URL}/system/status`);
+    if (!res) throw new Error("No response from server");
     const data = await res.json();
     const dbStatus = document.getElementById("db-type-status");
     if (dbStatus) {
       const dbType = (data.dbType || "sqlite").toUpperCase();
-      dbStatus.innerText = dbType + " Engine — Connected";
+      dbStatus.innerText = dbType + " Engine \u2014 Connected";
       dbStatus.style.color = data.dbType === "postgres" ? "#10B981" : "#4F46E5";
     }
 
@@ -7210,23 +7223,33 @@ async function loadSystemStatus() {
       troubleshootUrl.innerText = window.location.origin;
     }
 
-    // Staff count — wrapped separately so it never breaks the status update above
+    // Staff count — use /api/users (school schema) instead of /api/employees (business suite)
     try {
       const staffCount = document.getElementById("total-staff-status");
       if (staffCount) {
-        const empRes = await fetch(`${API_URL}/employees`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jomish_token")}`,
-            "x-company-prefix": localStorage.getItem("jomish_prefix") || "",
-          },
+        const token = localStorage.getItem("jomish_token");
+        const prefix = localStorage.getItem("jomish_prefix") || "";
+        // Try /api/users first (school system), fall back to /api/employees (business suite)
+        let count = null;
+        const usersRes = await fetch(`${API_URL}/users`, {
+          headers: { Authorization: `Bearer ${token}`, "x-company-prefix": prefix },
         });
-        if (empRes.ok) {
-          const empData = await empRes.json();
-          staffCount.innerText = (empData.employees?.length || 0) + " Members";
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          count = (usersData.users?.length || usersData.length || 0);
+        } else {
+          const empRes = await fetch(`${API_URL}/employees`, {
+            headers: { Authorization: `Bearer ${token}`, "x-company-prefix": prefix },
+          });
+          if (empRes.ok) {
+            const empData = await empRes.json();
+            count = (empData.employees?.length || 0);
+          }
         }
+        if (count !== null) staffCount.innerText = count + " Members";
       }
-    } catch (empErr) {
-      console.warn("Staff count fetch skipped:", empErr.message);
+    } catch (staffErr) {
+      console.warn("Staff count fetch skipped:", staffErr.message);
     }
   } catch (e) {
     console.error("System status fetch failed", e);
@@ -7237,6 +7260,7 @@ async function loadSystemStatus() {
     }
   }
 }
+
 
 
 async function handleAutoSchedule() {

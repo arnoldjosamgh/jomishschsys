@@ -113,15 +113,8 @@ setInterval(
   10 * 60 * 1000,
 );
 
-// 0. System Diagnostics
-app.get("/api/system/status", (req, res) => {
-  // Return DB info and app version
-  res.json({
-    dbType: config.dbType || "sqlite",
-    version: "1.0.0 (Enterprise)",
-    host: os.hostname(),
-  });
-});
+// 0. System Diagnostics — moved BELOW cors() middleware so CORS headers are included
+// (placeholder — real route defined after app.use(cors()) below)
 
 // GLOBAL CRASH PROTECTION
 process.on("uncaughtException", (err) => {
@@ -137,6 +130,15 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Note: /api/system/restore uses raw streaming (req.on('data')), bypassing json middleware
 // Express limits above do not affect raw binary uploads to that endpoint.
+
+// System Diagnostics (placed AFTER cors() so CORS headers are present for browser fetches)
+app.get("/api/system/status", (req, res) => {
+  res.json({
+    dbType: config.dbType || "sqlite",
+    version: "1.0.0 (Enterprise)",
+    host: os.hostname(),
+  });
+});
 
 // Security headers
 app.use((req, res, next) => {
@@ -2835,8 +2837,21 @@ app.post("/api/shifts/toggle", authenticateToken, (req, res) => {
     );
   }
 });
+// GET /api/users — list all active school staff (school-system equivalent of /api/employees)
+app.get("/api/users", authenticateToken, (req, res) => {
+  db.all(
+    `SELECT id, first_name, last_name, email, username, role, department, is_active, user_code
+     FROM users WHERE (is_active IS NULL OR is_active = 1) ORDER BY first_name`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ users: rows });
+    },
+  );
+});
 
 app.patch("/api/users/:id/credentials", authenticateToken, async (req, res) => {
+
   if (req.user.role !== "CEO" && req.user.role !== "HR")
     return res.status(403).json({ error: "Forbidden" });
   const { id } = req.params;
@@ -3167,15 +3182,17 @@ app.post("/api/employees/sick", authenticateToken, (req, res) => {
 });
 
 app.get("/api/attendance/summary", authenticateToken, (req, res) => {
+  // Use users table (school schema) — school system has no 'employees' table.
+  // Returns active user count as 'total'; present/sick are not tracked the same way.
   db.get(
-    `SELECT 
-        (SELECT COUNT(*) FROM employees WHERE is_active = 1) as total,
-        (SELECT COUNT(*) FROM employees WHERE is_present = 1) as present,
-        (SELECT COUNT(*) FROM employees WHERE is_sick = 1) as sick`,
+    `SELECT
+        (SELECT COUNT(*) FROM users WHERE (is_active IS NULL OR is_active = 1)) as total,
+        0 as present,
+        0 as sick`,
     [],
     (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(row);
+      res.json(row || { total: 0, present: 0, sick: 0 });
     },
   );
 });
