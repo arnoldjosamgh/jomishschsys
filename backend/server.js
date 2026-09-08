@@ -965,10 +965,10 @@ app.post("/api/system/initialize", async (req, res) => {
           [],
           () => {
             db.run(
-              `INSERT INTO companies (prefix, name) VALUES (?, ?)`,
+              `INSERT INTO companies (prefix, name) VALUES (?, ?) ON CONFLICT(prefix) DO NOTHING`,
               [prefix, company_name],
               (err) => {
-                if (err && !err.message.includes("UNIQUE")) return reject(err);
+                if (err) return reject(err);
                 resolve();
               },
             );
@@ -979,44 +979,51 @@ app.post("/api/system/initialize", async (req, res) => {
 
     // 3. Provision the first tech/admin user in the new tenant schema
     const schemaName = "t_" + prefix.toLowerCase();
-    asyncLocalStorage.run(schemaName, async () => {
-      const techUserId = `${prefix}00001`;
-      const defaultPassword = "Admin";
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    // Hash BEFORE entering asyncLocalStorage.run — await breaks ALS context
+    const techUserId = `${prefix}00001`;
+    const defaultPassword = "Admin";
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-      // Create the Tech Support user
-      db.run(
-        `INSERT INTO employees (first_name, last_name, email, username, role, department, salary, password, employee_code, is_active)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-        [
-          "HR",
-          "Admin",
-          business_email,
-          techUserId,
-          "HR",
-          "Administration",
-          0,
-          hashedPassword,
-          techUserId,
-        ],
-        function (insertErr) {
-          if (insertErr)
-            return res.status(500).json({ error: insertErr.message });
+    await new Promise((resolve, reject) => {
+      asyncLocalStorage.run(schemaName, () => {
+        // Create the Tech Support user
+        db.run(
+          `INSERT INTO users (first_name, last_name, email, username, role, department, password, user_code, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+                 ON CONFLICT(username) DO NOTHING`,
+          [
+            "HR",
+            "Admin",
+            business_email,
+            techUserId,
+            "System Technician",
+            "Administration",
+            hashedPassword,
+            techUserId,
+          ],
+          function (insertErr) {
+            if (insertErr && !insertErr.message.includes("duplicate"))
+              return reject(insertErr);
 
-          // Seed ALL standard roles with full permissions for the new company schema
-          const allRoles = [
-            ["CEO", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            ["Admin", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            ["HR", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            ["System Technician", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            ["Supervisor", 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-            ["Cashier", 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            ["Security", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-            ["Receptionist", 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-          ];
-          allRoles.forEach((r) => {
-            db.run(
-              `INSERT INTO roles_config (role_name, can_see_dashboard, can_see_hr, can_see_attendance, can_see_sme, can_see_pos, can_see_secretary, can_see_transport, can_see_hardware, can_see_system_users, can_see_schedules)
+            // Seed ALL standard roles with full permissions for the new company schema
+            const allRoles = [
+              ["CEO", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              ["Admin", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              ["HR", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              ["System Technician", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              ["Supervisor", 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+              ["Cashier", 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+              ["Security", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+              ["Receptionist", 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+              ["Headteacher", 1, 1, 1, 0, 0, 1, 0, 0, 0, 1],
+              ["Teacher", 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+              ["DOS", 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+              ["Secretary", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+              ["Accounts", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            ];
+            allRoles.forEach((r) => {
+              db.run(
+                `INSERT INTO roles_config (role_name, can_see_dashboard, can_see_hr, can_see_attendance, can_see_sme, can_see_pos, can_see_secretary, can_see_transport, can_see_hardware, can_see_system_users, can_see_schedules)
                              VALUES (?,?,?,?,?,?,?,?,?,?,?)
                              ON CONFLICT(role_name) DO UPDATE SET
                              can_see_dashboard=excluded.can_see_dashboard, can_see_hr=excluded.can_see_hr,
@@ -1024,34 +1031,37 @@ app.post("/api/system/initialize", async (req, res) => {
                              can_see_pos=excluded.can_see_pos, can_see_secretary=excluded.can_see_secretary,
                              can_see_transport=excluded.can_see_transport, can_see_hardware=excluded.can_see_hardware,
                              can_see_system_users=excluded.can_see_system_users, can_see_schedules=excluded.can_see_schedules`,
-              r,
+                r,
+              );
+            });
+
+            // Save business name and prefix to settings
+            const upsertSetting = (key, value) => {
+              db.run(
+                `INSERT INTO app_settings (setting_key, setting_value) VALUES (?, ?) ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value`,
+                [key, value],
+              );
+            };
+
+            upsertSetting("business_name", company_name);
+            upsertSetting("business_email", business_email);
+            upsertSetting("company_prefix", prefix);
+            upsertSetting("next_employee_number", "2");
+
+            console.log(
+              `[INIT] Company "${company_name}" initialized. First user: ${techUserId}`,
             );
-          });
+            resolve();
+          },
+        );
+      });
+    });
 
-          // Save business name and prefix to settings
-          const upsertSetting = (key, value) => {
-            db.run(
-              `INSERT INTO app_settings (setting_key, setting_value) VALUES (?, ?) ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value`,
-              [key, value],
-            );
-          };
-
-          upsertSetting("business_name", company_name);
-          upsertSetting("business_email", business_email);
-          upsertSetting("company_prefix", prefix);
-          upsertSetting("next_employee_number", "2");
-
-          console.log(
-            `[INIT] Company "${company_name}" initialized. First user: ${techUserId}`,
-          );
-          res.json({
-            message: `System initialized successfully for ${company_name}.`,
-            tech_username: techUserId,
-            default_password: defaultPassword,
-            note: "IMPORTANT: The Tech Support user must change their password after first login.",
-          });
-        },
-      );
+    res.json({
+      message: `System initialized successfully for ${company_name}.`,
+      tech_username: techUserId,
+      default_password: defaultPassword,
+      note: "IMPORTANT: The Tech Support user must change their password after first login.",
     });
   } catch (e) {
     console.error("[INIT ERROR]", e);
