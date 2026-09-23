@@ -239,7 +239,8 @@ const authenticateToken = (req, res, next) => {
 
 // ==== UNIFIED API ROUTES ====
 
-
+const dosRoutes = require('./dos_routes.js');
+app.use('/api/dos', dosRoutes);
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PUSH NOTIFICATION ROUTES

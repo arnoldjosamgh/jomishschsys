@@ -68,7 +68,7 @@ if (process.env.DATABASE_URL) {
 }
 
 let db;
-const CURRENT_VERSION = 201;
+const CURRENT_VERSION = 202;
 
 if (config.dbType === 'postgres') {
     const poolConfig = { ...config.postgres, max: 100, idleTimeoutMillis: 30000 };
@@ -364,7 +364,8 @@ const schema = [
         role TEXT, department TEXT, qr_hash TEXT,
         is_active INTEGER DEFAULT 1, user_code TEXT, username TEXT UNIQUE,
         photo_base64 TEXT, profile_color TEXT DEFAULT '#4F46E5',
-        session_token TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        session_token TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        levels_in_charge TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS students (
         id SERIAL PRIMARY KEY,
@@ -429,7 +430,8 @@ const schema = [
     )`,
     `CREATE TABLE IF NOT EXISTS onboarding_tokens (
         token TEXT PRIMARY KEY, company_prefix TEXT, company_name TEXT,
-        business_email TEXT, expires_at TIMESTAMP, used INTEGER DEFAULT 0
+        business_email TEXT, expires_at TIMESTAMP, used INTEGER DEFAULT 0,
+        levels_in_charge TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS subjects (
         id SERIAL PRIMARY KEY, name TEXT UNIQUE, code TEXT UNIQUE
@@ -451,7 +453,7 @@ const schema = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS classes (
-        id SERIAL PRIMARY KEY, name TEXT UNIQUE, grade_level TEXT
+        id SERIAL PRIMARY KEY, name TEXT UNIQUE, grade_level TEXT, level_category TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS teacher_assignments (
         id SERIAL PRIMARY KEY, teacher_id INTEGER, class_id INTEGER, subject_id INTEGER,
@@ -541,6 +543,12 @@ function runMigrations(fromVersion) {
         db.run('ALTER TABLE fees ADD COLUMN year TEXT', [], () => {});
         db.run('ALTER TABLE fees ADD COLUMN source TEXT', [], () => {});
         db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "201"]);
+    }
+    if (fromVersion < 202) {
+        db.run('ALTER TABLE users ADD COLUMN levels_in_charge TEXT', [], () => {});
+        db.run('ALTER TABLE onboarding_tokens ADD COLUMN levels_in_charge TEXT', [], () => {});
+        db.run('ALTER TABLE classes ADD COLUMN level_category TEXT', [], () => {});
+        db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "202"]);
     }
 }
 

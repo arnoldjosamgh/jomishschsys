@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOS Registration - School System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: var(--bg, #0f0f1a); color: #fff; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .auth-container { background: #1a1a2e; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .auth-container h2 { margin-top: 0; margin-bottom: 24px; text-align: center; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #a0a0b0; }
+        .form-group input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #0f0f1a; color: #fff; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; background: #4F46E5; color: #fff; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .btn:hover { background: #4338ca; }
+        #error-msg { color: #ef4444; margin-bottom: 16px; text-align: center; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <h2>Complete DOS Registration</h2>
+    <div id="error-msg"></div>
+    <form id="regForm">
+        <div class="form-group">
+            <label>First Name</label>
+            <input type="text" id="fname" required>
+        </div>
+        <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="lname" required>
+        </div>
+        <div class="form-group">
+            <label>Create Password</label>
+            <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="btn">Register</button>
+    </form>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (!token) {
+        document.getElementById('error-msg').innerText = "Invalid link: Token missing.";
+        document.getElementById('regForm').style.display = 'none';
+    }
+
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fname = document.getElementById('fname').value;
+        const lname = document.getElementById('lname').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const res = await fetch('/api/dos/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, first_name: fname, last_name: lname, password })
+            });
+            const data = await res.json();
+            
+            if (data.error) {
+                document.getElementById('error-msg').innerText = data.error;
+            } else {
+                alert('Registration successful! Your username is: ' + data.username);
+                window.location.href = 'login.html';
+            }
+        } catch (err) {
+            document.getElementById('error-msg').innerText = "Network error. Try again.";
+        }
+    });
+</script>
+</body>
+</html>
