@@ -21,6 +21,7 @@ const fs = require("fs");
 const os = require("os");
 const { exec, spawn } = require("child_process");
 const { seedDemoTenant } = require("./seed_demo");
+const { seedSchoolTenant } = require("./seed_school");
 
 // Expose asyncLocalStorage from the db module proxy so all existing references work
 const asyncLocalStorage = db.asyncLocalStorage;
@@ -5775,6 +5776,11 @@ server
     // Seed demo database tenant if needed
     seedDemoTenant(db, db.asyncLocalStorage).catch((err) =>
       console.error("[SEED] Failed to seed demo tenant:", err),
+    );
+
+    // Seed school tenant (creates schema + admin user on fresh Render/Neon deployment)
+    seedSchoolTenant(db, db.asyncLocalStorage).catch((err) =>
+      console.error("[SEED] Failed to seed school tenant:", err),
     );
 
     // Initialize global tech_users table
