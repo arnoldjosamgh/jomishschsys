@@ -7152,7 +7152,7 @@ function autoRedirect() {
 }
 
 async function handleLogout() {
-  if (!confirm("Are you sure you want to logout?")) return;
+  
   try {
     await fetch(`${API_URL}/logout`, { method: "POST" });
   } catch (e) {}
@@ -11223,4 +11223,5 @@ window.loadPettyCashHub = async function () {
     }
   }
 };
+
 

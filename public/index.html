@@ -3,7 +3,7 @@
 <head>
     <!-- Global error logging for diagnostics -->
     <script>
-        // ── AUTH GUARD: runs before ANY HTML paints ──────────────────────────
+        // -- AUTH GUARD: runs before ANY HTML paints --------------------------
         // Hide the whole body immediately so nothing flashes before auth check.
         document.documentElement.style.visibility = 'hidden';
         (function() {
@@ -15,7 +15,7 @@
             // Token exists — the skeleton will be shown while app.js loads.
         })();
 
-        // ── FAILSAFE: always reveal the page within 3s even if app.js crashes ──
+        // -- FAILSAFE: always reveal the page within 3s even if app.js crashes --
         setTimeout(function() {
             document.documentElement.style.visibility = '';
             var sk = document.getElementById('app-skeleton');
@@ -98,7 +98,7 @@
     <meta property="twitter:title" content="School System">
     <meta property="twitter:description" content="All-in-one school management platform.">
     <meta property="twitter:image" content="/favicon.png">
-    <link rel="icon" type="image/png" href="favicon.png?v=3">
+    <link rel="icon" type="image/png" href="favicon.png?v=4">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#6366f1">
     <meta name="mobile-web-app-capable" content="yes">
@@ -116,8 +116,8 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
-    <link rel="stylesheet" href="style.css?v=20">
-    <script src="kiosk-lock.js?v=20"></script>
+    <link rel="stylesheet" href="style.css?v=21">
+    <script src="kiosk-lock.js?v=21"></script>
     <script defer src="lib/socket.io.js"></script>
     <script defer src="lib/jspdf.umd.min.js"></script>
     <script defer src="lib/jspdf.plugin.autotable.min.js"></script>
@@ -126,8 +126,8 @@
     <!-- For Modern QR Codes with Branding -->
     <script defer src="lib/qr-code-styling.js"></script>
     <script src="lib/JsBarcode.all.min.js"></script>
-    <script src="lib/thermal-serial.js?v=3"></script>
-    <script defer src="school_logic.js?v=4"></script>
+    <script src="lib/thermal-serial.js?v=4"></script>
+    <script defer src="school_logic.js?v=5"></script>
 </head>
 <body>
     <!-- Skeleton Auth Guard Loader -->
@@ -200,7 +200,7 @@
             <div class="user-info">
                 <p>Admin Mode</p>
                 <button id="btn-theme-toggle" onclick="toggleTheme()" style="width:100%;margin-top:8px;padding:10px;border:none;border-radius:var(--radius);background:var(--surface);color:var(--text-muted);cursor:pointer;font-family:inherit;font-size:0.82rem;box-shadow:var(--shadow-sm);transition:all .2s">Light / Dark</button>
-                <button id="btn-logout" class="sm-btn danger" style="width: 100%; margin-top: 10px;">Logout</button>
+                <button id="btn-logout" class="sm-btn danger" style="width: 100%; margin-top: 10px;" onclick="handleLogout()">Logout</button>
             </div>
         </aside>
 
@@ -241,7 +241,7 @@
                 <div class="card" style="background: var(--surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px;">
                     <header style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <h3 style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-satellite-dish"></i>️ Hardware Radar</h3>
+                            <h3 style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-satellite-dish"></i>? Hardware Radar</h3>
                             <p style="font-size: 0.8rem; color: #94A3B8;">Detects every phone, tablet, and terminal accessing the suite.</p>
                         </div>
                         <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">LIVE SCANNING</div>
@@ -1094,7 +1094,7 @@
                                     <input type="checkbox" id="mod-hr" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-users"></i> HR & Staff
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: var(--text);">
-                                    <input type="checkbox" id="mod-attendance" checked style="width:16px; height:16px; accent-color: var(--primary);"> ΓÅ░ Attendance
+                                    <input type="checkbox" id="mod-attendance" checked style="width:16px; height:16px; accent-color: var(--primary);"> GÅ¦ Attendance
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: var(--text);">
                                     <input type="checkbox" id="mod-sme" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-sack-dollar"></i> Accounts
@@ -1158,7 +1158,7 @@
                     <p style="color:var(--text-muted); font-size:0.85rem; margin:4px 0 0;">Device compatibility, print sizes &amp; test tools.</p>
                 </div>
 
-                <!-- ΓòÉΓòÉ WebSerial Direct Print Panel ΓòÉΓòÉ -->
+                <!-- GòÉGòÉ WebSerial Direct Print Panel GòÉGòÉ -->
                 <div id="thermal-serial-panel" style="
                     background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.06));
                     border: 1px solid rgba(99,102,241,0.25);
@@ -1180,7 +1180,7 @@
                             </div>
                             <div>
                                 <div style="font-weight:700; font-size:1rem;">Direct ESC/POS Printing</div>
-                                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">WebSerial ΓÇö Chrome/Edge only &bull; USB virtual COM port</div>
+                                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">WebSerial GÇö Chrome/Edge only &bull; USB virtual COM port</div>
                             </div>
                         </div>
                         <!-- Status pill -->
@@ -1261,11 +1261,11 @@
                     <!-- Help text -->
                     <div style="margin-top:16px; padding:12px 14px; background:rgba(0,0,0,0.06); border-radius:8px; font-size:0.78rem; color:var(--text-muted); line-height:1.6;">
                         <strong style="color:var(--text);"><i class="fa-solid fa-circle-info"></i> Setup steps:</strong><br>
-                        1. Plug printer via <strong>USB-A ΓåÆ USB-B</strong> cable directly into PC &nbsp;&bull;&nbsp;
+                        1. Plug printer via <strong>USB-A GåÆ USB-B</strong> cable directly into PC &nbsp;&bull;&nbsp;
                         2. Install the <strong>POS-80 driver</strong> (select USB port during setup) &nbsp;&bull;&nbsp;
-                        3. Open <strong>Device Manager ΓåÆ Ports (COM &amp; LPT)</strong> ΓÇö note your COM port (e.g. COM3) &nbsp;&bull;&nbsp;
-                        4. Click <strong>Connect Printer</strong> above ΓåÆ select that COM port from the browser list &nbsp;&bull;&nbsp;
-                        5. Click <strong>Test ESC/POS Print</strong> to confirm ΓÇö printer cuts paper &nbsp;&bull;&nbsp;
+                        3. Open <strong>Device Manager GåÆ Ports (COM &amp; LPT)</strong> GÇö note your COM port (e.g. COM3) &nbsp;&bull;&nbsp;
+                        4. Click <strong>Connect Printer</strong> above GåÆ select that COM port from the browser list &nbsp;&bull;&nbsp;
+                        5. Click <strong>Test ESC/POS Print</strong> to confirm GÇö printer cuts paper &nbsp;&bull;&nbsp;
                         Requires <strong>Chrome or Edge</strong> browser.
                     </div>
                 </div>
@@ -1275,7 +1275,7 @@
                     <div class="stat-card">
                         <h3><i class="fa-solid fa-barcode"></i> Barcode Scanner</h3>
                         <div style="font-size:2rem;font-weight:700;color:var(--success);" id="scanner-status"><i class="fa-solid fa-check"></i> Ready</div>
-                        <p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px;">USB HID / Keyboard Wedge mode<br>Just plug in and scan ΓÇö no drivers needed</p>
+                        <p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px;">USB HID / Keyboard Wedge mode<br>Just plug in and scan GÇö no drivers needed</p>
                     </div>
                     <div class="stat-card">
                         <h3><i class="fa-solid fa-print"></i> Thermal Printer</h3>
@@ -1284,7 +1284,7 @@
                     </div>
                     <div class="stat-card">
                         <h3><i class="fa-solid fa-tag"></i> Label Printer</h3>
-                        <div style="font-size:2rem;font-weight:700;color:#F59E0B;">38├ù25mm</div>
+                        <div style="font-size:2rem;font-weight:700;color:#F59E0B;">38+ù25mm</div>
                         <p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px;">Thermal sticker rolls<br>Zebra, TSC, Xprinter, Godex</p>
                     </div>
                 </div>
@@ -1306,9 +1306,9 @@
                             <tr>
                                 <td><i class="fa-solid fa-chart-column"></i> Reports (PDF)</td>
                                 <td>A4 Paper</td>
-                                <td><strong>210mm ├ù 297mm</strong></td>
+                                <td><strong>210mm +ù 297mm</strong></td>
                                 <td>jsPDF AutoTable, standard printer</td>
-                                <td>ΓÇö</td>
+                                <td>GÇö</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1326,7 +1326,7 @@
         <div class="id-print-container">
             <div class="id-card-wrapper" style="font-family: 'Inter', sans-serif;">
 
-                <!-- ═══ FRONT SIDE: 86mm × 54mm ═══ -->
+                <!-- --- FRONT SIDE: 86mm × 54mm --- -->
                 <div class="id-card landscape front" id="id-card-front"
                      style="display:flex; flex-direction:column; justify-content:space-between;
                             padding: 5mm 5mm 4mm; overflow:hidden; position:relative;">
@@ -1393,7 +1393,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ BACK SIDE: 86mm × 54mm ═══ -->
+                <!-- --- BACK SIDE: 86mm × 54mm --- -->
                 <div class="id-card landscape back" id="id-card-back"
                      style="display:flex; flex-direction:column; justify-content:space-between;
                             padding:4mm 5mm 3mm; background:#ffffff; color:#1e293b;
@@ -1659,7 +1659,7 @@
                 <div class="form-group" id="app-password-container">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <label style="font-weight:700; font-size:0.85rem;">Gmail App Password</label>
-                        <a href="https://myaccount.google.com/apppasswords" target="_blank" style="font-size:0.75rem; color:var(--primary); text-decoration:none; font-weight:600;">Get Key →</a>
+                        <a href="https://myaccount.google.com/apppasswords" target="_blank" style="font-size:0.75rem; color:var(--primary); text-decoration:none; font-weight:600;">Get Key ?</a>
                     </div>
                     <input type="password" id="email-cfg-password" placeholder="16-character security key" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--background); color:var(--text);">
                     <p style="font-size:0.7rem; color:#94A3B8; margin-top:6px; line-height:1.4;">Note: Standard Gmail passwords do not work. You must generate a 16-character "App Password" from your Google account security settings.</p>
@@ -1810,7 +1810,7 @@
                     <div id="r-balance-row" style="display:none; justify-content:space-between; margin-bottom:3px; color:#EF4444; font-weight:bold;"><span>Balance Due:</span><span id="r-balance">UGX 0</span></div>
                     <div id="r-buyer-row"   style="display:none; justify-content:space-between; margin-bottom:3px;"><span>Buyer:</span><strong id="r-buyer-name"></strong></div>
                     <div id="r-delivery-row" style="display:none; margin-top:7px; padding-top:6px; border-top:1px dashed #999; font-size:0.77rem;">
-                        <div style="font-weight:bold; margin-bottom:3px;">🚚 DELIVERY</div>
+                        <div style="font-weight:bold; margin-bottom:3px;">?? DELIVERY</div>
                         <div style="display:flex; justify-content:space-between;"><span>Client:</span><span id="r-delivery-client"></span></div>
                         <div style="display:flex; justify-content:space-between;"><span>Location:</span><span id="r-delivery-loc"></span></div>
                     </div>
@@ -1983,8 +1983,8 @@
         </div>
     </div>
 
-    <script src="offline-db.js?v=33"></script>
-    <script src="app.js?v=52"></script>
+    <script src="offline-db.js?v=34"></script>
+    <script src="app.js?v=53"></script>
 
     <!-- Make favicon round dynamically -->
     <script>
@@ -2012,14 +2012,14 @@
         });
     </script>
 
-    <!-- ── PUSH NOTIFICATION BOOTSTRAP ──────────────────────────────────── -->
+    <!-- -- PUSH NOTIFICATION BOOTSTRAP ------------------------------------ -->
     <script>
     (function() {
         'use strict';
 
         const BASE_URL = window.location.origin;
 
-        // ─── Utility: convert base64 VAPID key to Uint8Array ─────────────────
+        // --- Utility: convert base64 VAPID key to Uint8Array -----------------
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -2029,7 +2029,7 @@
             return output;
         }
 
-        // ─── Register SW + subscribe to push ─────────────────────────────────
+        // --- Register SW + subscribe to push ---------------------------------
         async function initPushNotifications() {
             // Skip if browser doesn't support push
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -2042,7 +2042,7 @@
 
             try {
                 // 1. Register the Service Worker
-                const reg = await navigator.serviceWorker.register('/sw.js?v=40', { scope: '/' });
+                const reg = await navigator.serviceWorker.register('/sw.js?v=41', { scope: '/' });
                 console.log('[PUSH] Service Worker registered:', reg.scope);
 
                 // 2. Check current permission state
@@ -2083,7 +2083,7 @@
                     body: JSON.stringify({ subscription })
                 });
                 if (subRes.ok) {
-                    console.log('[PUSH] ✅ Push subscription registered with server.');
+                    console.log('[PUSH] ? Push subscription registered with server.');
                 } else {
                     const err = await subRes.json();
                     console.warn('[PUSH] Server rejected subscription:', err.error);
@@ -2094,7 +2094,7 @@
             }
         }
 
-        // ─── Listen for NAVIGATE_TO from service worker (notification click) ─
+        // --- Listen for NAVIGATE_TO from service worker (notification click) -
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', (event) => {
                 if (!event.data || event.data.type !== 'NAVIGATE_TO') return;
@@ -2125,7 +2125,7 @@
             });
         }
 
-        // ─── Handle deep linking via hash on initial load ────────────────────
+        // --- Handle deep linking via hash on initial load --------------------
         function handleInitialHash() {
             const hash = window.location.hash.slice(1).split('?')[0];
             if (!hash) return;
@@ -2151,7 +2151,7 @@
             }
         }
 
-        // ─── Run after the page is fully loaded ──────────────────────────────
+        // --- Run after the page is fully loaded ------------------------------
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 initPushNotifications();
@@ -2167,8 +2167,10 @@
 
     })();
     </script>
-    <!-- ── END PUSH NOTIFICATION BOOTSTRAP ──────────────────────────────── -->
+    <!-- -- END PUSH NOTIFICATION BOOTSTRAP -------------------------------- -->
 
 </body>
 </html>
+
+
 
