@@ -59,20 +59,30 @@ router.post('/register', async (req, res) => {
             const hash = await bcrypt.hash(password, salt);
             const username = 'DOS' + Math.floor(Math.random() * 10000);
             const companySchema = row.company_prefix === "public" ? "public" : "t_" + row.company_prefix.toLowerCase();
+            const prefix = row.company_prefix.toUpperCase();
 
             db.asyncLocalStorage.run(companySchema, () => {
-                db.run(
-                    `INSERT INTO users (first_name, last_name, email, password, role, username, levels_in_charge)
-                     VALUES (?, ?, ?, ?, 'DOS', ?, ?)`,
-                    [first_name, last_name, row.business_email, hash, username, row.levels_in_charge],
-                    function(err) {
-                        if (err) return res.status(500).json({ error: err.message });
-                        db.asyncLocalStorage.run("public", () => {
-                            db.run(`UPDATE onboarding_tokens SET used = 1 WHERE token = ?`, [token]);
-                        });
-                        res.json({ success: true, message: 'DOS registered successfully', username, prefix: row.company_prefix });
+                db.get(`SELECT username FROM users WHERE username LIKE ? ORDER BY id DESC LIMIT 1`, [`${prefix}%`], (err, lastUser) => {
+                    let nextNum = 2; // Assuming admin is 1
+                    if (lastUser && lastUser.username) {
+                        const match = lastUser.username.match(/\d+$/);
+                        if (match) nextNum = parseInt(match[0]) + 1;
                     }
-                );
+                    const username = prefix + String(nextNum).padStart(3, '0');
+
+                    db.run(
+                        `INSERT INTO users (first_name, last_name, email, password, role, username, levels_in_charge)
+                         VALUES (?, ?, ?, ?, 'DOS', ?, ?)`,
+                        [first_name, last_name, row.business_email, hash, username, row.levels_in_charge],
+                        function(err) {
+                            if (err) return res.status(500).json({ error: err.message });
+                            db.asyncLocalStorage.run("public", () => {
+                                db.run(`UPDATE onboarding_tokens SET used = 1 WHERE token = ?`, [token]);
+                            });
+                            res.json({ success: true, message: 'DOS registered successfully', username, prefix });
+                        }
+                    );
+                });
             });
         });
     });
@@ -85,19 +95,27 @@ router.post('/teachers', authenticateToken, async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-    // In DB we store TRxxxx, but user logs in with PREFIX-TRxxxx
-    const username = 'TR' + Math.floor(Math.random() * 10000);
-    const loginUsername = (req.user.prefix || 'TSCH') + '-' + username;
-
-    db.run(
-        `INSERT INTO users (first_name, last_name, email, phone, password, role, username)
-         VALUES (?, ?, ?, ?, ?, 'Teacher', ?)`,
-        [first_name, last_name, email, phone, hash, username],
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true, teacher_id: this.lastID, username: loginUsername });
+    
+    const prefix = req.user.prefix ? req.user.prefix.toUpperCase() : 'TSCH';
+    
+    db.get(`SELECT username FROM users WHERE username LIKE ? ORDER BY id DESC LIMIT 1`, [`${prefix}%`], (err, lastUser) => {
+        let nextNum = 2;
+        if (lastUser && lastUser.username) {
+            const match = lastUser.username.match(/\d+$/);
+            if (match) nextNum = parseInt(match[0]) + 1;
         }
-    );
+        const username = prefix + String(nextNum).padStart(3, '0');
+
+        db.run(
+            `INSERT INTO users (first_name, last_name, email, phone, password, role, username)
+             VALUES (?, ?, ?, ?, ?, 'Teacher', ?)`,
+            [first_name, last_name, email, phone, hash, username],
+            function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ success: true, teacher_id: this.lastID, username });
+            }
+        );
+    });
 });
 
 // 4. Assign Class and Subject to Teacher

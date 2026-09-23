@@ -6052,9 +6052,8 @@ app.get("/api/teacher/assignments", authenticateToken, (req, res) => {
 app.get("/api/dos/teachers", authenticateToken, (req, res) => {
   const allowed = ["Admin", "DOS", "HR", "CEO", "System Technician", "Tech"];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
-  const prefix = req.user.prefix || 'TSCH';
   db.all(
-    `SELECT u.id, u.first_name, u.last_name, u.email, '${prefix}-' || u.username as username, u.phone, u.is_active,
+    `SELECT u.id, u.first_name, u.last_name, u.email, u.username, u.phone, u.is_active,
      (
        SELECT json_agg(json_build_object('class', c.name, 'subject', s.name))
        FROM teacher_assignments ta
@@ -6067,7 +6066,7 @@ app.get("/api/dos/teachers", authenticateToken, (req, res) => {
     (err, rows) => {
       if (err) {
         // Fallback for SQLite (no json_agg)
-        db.all(`SELECT id, first_name, last_name, email, '${prefix}-' || username as username, phone, is_active FROM users WHERE role = 'Teacher' ORDER BY first_name`, [], (err2, rows2) => {
+        db.all("SELECT id, first_name, last_name, email, username, phone, is_active FROM users WHERE role = 'Teacher' ORDER BY first_name", [], (err2, rows2) => {
           if (err2) return res.status(500).json({ error: err2.message });
           res.json(rows2 || []);
         });
