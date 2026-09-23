@@ -2137,6 +2137,156 @@ app.delete("/api/system/tech_users/:id", authenticateToken, (req, res) => {
   });
 });
 
+// ============================================================
+// TECH: Reset DOS / Admin password for any school tenant
+// POST /api/system/reset-dos-password
+// Body: { school_prefix, username, new_password }
+// Only callable by System Technician (id === 9999)
+// ============================================================
+app.post("/api/system/reset-dos-password", authenticateToken, async (req, res) => {
+  if (req.user.id !== 9999) return res.status(403).json({ error: "Forbidden" });
+  const { school_prefix, username, new_password } = req.body;
+  if (!school_prefix || !username || !new_password)
+    return res.status(400).json({ error: "Missing school_prefix, username, or new_password" });
+
+  const schemaName = "t_" + school_prefix.toLowerCase().trim();
+  try {
+    const hash = await bcrypt.hash(new_password, 10);
+    asyncLocalStorage.run(schemaName, () => {
+      db.run(
+        "UPDATE users SET password = ? WHERE username = ?",
+        [hash, username.trim()],
+        function(err) {
+          if (err) return res.status(500).json({ error: err.message });
+          if (this.changes === 0) return res.status(404).json({ error: `User '${username}' not found in schema '${schemaName}'` });
+          console.log(`[TECH] Password reset for ${username} in ${schemaName}`);
+          res.json({ success: true, message: `Password reset for ${username} in ${schemaName}` });
+        }
+      );
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
+// TECH: Provision or reset the DEMO school tenant
+// POST /api/system/provision-demo-school
+// Only callable by System Technician (id === 9999)
+// ============================================================
+app.post("/api/system/provision-demo-school", authenticateToken, async (req, res) => {
+  if (req.user.id !== 9999) return res.status(403).json({ error: "Forbidden" });
+
+  const prefix = "DEMO";
+  const schemaName = "t_demo";
+
+  try {
+    // Create schema if not exists
+    if (db.createCompanySchema) {
+      try { await db.createCompanySchema(prefix); } catch(e) {
+        if (!e.message.includes("already exists")) throw e;
+      }
+    }
+
+    const adminUsername = prefix + "00001";
+    const adminHash = await bcrypt.hash("Admin", 10);
+    const dosHash = await bcrypt.hash("Demo1234!", 10);
+    const teacherHash = await bcrypt.hash("Teacher1!", 10);
+
+    await new Promise((resolve, reject) => {
+      asyncLocalStorage.run(schemaName, () => {
+        // Seed admin
+        db.run(`INSERT INTO users (first_name, last_name, email, password, role, username, is_active)
+          VALUES (?, ?, ?, ?, 'Admin', ?, 1) ON CONFLICT (username) DO UPDATE SET password = excluded.password`,
+          ["Demo", "Admin", "admin@demoschool.com", adminHash, adminUsername], () => {});
+
+        // Seed DOS
+        db.run(`INSERT INTO users (first_name, last_name, email, password, role, username, is_active, levels_in_charge)
+          VALUES (?, ?, ?, ?, 'DOS', ?, 1, ?) ON CONFLICT (username) DO UPDATE SET password = excluded.password`,
+          ["Demo", "DOS", "dos@demoschool.com", dosHash, prefix + "002", "Primary,Secondary O-Level"], () => {});
+
+        // Seed Teachers
+        const teachers = [
+          { name: "Alice", last: "Nakato", email: "alice@demo.com", user: prefix + "003" },
+          { name: "Bob",   last: "Okello", email: "bob@demo.com",   user: prefix + "004" },
+          { name: "Carol", last: "Amara",  email: "carol@demo.com", user: prefix + "005" },
+        ];
+        teachers.forEach(t => {
+          db.run(`INSERT INTO users (first_name, last_name, email, password, role, username, is_active)
+            VALUES (?, ?, ?, ?, 'Teacher', ?, 1) ON CONFLICT (username) DO UPDATE SET password = excluded.password`,
+            [t.name, t.last, t.email, teacherHash, t.user], () => {});
+        });
+
+        // Seed classes
+        const classes = ["P1","P2","P3","P4","P5","P6","P7","S1 (O-Level)","S2 (O-Level)","S3 (O-Level)","S4 (O-Level)"];
+        const levelMap = { P: "Primary", S: "Secondary O-Level" };
+        classes.forEach(name => {
+          const cat = name.startsWith("P") ? "Primary" : "Secondary O-Level";
+          db.run(`INSERT INTO classes (name, grade_level, level_category) VALUES (?, ?, ?) ON CONFLICT (name) DO NOTHING`,
+            [name, name, cat], () => {});
+        });
+
+        // Seed subjects
+        const subjects = ["Mathematics","English Language","Science","Social Studies","History","Geography","Biology","Chemistry","Physics","Computer Science","Agriculture","Commerce","Luganda","Religious Education","Physical Education","Art","Music"];
+        subjects.forEach(name => {
+          const code = name.toUpperCase().replace(/\s+/g,"").substring(0,6);
+          db.run(`INSERT INTO subjects (name, code) VALUES (?, ?) ON CONFLICT (name) DO NOTHING`, [name, code], () => {});
+        });
+
+        // Seed sample students
+        const studentNames = [
+          ["Ssemwanga","James"],["Nakireka","Grace"],["Okwera","Paul"],["Apio","Susan"],
+          ["Tumwebaze","Brian"],["Nakawuka","Doreen"],["Mugisha","Arnold"],["Atim","Faith"],
+          ["Kayonde","Peter"],["Nassolo","Ruth"],["Byarugaba","Mark"],["Kemigisa","Lydia"],
+          ["Ssekajja","Daniel"],["Auma","Esther"],["Lubega","Ivan"],
+        ];
+        studentNames.forEach(([last, first], i) => {
+          const classId = (i % 11) + 1;
+          const yr = 2009 + (i % 7);
+          const dob = `${yr}-0${(i%9)+1}-${String((i*3%28)+1).padStart(2,'0')}`;
+          const admNo = `DEMO/2024/${String(i+1).padStart(3,'0')}`;
+          db.run(`INSERT INTO students (first_name, last_name, class_id, date_of_birth, admission_number, gender, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, 1) ON CONFLICT (admission_number) DO NOTHING`,
+            [first, last, classId, dob, admNo, i%2===0?"Male":"Female"], () => {});
+        });
+
+        // Seed fee records
+        db.run(`INSERT INTO fees (student_id, amount, due_date, description, term, year, source)
+          VALUES (1, 450000, date('now'), 'Term 1 School Fees', 'Term 1', '2024', 'Cash') ON CONFLICT DO NOTHING`, [], () => {});
+        db.run(`INSERT INTO fees (student_id, amount, due_date, description, term, year, source)
+          VALUES (2, 450000, date('now'), 'Term 1 School Fees', 'Term 1', '2024', 'Mobile Money') ON CONFLICT DO NOTHING`, [], () => {});
+
+        setTimeout(resolve, 500);
+      });
+    });
+
+    // Register in companies table
+    asyncLocalStorage.run("public", () => {
+      db.run(
+        `INSERT INTO companies (prefix, company_name, business_email, status, created_at)
+         VALUES (?, ?, ?, 'ACTIVE', NOW()) ON CONFLICT (prefix) DO UPDATE SET status='ACTIVE'`,
+        [prefix, "Demo School (Testing)", "demo@demoschool.com"],
+        () => {}
+      );
+    });
+
+    res.json({
+      success: true,
+      message: "Demo school provisioned successfully",
+      credentials: {
+        admin: { username: adminUsername, password: "Admin" },
+        dos:   { username: prefix + "002", password: "Demo1234!" },
+        teachers: [prefix + "003", prefix + "004", prefix + "005"].map(u => ({ username: u, password: "Teacher1!" }))
+      },
+      note: "Use these credentials to log in as any role and test all features."
+    });
+  } catch(e) {
+    console.error("[TECH] Demo school provision error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 app.post("/api/system/autostart", authenticateToken, (req, res) => {
   if (req.user.name !== "System Technician")
     return res.status(403).json({ error: "Forbidden" });
