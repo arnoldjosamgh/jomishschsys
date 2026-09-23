@@ -21,7 +21,7 @@ const fs = require("fs");
 const os = require("os");
 const { exec, spawn } = require("child_process");
 const { seedDemoTenant } = require("./seed_demo");
-const { seedSchoolTenant } = require("./seed_school");
+const { seedSchoolTenant, seedDefaultClassesAndSubjects } = require("./seed_school");
 
 // Expose asyncLocalStorage from the db module proxy so all existing references work
 const asyncLocalStorage = db.asyncLocalStorage;
@@ -5779,7 +5779,12 @@ server
     );
 
     // Seed school tenant (creates schema + admin user on fresh Render/Neon deployment)
-    seedSchoolTenant(db, db.asyncLocalStorage).catch((err) =>
+    const prefix = (process.env.SCHOOL_PREFIX || "TSCH").toUpperCase();
+    const schemaName = db.createCompanySchema ? "t_" + prefix.toLowerCase() : "public";
+    const isPostgres = !!db.createCompanySchema;
+    seedSchoolTenant(db, db.asyncLocalStorage).then(() => {
+      seedDefaultClassesAndSubjects(db, db.asyncLocalStorage, schemaName, isPostgres);
+    }).catch((err) =>
       console.error("[SEED] Failed to seed school tenant:", err),
     );
 
@@ -5920,7 +5925,7 @@ require('./school_routes')(app, db, io, asyncLocalStorage);
 //  STUDENT MANAGEMENT ROUTES
 // ============================================================
 
-// GET all students (secretary / admin)
+// GET all students (secretary / admin / DOS / Teacher / Bursar)
 app.get("/api/students", authenticateToken, (req, res) => {
   const { status } = req.query;
   let sql = "SELECT * FROM students ORDER BY created_at DESC";
@@ -5972,8 +5977,116 @@ app.put("/api/students/:id/status", authenticateToken, (req, res) => {
 
 // DELETE a student
 app.delete("/api/students/:id", authenticateToken, (req, res) => {
+  const allowedRoles = ["Admin", "HR", "CEO", "System Technician", "Tech"];
+  if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
   db.run(`DELETE FROM students WHERE id = ?`, [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// GET classes list
+app.get("/api/classes", authenticateToken, (req, res) => {
+  db.all("SELECT * FROM classes ORDER BY level_category, name", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// POST add class
+app.post("/api/classes", authenticateToken, (req, res) => {
+  const allowed = ["Admin", "DOS", "HR", "CEO", "System Technician", "Tech"];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+  const { name, grade_level, level_category } = req.body;
+  if (!name) return res.status(400).json({ error: "Class name required" });
+  db.run(`INSERT INTO classes (name, grade_level, level_category) VALUES (?, ?, ?)
+    ON CONFLICT (name) DO NOTHING`,
+    [name, grade_level || name, level_category || name],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: this.lastID });
+    }
+  );
+});
+
+// GET subjects list
+app.get("/api/subjects", authenticateToken, (req, res) => {
+  db.all("SELECT * FROM subjects ORDER BY name", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// POST add subject
+app.post("/api/subjects", authenticateToken, (req, res) => {
+  const allowed = ["Admin", "DOS", "HR", "CEO", "System Technician", "Tech"];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+  const { name, code } = req.body;
+  if (!name) return res.status(400).json({ error: "Subject name required" });
+  db.run(`INSERT INTO subjects (name, code) VALUES (?, ?) ON CONFLICT (name) DO NOTHING`,
+    [name, code || name.toUpperCase().substring(0, 6)],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: this.lastID });
+    }
+  );
+});
+
+// GET teacher assignments (for logged-in teacher)
+app.get("/api/teacher/assignments", authenticateToken, (req, res) => {
+  db.all(
+    `SELECT ta.id, ta.class_id, ta.subject_id, c.name as class_name, c.level_category, s.name as subject_name
+     FROM teacher_assignments ta
+     LEFT JOIN classes c ON ta.class_id = c.id
+     LEFT JOIN subjects s ON ta.subject_id = s.id
+     WHERE ta.teacher_id = ?`,
+    [req.user.id],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows || []);
+    }
+  );
+});
+
+// GET all teachers (for DOS view)
+app.get("/api/dos/teachers", authenticateToken, (req, res) => {
+  const allowed = ["Admin", "DOS", "HR", "CEO", "System Technician", "Tech"];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+  db.all(
+    `SELECT u.id, u.first_name, u.last_name, u.email, u.username, u.phone, u.is_active,
+     (
+       SELECT json_agg(json_build_object('class', c.name, 'subject', s.name))
+       FROM teacher_assignments ta
+       LEFT JOIN classes c ON ta.class_id = c.id
+       LEFT JOIN subjects s ON ta.subject_id = s.id
+       WHERE ta.teacher_id = u.id
+     ) as assignments
+     FROM users u WHERE u.role = 'Teacher' ORDER BY u.first_name`,
+    [],
+    (err, rows) => {
+      if (err) {
+        // Fallback for SQLite (no json_agg)
+        db.all("SELECT id, first_name, last_name, email, username, phone, is_active FROM users WHERE role = 'Teacher' ORDER BY first_name", [], (err2, rows2) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          res.json(rows2 || []);
+        });
+        return;
+      }
+      res.json(rows || []);
+    }
+  );
+});
+
+// POST reset teacher password (DOS)
+app.post("/api/dos/teachers/:id/reset-password", authenticateToken, async (req, res) => {
+  const allowed = ["Admin", "DOS", "HR", "System Technician", "Tech"];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+  const { new_password } = req.body;
+  if (!new_password || new_password.length < 4) return res.status(400).json({ error: "Password too short" });
+  const hash = await bcrypt.hash(new_password, 10);
+  db.run("UPDATE users SET password = ? WHERE id = ? AND role = 'Teacher'", [hash, req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) return res.status(404).json({ error: "Teacher not found" });
     res.json({ success: true });
   });
 });

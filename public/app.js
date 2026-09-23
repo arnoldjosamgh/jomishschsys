@@ -2064,10 +2064,37 @@ function enforceRBAC() {
   const navSecretary = document.querySelector('[data-target="secretary-hub"]');
   const navTechHub = document.querySelector('[data-target="tech-hub"]');
 
+  const navDOSHub = document.querySelector('[data-target="dos-hub"]');
+  const navTeacherHub = document.querySelector('[data-target="teacher-hub"]');
+
   const isTech = localStorage.getItem("jomish_name") === "System Technician" || USER_ROLE === "Tech" || USER_ROLE === "System Technician";
   const isDemo = localStorage.getItem("jomish_demo") === "true";
+  const isDOS = USER_ROLE === "DOS";
+  const isTeacher = USER_ROLE === "Teacher";
 
-  // ── STRICT ROLE MAPS ─────────────────────────────────────────────────────
+  // Show DOS Hub and Teacher Hub nav buttons based on role
+  if (navDOSHub) navDOSHub.style.display = (isDOS || USER_ROLE === "Admin" || isTech || USER_ROLE === "Headteacher") ? "block" : "none";
+  if (navTeacherHub) navTeacherHub.style.display = (isTeacher || isTech) ? "block" : "none";
+
+  // If DOS role: hide all standard business tabs, only show DOS Hub
+  if (isDOS) {
+    [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = "none"; });
+    document.querySelectorAll(".tech-only, .admin-only").forEach(el => el.classList.add("hidden"));
+    setTimeout(() => { if (navDOSHub) navDOSHub.click(); }, 100);
+    return;
+  }
+
+  // If Teacher role: hide all standard tabs, only show Teacher Hub
+  if (isTeacher) {
+    [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = "none"; });
+    document.querySelectorAll(".tech-only, .admin-only").forEach(el => el.classList.add("hidden"));
+    setTimeout(() => { if (navTeacherHub) navTeacherHub.click(); }, 100);
+    // Prompt teacher on first login
+    setTimeout(() => initTeacherFirstLogin(), 1500);
+    return;
+  }
+
+
   // Each role sees ONLY the tabs listed here.
   // Tech (System Technician) sees everything.
   const ROLE_TAB_MAP = {
@@ -11225,3 +11252,268 @@ window.loadPettyCashHub = async function () {
 };
 
 
+
+// ================================================================
+// DOS HUB MODULE
+// ================================================================
+
+function switchDOSView(view) {
+  document.querySelectorAll('.dos-sub-view').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('#dos-hub .tab-scroller .nav-btn').forEach(btn => btn.classList.remove('active'));
+  const target = document.getElementById('dos-' + view + '-view');
+  if (target) target.classList.remove('hidden');
+  const btn = document.getElementById('btn-dos-' + view) || document.getElementById('btn-dos-' + view + '-tab');
+  if (btn) btn.classList.add('active');
+  if (view === 'teachers') { dosLoadClassesAndSubjects(); dosLoadTeachers(); }
+  if (view === 'dos-students') dosLoadStudents();
+}
+
+async function dosLoadTeachers() {
+  const tbody = document.getElementById('dos-teachers-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>';
+  try {
+    const res = await fetchAuth(`${API_URL}/dos/teachers`);
+    const rows = await res.json();
+    if (!res.ok || !Array.isArray(rows) || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">No teachers found. Add one above.</td></tr>';
+      return;
+    }
+    const sel = document.getElementById('dos-assign-teacher');
+    if (sel) {
+      sel.innerHTML = '<option value="">-- Select Teacher --</option>' +
+        rows.map(t => `<option value="${t.id}">${t.first_name} ${t.last_name} (${t.username||''})</option>`).join('');
+    }
+    tbody.innerHTML = rows.map(t => {
+      const asgn = Array.isArray(t.assignments) && t.assignments.length > 0
+        ? t.assignments.map(a => `<span style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:2px 8px;font-size:0.75rem;margin:2px;">${a.class}/${a.subject}</span>`).join('')
+        : '—';
+      return `<tr>
+        <td><strong>${t.first_name} ${t.last_name}</strong></td>
+        <td><code style="background:var(--background);padding:2px 8px;border-radius:6px;">${t.username||'—'}</code></td>
+        <td>${t.email||'—'}</td>
+        <td style="display:flex;flex-wrap:wrap;gap:4px;">${asgn}</td>
+        <td><button class="sm-btn secondary" onclick="dosResetTeacherPassword(${t.id},'${t.first_name}')" style="font-size:0.75rem;"><i class="fa-solid fa-key"></i> Reset Password</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);text-align:center;padding:20px;">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function dosLoadStudents() {
+  const tbody = document.getElementById('dos-students-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>';
+  try {
+    const res = await fetchAuth(`${API_URL}/students`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No students found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(s => `<tr>
+      <td><code style="background:var(--background);padding:2px 8px;border-radius:6px;">${s.student_id||s.id}</code></td>
+      <td><strong>${s.first_name} ${s.last_name}</strong></td>
+      <td>${s.grade||'—'}</td>
+      <td>${s.parent_name||'—'}</td>
+      <td>${s.parent_phone||s.phone||'—'}</td>
+      <td><span style="background:${s.status==='ACTIVE'?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)'};color:${s.status==='ACTIVE'?'#10B981':'#EF4444'};padding:2px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;">${s.status||'ACTIVE'}</span></td>
+    </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);text-align:center;padding:20px;">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function handleDOSAddTeacher(event) {
+  event.preventDefault();
+  const btn = event.target.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...'; }
+  const body = {
+    first_name: document.getElementById('dos-teacher-firstname').value.trim(),
+    last_name: document.getElementById('dos-teacher-lastname').value.trim(),
+    email: document.getElementById('dos-teacher-email').value.trim(),
+    phone: document.getElementById('dos-teacher-phone').value.trim(),
+    password: document.getElementById('dos-teacher-password').value,
+  };
+  try {
+    const res = await fetchAuth(`${API_URL}/dos/teachers`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    showToast(`Teacher created! Username: ${data.username}`, 'success');
+    event.target.reset();
+    dosLoadTeachers();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-plus"></i> Create Teacher Account'; }
+  }
+}
+
+async function handleDOSAssignTeacher() {
+  const teacher_id = document.getElementById('dos-assign-teacher')?.value;
+  const class_id = document.getElementById('dos-assign-class')?.value;
+  const subject_id = document.getElementById('dos-assign-subject')?.value;
+  if (!teacher_id || !class_id || !subject_id) { showToast('Please select Teacher, Class, and Subject', 'error'); return; }
+  try {
+    const res = await fetchAuth(`${API_URL}/dos/teachers/${teacher_id}/assignments`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ class_id: parseInt(class_id), subject_id: parseInt(subject_id) })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    showToast('Assignment saved!', 'success');
+    dosLoadTeachers();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function dosResetTeacherPassword(teacherId, teacherName) {
+  const newPass = prompt(`Enter new password for ${teacherName}:`);
+  if (!newPass || newPass.length < 4) { showToast('Password too short', 'error'); return; }
+  try {
+    const res = await fetchAuth(`${API_URL}/dos/teachers/${teacherId}/reset-password`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ new_password: newPass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    showToast(`Password reset for ${teacherName}`, 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function dosLoadClassesAndSubjects() {
+  try {
+    const [classRes, subjectRes] = await Promise.all([
+      fetchAuth(`${API_URL}/classes`), fetchAuth(`${API_URL}/subjects`)
+    ]);
+    const classes = await classRes.json();
+    const subjects = await subjectRes.json();
+    const classSel = document.getElementById('dos-assign-class');
+    const subjectSel = document.getElementById('dos-assign-subject');
+    if (classSel && Array.isArray(classes)) {
+      classSel.innerHTML = '<option value="">-- Select Class --</option>' +
+        classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+    if (subjectSel && Array.isArray(subjects)) {
+      subjectSel.innerHTML = '<option value="">-- Select Subject --</option>' +
+        subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+  } catch(e) {
+    console.error('[DOS] Failed to load classes/subjects:', e);
+  }
+}
+
+async function generateDOSInviteLink() {
+  const email = document.getElementById('dos-invite-email')?.value.trim();
+  const checked = [...document.querySelectorAll('input[name="dos-level"]:checked')].map(cb => cb.value);
+  if (!email) { showToast('Please enter an email address', 'error'); return; }
+  if (checked.length === 0) { showToast('Please select at least one level', 'error'); return; }
+  try {
+    const res = await fetchAuth(`${API_URL}/dos/invite-link`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, levels_in_charge: checked })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    const linkEl = document.getElementById('dos-invite-link-text');
+    const resultEl = document.getElementById('dos-invite-result');
+    if (linkEl) linkEl.value = data.link;
+    if (resultEl) resultEl.style.display = 'block';
+    showToast('Invite link generated!', 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function copyDOSLink() {
+  const linkEl = document.getElementById('dos-invite-link-text');
+  if (linkEl) {
+    navigator.clipboard.writeText(linkEl.value)
+      .then(() => showToast('Copied to clipboard!', 'success'))
+      .catch(() => { linkEl.select(); document.execCommand('copy'); });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dosNavBtn = document.querySelector('[data-target="dos-hub"]');
+  if (dosNavBtn) {
+    dosNavBtn.addEventListener('click', () => {
+      setTimeout(() => { dosLoadClassesAndSubjects(); if (USER_ROLE === 'DOS' || USER_ROLE === 'Admin') dosLoadTeachers(); }, 300);
+    });
+  }
+});
+
+// ================================================================
+// TEACHER FIRST-LOGIN EXPERIENCE
+// ================================================================
+async function initTeacherFirstLogin() {
+  try {
+    const res = await fetchAuth(`${API_URL}/teacher/assignments`);
+    if (res.ok) {
+      const assignments = await res.json();
+      window._teacherAssignments = assignments;
+      if (Array.isArray(assignments) && assignments.length > 0) {
+        const uniqueClasses = [...new Map(assignments.map(a => [a.class_id, a])).values()];
+        ['t-class-id', 'rc-class-id'].forEach(id => {
+          const sel = document.getElementById(id);
+          if (sel) sel.innerHTML = '<option value="">-- Select Class --</option>' +
+            uniqueClasses.map(a => `<option value="${a.class_id}">${a.class_name||'Class '+a.class_id}</option>`).join('');
+        });
+      }
+    }
+  } catch(e) { console.warn('[Teacher] Could not load assignments:', e); }
+
+  if ('Notification' in window && Notification.permission === 'default') {
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') showToast('Push notifications enabled!', 'success');
+    } catch(e) {}
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window._deferredInstallPrompt = e;
+    showPWAInstallBanner();
+  });
+  if (window._deferredInstallPrompt) showPWAInstallBanner();
+}
+
+function showPWAInstallBanner() {
+  if (document.getElementById('pwa-install-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:16px 24px;border-radius:16px;display:flex;gap:12px;align-items:center;z-index:99999;box-shadow:0 8px 32px rgba(99,102,241,0.4);font-size:0.9rem;max-width:90vw;';
+  banner.innerHTML = `
+    <i class="fa-solid fa-mobile-screen-button" style="font-size:1.3rem;"></i>
+    <div><div style="font-weight:700;margin-bottom:2px;">Install School App</div><div style="opacity:0.85;font-size:0.8rem;">Add to your home screen for quick access</div></div>
+    <button onclick="installPWA()" style="background:white;color:#6366f1;border:none;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;margin-left:8px;">Install</button>
+    <button onclick="document.getElementById('pwa-install-banner').remove()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px;border-radius:8px;cursor:pointer;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function installPWA() {
+  if (window._deferredInstallPrompt) {
+    window._deferredInstallPrompt.prompt();
+    const { outcome } = await window._deferredInstallPrompt.userChoice;
+    window._deferredInstallPrompt = null;
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.remove();
+    if (outcome === 'accepted') showToast('App installed!', 'success');
+  }
+}
+
+window.installPWA = installPWA;
+window.switchDOSView = switchDOSView;
+window.dosLoadTeachers = dosLoadTeachers;
+window.dosLoadStudents = dosLoadStudents;
+window.handleDOSAddTeacher = handleDOSAddTeacher;
+window.handleDOSAssignTeacher = handleDOSAssignTeacher;
+window.dosResetTeacherPassword = dosResetTeacherPassword;
+window.generateDOSInviteLink = generateDOSInviteLink;
+window.copyDOSLink = copyDOSLink;
+window.initTeacherFirstLogin = initTeacherFirstLogin;

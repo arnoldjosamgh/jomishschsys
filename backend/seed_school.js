@@ -59,6 +59,50 @@ async function seedSchoolTenant(db, asyncLocalStorage) {
     console.log(`[SEED] School tenant "${prefix}" done.`);
 }
 
+async function seedDefaultClassesAndSubjects(db, asyncLocalStorage, schemaName, isPostgres) {
+    const doSeed = () => {
+        const defaultClasses = [
+            { name: 'Nursery Baby Class', level_category: 'Nursery' },
+            { name: 'Nursery Middle', level_category: 'Nursery' },
+            { name: 'Nursery Top', level_category: 'Nursery' },
+            { name: 'P1', level_category: 'Primary' }, { name: 'P2', level_category: 'Primary' },
+            { name: 'P3', level_category: 'Primary' }, { name: 'P4', level_category: 'Primary' },
+            { name: 'P5', level_category: 'Primary' }, { name: 'P6', level_category: 'Primary' },
+            { name: 'P7', level_category: 'Primary' },
+            { name: 'S1 (O-Level)', level_category: 'Secondary O-Level' },
+            { name: 'S2 (O-Level)', level_category: 'Secondary O-Level' },
+            { name: 'S3 (O-Level)', level_category: 'Secondary O-Level' },
+            { name: 'S4 (O-Level)', level_category: 'Secondary O-Level' },
+            { name: 'S5 (A-Level)', level_category: 'Secondary A-Level' },
+            { name: 'S6 (A-Level)', level_category: 'Secondary A-Level' },
+            { name: 'University Year 1', level_category: 'University' },
+        ];
+        const defaultSubjects = [
+            'Mathematics', 'English Language', 'Science', 'Social Studies',
+            'Religious Education', 'Physical Education', 'Art', 'Music',
+            'History', 'Geography', 'Biology', 'Chemistry', 'Physics',
+            'Computer Science', 'Agriculture', 'Commerce', 'Luganda',
+        ];
+        defaultClasses.forEach(c => {
+            db.run(
+                `INSERT INTO classes (name, grade_level, level_category) VALUES (?, ?, ?) ON CONFLICT (name) DO NOTHING`,
+                [c.name, c.name, c.level_category], () => {}
+            );
+        });
+        defaultSubjects.forEach(name => {
+            const code = name.toUpperCase().replace(/\s+/g, '').substring(0, 6);
+            db.run(
+                `INSERT INTO subjects (name, code) VALUES (?, ?) ON CONFLICT (name) DO NOTHING`,
+                [name, code], () => {}
+            );
+        });
+        console.log('[SEED] Default classes and subjects seeded.');
+    };
+    if (isPostgres) asyncLocalStorage.run(schemaName, doSeed);
+    else doSeed();
+}
+
+
 function runSchemaMigrations(db, asyncLocalStorage, schemaName, isPostgres, resolve) {
     const doIt = () => {
         db.get("SELECT value FROM system_info WHERE key = 'version'", (err, row) => {
@@ -98,4 +142,5 @@ function runSchemaMigrations(db, asyncLocalStorage, schemaName, isPostgres, reso
     else doIt();
 }
 
-module.exports = { seedSchoolTenant };
+module.exports = { seedSchoolTenant, seedDefaultClassesAndSubjects };
+
