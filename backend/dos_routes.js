@@ -32,40 +32,49 @@ router.post('/invite-link', authenticateToken, (req, res) => {
     
     const levelsStr = Array.isArray(levels_in_charge) ? levels_in_charge.join(',') : levels_in_charge;
 
-    db.run(
-        `INSERT INTO onboarding_tokens (token, company_prefix, company_name, business_email, expires_at, used, levels_in_charge)
-         VALUES (?, 'dos_invite', 'DOS Invite', ?, ?, 0, ?)`,
-        [token, email, expiresAt, levelsStr],
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            const baseUrl = req.protocol + "://" + req.get("host");
-            res.json({ token, link: `${baseUrl}/dos-register.html?token=${token}` });
-        }
-    );
+    db.asyncLocalStorage.run("public", () => {
+        db.run(
+            `INSERT INTO onboarding_tokens (token, company_prefix, company_name, business_email, expires_at, used, levels_in_charge)
+             VALUES (?, ?, 'dos_invite', ?, ?, 0, ?)`,
+            [token, req.user.prefix || 'TSCH', email, expiresAt, levelsStr],
+            function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                const baseUrl = req.protocol + "://" + req.get("host");
+                res.json({ token, link: `${baseUrl}/dos-register.html?token=${token}` });
+            }
+        );
+    });
 });
 
 // 2. Register DOS with Token
 router.post('/register', async (req, res) => {
     const { token, first_name, last_name, password } = req.body;
     
-    db.get(`SELECT * FROM onboarding_tokens WHERE token = ? AND company_prefix = 'dos_invite' AND used = 0`, [token], async (err, row) => {
-        if (err || !row) return res.status(400).json({ error: 'Invalid or expired token' });
-        if (new Date(row.expires_at) < new Date()) return res.status(400).json({ error: 'Token expired' });
+    db.asyncLocalStorage.run("public", () => {
+        db.get(`SELECT * FROM onboarding_tokens WHERE token = ? AND company_name = 'dos_invite' AND used = 0`, [token], async (err, row) => {
+            if (err || !row) return res.status(400).json({ error: 'Invalid or expired token' });
+            if (new Date(row.expires_at) < new Date()) return res.status(400).json({ error: 'Token expired' });
 
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-        const username = 'DOS' + Math.floor(Math.random() * 10000);
+            const salt = await bcrypt.genSalt(10);
+            const hash = await bcrypt.hash(password, salt);
+            const username = 'DOS' + Math.floor(Math.random() * 10000);
+            const companySchema = row.company_prefix === "public" ? "public" : "t_" + row.company_prefix.toLowerCase();
 
-        db.run(
-            `INSERT INTO users (first_name, last_name, email, password, role, username, levels_in_charge)
-             VALUES (?, ?, ?, ?, 'DOS', ?, ?)`,
-            [first_name, last_name, row.business_email, hash, username, row.levels_in_charge],
-            function(err) {
-                if (err) return res.status(500).json({ error: err.message });
-                db.run(`UPDATE onboarding_tokens SET used = 1 WHERE token = ?`, [token]);
-                res.json({ success: true, message: 'DOS registered successfully', username });
-            }
-        );
+            db.asyncLocalStorage.run(companySchema, () => {
+                db.run(
+                    `INSERT INTO users (first_name, last_name, email, password, role, username, levels_in_charge)
+                     VALUES (?, ?, ?, ?, 'DOS', ?, ?)`,
+                    [first_name, last_name, row.business_email, hash, username, row.levels_in_charge],
+                    function(err) {
+                        if (err) return res.status(500).json({ error: err.message });
+                        db.asyncLocalStorage.run("public", () => {
+                            db.run(`UPDATE onboarding_tokens SET used = 1 WHERE token = ?`, [token]);
+                        });
+                        res.json({ success: true, message: 'DOS registered successfully', username, prefix: row.company_prefix });
+                    }
+                );
+            });
+        });
     });
 });
 
@@ -76,7 +85,9 @@ router.post('/teachers', authenticateToken, async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
+    // In DB we store TRxxxx, but user logs in with PREFIX-TRxxxx
     const username = 'TR' + Math.floor(Math.random() * 10000);
+    const loginUsername = (req.user.prefix || 'TSCH') + '-' + username;
 
     db.run(
         `INSERT INTO users (first_name, last_name, email, phone, password, role, username)
@@ -84,7 +95,7 @@ router.post('/teachers', authenticateToken, async (req, res) => {
         [first_name, last_name, email, phone, hash, username],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true, teacher_id: this.lastID, username });
+            res.json({ success: true, teacher_id: this.lastID, username: loginUsername });
         }
     );
 });
