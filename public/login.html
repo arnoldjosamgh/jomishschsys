@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -28,7 +28,7 @@ window.onunhandledrejection = function(e) {
     <meta property="twitter:title" content="Sign In - School System">
     <meta property="twitter:description" content="All-in-one school management platform.">
     <meta property="twitter:image" content="/favicon.png">
-    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link rel="icon" type="image/png" href="favicon.png?v=3">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#6366f1">
     <meta name="mobile-web-app-capable" content="yes">
@@ -152,7 +152,7 @@ window.onunhandledrejection = function(e) {
             pwd.type = pwd.type === 'password' ? 'text' : 'password';
         });
 
-        // ── Offline credential helpers ────────────────────────────────────────
+        // â”€â”€ Offline credential helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         async function hashPassword(password, salt) {
             const enc = new TextEncoder();
             const data = enc.encode(password + salt);
@@ -166,7 +166,7 @@ window.onunhandledrejection = function(e) {
             const creds = {
                 username: username.toLowerCase(),
                 hash,
-                // NOTE: We do NOT store the JWT token — it becomes stale when
+                // NOTE: We do NOT store the JWT token â€” it becomes stale when
                 // someone logs in from another device and gets a new session token.
                 // Offline login will re-use role/permissions only and set offline_mode.
                 role:        profile.role,
@@ -241,8 +241,8 @@ window.onunhandledrejection = function(e) {
                     btn.innerHTML = 'Sign In';
                 }
             } catch (err) {
-                // ── Offline Fallback Login ────────────────────────────────────
-                // Server unreachable — check if credentials match saved offline cache
+                // â”€â”€ Offline Fallback Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // Server unreachable â€” check if credentials match saved offline cache
                 const offline = await tryOfflineLogin(usernameVal, passwordVal);
                 if (offline) {
                     // Restore session in offline mode.
@@ -260,7 +260,7 @@ window.onunhandledrejection = function(e) {
                 } else {
                     errorEl.style.display = 'block';
                     if (!navigator.onLine) {
-                        errorEl.innerHTML = '📴 <strong>Offline</strong> — no server connection.<br>Use your normal username & password to log in offline.';
+                        errorEl.innerHTML = 'ðŸ“´ <strong>Offline</strong> â€” no server connection.<br>Use your normal username & password to log in offline.';
                     } else {
                         errorEl.textContent = 'Cannot reach server. Is the system running?';
                     }
@@ -296,3 +296,4 @@ window.onunhandledrejection = function(e) {
     </script>
 </body>
 </html>
+

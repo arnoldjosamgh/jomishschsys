@@ -98,7 +98,7 @@
     <meta property="twitter:title" content="School System">
     <meta property="twitter:description" content="All-in-one school management platform.">
     <meta property="twitter:image" content="/favicon.png">
-    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link rel="icon" type="image/png" href="favicon.png?v=3">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#6366f1">
     <meta name="mobile-web-app-capable" content="yes">
@@ -116,8 +116,8 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
-    <link rel="stylesheet" href="style.css?v=19">
-    <script src="kiosk-lock.js?v=19"></script>
+    <link rel="stylesheet" href="style.css?v=20">
+    <script src="kiosk-lock.js?v=20"></script>
     <script defer src="lib/socket.io.js"></script>
     <script defer src="lib/jspdf.umd.min.js"></script>
     <script defer src="lib/jspdf.plugin.autotable.min.js"></script>
@@ -126,8 +126,8 @@
     <!-- For Modern QR Codes with Branding -->
     <script defer src="lib/qr-code-styling.js"></script>
     <script src="lib/JsBarcode.all.min.js"></script>
-    <script src="lib/thermal-serial.js?v=2"></script>
-    <script defer src="school_logic.js?v=3"></script>
+    <script src="lib/thermal-serial.js?v=3"></script>
+    <script defer src="school_logic.js?v=4"></script>
 </head>
 <body>
     <!-- Skeleton Auth Guard Loader -->
@@ -1983,8 +1983,8 @@
         </div>
     </div>
 
-    <script src="offline-db.js?v=32"></script>
-    <script src="app.js?v=51"></script>
+    <script src="offline-db.js?v=33"></script>
+    <script src="app.js?v=52"></script>
 
     <!-- Make favicon round dynamically -->
     <script>
@@ -2042,7 +2042,7 @@
 
             try {
                 // 1. Register the Service Worker
-                const reg = await navigator.serviceWorker.register('/sw.js?v=39', { scope: '/' });
+                const reg = await navigator.serviceWorker.register('/sw.js?v=40', { scope: '/' });
                 console.log('[PUSH] Service Worker registered:', reg.scope);
 
                 // 2. Check current permission state
@@ -2171,3 +2171,4 @@
 
 </body>
 </html>
+
