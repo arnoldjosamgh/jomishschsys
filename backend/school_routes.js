@@ -229,16 +229,32 @@ module.exports = function(app, db, io, asyncLocalStorage) {
     // =====================================================
 
     app.post("/api/school/marks", (req, res) => {
-        const { student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64 } = req.body;
+        const { student_id, subject_id, class_id, teacher_id, term, year, score, grade, exam_photo_base64 } = req.body;
+        if (!student_id || !subject_id || !term || !year || score === undefined)
+            return res.status(400).json({ error: "Missing required fields: student_id, subject_id, term, year, score" });
+
+        // Auto-calculate grade if not provided
+        let finalGrade = grade;
+        if (!finalGrade && score !== undefined) {
+            const s = parseFloat(score);
+            if (s >= 90) finalGrade = 'A';
+            else if (s >= 80) finalGrade = 'B';
+            else if (s >= 70) finalGrade = 'C';
+            else if (s >= 60) finalGrade = 'D';
+            else if (s >= 50) finalGrade = 'E';
+            else finalGrade = 'F';
+        }
+
         db.run(
-            `INSERT INTO marks (student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64) VALUES (?,?,?,?,?,?,?,?)`,
-            [student_id, subject_id, teacher_id, term, year, score, grade, exam_photo_base64],
+            `INSERT INTO marks (student_id, subject_id, class_id, teacher_id, term, year, score, grade, exam_photo_base64) VALUES (?,?,?,?,?,?,?,?,?)`,
+            [student_id, subject_id, class_id || null, teacher_id || null, term, year, score, finalGrade, exam_photo_base64 || null],
             function(err) {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json({ success: true, mark_id: this.lastID });
+                res.json({ success: true, mark_id: this.lastID, grade: finalGrade });
             }
         );
     });
+
 
     app.get("/api/school/marks", (req, res) => {
         const { student_id, term, year } = req.query;

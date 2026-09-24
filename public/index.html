@@ -472,11 +472,11 @@
                             </div>
                             <div>
                                 <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Score</label>
-                                <input type="number" id="t-score" placeholder="0 - 100" min="0" max="100" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
+                                <input type="number" id="t-score" oninput="autoCalcGrade()" placeholder="0 - 100" min="0" max="100" style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
                             </div>
                             <div>
-                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Grade</label>
-                                <input type="text" id="t-grade" placeholder="A, B, C..." style="width:100%; padding:10px 12px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
+                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Grade <span style="font-weight:400; color:var(--text-muted);">(auto)</span></label>
+                                <input type="text" id="t-grade" readonly placeholder="Auto-calculated" style="width:100%; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--primary); font-weight:bold; font-size:1.1rem; text-align:center; cursor:default;">
                             </div>
                         </div>
 

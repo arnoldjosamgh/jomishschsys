@@ -128,6 +128,15 @@ function runSchemaMigrations(db, asyncLocalStorage, schemaName, isPostgres, reso
                 tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','202') ON CONFLICT (key) DO UPDATE SET value='202'", [], () => cb(null)));
             }
 
+            if (v < 203) {
+                tasks.push(cb => db.run("ALTER TABLE students ADD COLUMN IF NOT EXISTS class_id INTEGER", [], () => cb(null)));
+                tasks.push(cb => db.run("ALTER TABLE students ADD COLUMN IF NOT EXISTS admission_number TEXT", [], () => cb(null)));
+                tasks.push(cb => db.run("ALTER TABLE students ADD COLUMN IF NOT EXISTS date_of_admission DATE DEFAULT CURRENT_DATE", [], () => cb(null)));
+                tasks.push(cb => db.run("ALTER TABLE students ADD COLUMN IF NOT EXISTS gender TEXT", [], () => cb(null)));
+                tasks.push(cb => db.run("ALTER TABLE marks ADD COLUMN IF NOT EXISTS class_id INTEGER", [], () => cb(null)));
+                tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','203') ON CONFLICT (key) DO UPDATE SET value='203'", [], () => cb(null)));
+            }
+
             if (tasks.length === 0) {
                 console.log(`[SEED] "${schemaName}" is fully migrated.`);
                 return resolve();

@@ -352,13 +352,34 @@ window.onTeacherSubjectChange = async function() {
 
     if (!class_id) return;
 
-    // Load students for this class
-    const students = await apiGet(`/students/by-class?class_id=${class_id}`);
-    students.forEach(s => {
-        studentSelect.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.id})</option>`;
-    });
-
+    // Use the correct endpoint: /school/students?class_id=X
+    const students = await apiGet(`/students?class_id=${class_id}`);
+    if (!Array.isArray(students) || students.length === 0) {
+        studentSelect.innerHTML += '<option disabled>No students in this class</option>';
+    } else {
+        students.forEach(s => {
+            studentSelect.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id || s.id})</option>`;
+        });
+    }
     studentSelect.disabled = false;
+};
+
+// Auto-calculate grade from score using school grade scale
+window.autoCalcGrade = function() {
+    const score = parseInt(document.getElementById('t-score')?.value, 10);
+    const gradeEl = document.getElementById('t-grade');
+    if (!gradeEl || isNaN(score)) return;
+    // Default Uganda-style grade boundaries (can be configured by school)
+    const boundaries = [
+        { min: 90, max: 100, grade: 'A' },
+        { min: 80, max: 89,  grade: 'B' },
+        { min: 70, max: 79,  grade: 'C' },
+        { min: 60, max: 69,  grade: 'D' },
+        { min: 50, max: 59,  grade: 'E' },
+        { min: 0,  max: 49,  grade: 'F' },
+    ];
+    const match = boundaries.find(b => score >= b.min && score <= b.max);
+    gradeEl.value = match ? match.grade : '';
 };
 
 // ==========================================
@@ -470,17 +491,84 @@ window.submitRollCall = async function() {
         class_id: currentRollCall.class_id,
         subject_id: currentRollCall.subject_id,
         teacher_id,
-        attendance_records
+        attendance: attendance_records   // backend expects 'attendance'
     };
     
-    const res = await apiPost('/rollcall', payload);
+    const res = await apiPost('/class-attendance', payload);  // correct path
     if (res.success) {
-        alert("Roll call submitted successfully!");
+        if (window.showToast) showToast('Roll call submitted!', 'success');
+        else alert('Roll call submitted successfully!');
         document.getElementById('rollcall-student-list').style.display = 'none';
         document.getElementById('rollcall-session-info').style.display = 'none';
         document.getElementById('rollcall-manual-pickers').style.display = 'none';
     } else {
-        alert("Error: " + res.error);
+        if (window.showToast) showToast('Error: ' + (res.error || 'Unknown error'), 'error');
+        else alert('Error: ' + res.error);
+    }
+};
+
+// ==========================================
+// Teacher - Submit Marks
+// ==========================================
+window.submitMarks = async function() {
+    const student_id  = document.getElementById('t-student-id')?.value;
+    const subject_id  = document.getElementById('t-subject-id')?.value;
+    const class_id    = document.getElementById('t-class-id')?.value;
+    const term        = document.getElementById('t-term')?.value.trim();
+    const year        = document.getElementById('t-year')?.value.trim();
+    const score       = document.getElementById('t-score')?.value;
+    const grade       = document.getElementById('t-grade')?.value.trim();
+    const photoFile   = document.getElementById('t-exam-photo')?.files?.[0];
+    const teacher_id  = localStorage.getItem('jomish_user_id') || '';
+    const btn         = document.querySelector('#teacher-marks-view .primary-btn');
+
+    if (!student_id) return showToast && showToast('Please select a student', 'error') || alert('Please select a student');
+    if (!subject_id) return showToast && showToast('Please select a subject', 'error') || alert('Please select a subject');
+    if (!term)       return showToast && showToast('Please enter a term', 'error') || alert('Please enter a term');
+    if (!year)       return showToast && showToast('Please enter a year', 'error') || alert('Please enter a year');
+    if (score === '' || score === undefined) return showToast && showToast('Please enter a score', 'error') || alert('Please enter a score');
+
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...'; }
+
+    let exam_photo_base64 = null;
+    if (photoFile) {
+        exam_photo_base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.readAsDataURL(photoFile);
+        });
+    }
+
+    const payload = {
+        student_id: parseInt(student_id),
+        subject_id: parseInt(subject_id),
+        class_id: class_id ? parseInt(class_id) : undefined,
+        teacher_id: parseInt(teacher_id) || undefined,
+        term,
+        year,
+        score: parseFloat(score),
+        grade: grade || undefined,
+        exam_photo_base64
+    };
+
+    const res = await apiPost('/marks', payload);
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Submit Marks'; }
+
+    if (res.success || res.mark_id) {
+        if (window.showToast) showToast('Marks saved successfully!', 'success');
+        else alert('Marks saved!');
+        // Reset form fields but keep class/subject for batch entry
+        const resetIds = ['t-student-id', 't-term', 't-year', 't-score', 't-grade', 't-exam-photo'];
+        resetIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.tagName === 'SELECT') el.value = '';
+            else el.value = '';
+            if (el.type === 'file') el.value = null;
+        });
+    } else {
+        if (window.showToast) showToast('Error: ' + (res.error || 'Failed to save marks'), 'error');
+        else alert('Error: ' + (res.error || 'Failed'));
     }
 };
 
