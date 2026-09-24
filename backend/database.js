@@ -471,6 +471,13 @@ const schema = [
         event_type TEXT,
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS passkey_credentials (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        cred_id TEXT NOT NULL UNIQUE,
+        cred_json TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`
 ];
 

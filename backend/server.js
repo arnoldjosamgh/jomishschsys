@@ -809,16 +809,11 @@ app.post("/api/passkey/register", authenticateToken, async (req, res) => {
   const schema = asyncLocalStorage.getStore() || "public";
   asyncLocalStorage.run(schema, () => {
     db.run(
-      `CREATE TABLE IF NOT EXISTS passkey_credentials (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, cred_id TEXT NOT NULL UNIQUE, cred_json TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
-      [], () => {
-        db.run(
-          `INSERT INTO passkey_credentials (user_id, cred_id, cred_json) VALUES (?,?,?) ON CONFLICT (cred_id) DO UPDATE SET cred_json=excluded.cred_json`,
-          [req.user.id, credId, credJson],
-          (err) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-          }
-        );
+      `INSERT INTO passkey_credentials (user_id, cred_id, cred_json) VALUES (?,?,?) ON CONFLICT (cred_id) DO UPDATE SET cred_json=excluded.cred_json`,
+      [req.user.id, credId, credJson],
+      (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
       }
     );
   });

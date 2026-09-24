@@ -2254,7 +2254,7 @@ function enforceRBAC() {
     ].forEach((n) => {
       if (n) n.style.display = "block";
     });
-    if (navTechHub) { navTechHub.style.display = "block"; navTechHub.style.removeProperty('display'); navTechHub.classList.remove("hidden"); }
+    if (navTechHub) { navTechHub.style.display = "block"; navTechHub.classList.remove("hidden"); }
     // Auto-navigate to Tech Hub
     setTimeout(() => { if (navTechHub) navTechHub.click(); }, 150);
     if (isTech) {

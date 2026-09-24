@@ -145,6 +145,17 @@ function runSchemaMigrations(db, asyncLocalStorage, schemaName, isPostgres, reso
                 tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','205') ON CONFLICT (key) DO UPDATE SET value='205'", [], () => cb(null)));
             }
 
+            if (v < 206) {
+                tasks.push(cb => db.run(
+                    `CREATE TABLE IF NOT EXISTS passkey_credentials (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, cred_id TEXT NOT NULL UNIQUE, cred_json TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+                    [], (err) => {
+                        if (err) console.error("[SEED ERROR] v206 passkey_credentials:", err.message);
+                        cb(null);
+                    }
+                ));
+                tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','206') ON CONFLICT (key) DO UPDATE SET value='206'", [], () => cb(null)));
+            }
+
             if (tasks.length === 0) {
                 console.log(`[SEED] "${schemaName}" is fully migrated.`);
                 return resolve();
