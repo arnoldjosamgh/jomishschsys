@@ -88,7 +88,7 @@ router.post('/register', async (req, res) => {
 
 // 3. Add Teacher (DOS or Admin)
 router.post('/teachers', auth, async (req, res) => {
-    const allowed = ['DOS', 'Admin', 'Headteacher'];
+    const allowed = ['DOS', 'Admin', 'Headteacher', 'Tech', 'System Technician'];
     if (!allowed.includes(req.user.role)) {
         return res.status(403).json({ error: 'Forbidden' });
     }
@@ -123,7 +123,7 @@ router.post('/teachers', auth, async (req, res) => {
 
 // 4. Assign Class and Subject to Teacher
 router.post('/teachers/:id/assignments', auth, (req, res) => {
-    const allowed = ['DOS', 'Admin', 'Headteacher'];
+    const allowed = ['DOS', 'Admin', 'Headteacher', 'Tech', 'System Technician'];
     if (!allowed.includes(req.user.role)) {
         return res.status(403).json({ error: 'Forbidden' });
     }
