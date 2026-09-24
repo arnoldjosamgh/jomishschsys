@@ -2256,8 +2256,11 @@ function enforceRBAC() {
       if (n) n.style.display = "block";
     });
     if (navTechHub) { navTechHub.style.display = "block"; navTechHub.classList.remove("hidden"); }
-    // Auto-navigate to Tech Hub
-    setTimeout(() => { if (navTechHub) navTechHub.click(); }, 150);
+    // Auto-navigate to Tech Hub only on initial load
+    if (!window._initialTechClickDone) {
+      window._initialTechClickDone = true;
+      setTimeout(() => { if (navTechHub) navTechHub.click(); }, 150);
+    }
     if (isTech) {
       // Tech users always see tech-only elements
       document
