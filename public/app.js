@@ -2063,6 +2063,7 @@ function enforceRBAC() {
   const navTransport = document.querySelector('[data-target="transport-hub"]');
   const navSecretary = document.querySelector('[data-target="secretary-hub"]');
   const navTechHub = document.querySelector('[data-target="tech-hub"]');
+  const navPOS = document.querySelector('[data-target="pos"]') || null;
 
   const navDOSHub = document.querySelector('[data-target="dos-hub"]');
   const navTeacherHub = document.querySelector('[data-target="teacher-hub"]');
