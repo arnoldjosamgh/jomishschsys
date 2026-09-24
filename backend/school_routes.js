@@ -142,7 +142,7 @@ module.exports = function(app, db, io, asyncLocalStorage) {
 
         targetLevels.forEach(lv => {
             db.run(
-                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
+                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?) ON CONFLICT (name, level) DO NOTHING`,
                 [name, subjectCode, lv],
                 function(err) {
                     completed++;
@@ -150,7 +150,7 @@ module.exports = function(app, db, io, asyncLocalStorage) {
                     else inserted.push({ id: this.lastID, level: lv });
 
                     if (completed === targetLevels.length) {
-                        if (inserted.length === 0) {
+                        if (inserted.length === 0 && errors.length > 0) {
                             return res.status(400).json({ error: errors.join("; ") });
                         }
                         res.json({ success: true, inserted, errors });

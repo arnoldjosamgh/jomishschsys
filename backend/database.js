@@ -68,7 +68,7 @@ if (process.env.DATABASE_URL) {
 }
 
 let db;
-const CURRENT_VERSION = 207;
+const CURRENT_VERSION = 208;
 
 if (config.dbType === 'postgres') {
     const poolConfig = { ...config.postgres, max: 100, idleTimeoutMillis: 30000 };
@@ -561,6 +561,14 @@ function runMigrations(fromVersion) {
         db.run('ALTER TABLE subjects ADD COLUMN level TEXT', [], () => {});
         db.run('ALTER TABLE subjects ADD COLUMN class_id INTEGER', [], () => {});
         db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "207"]);
+    }
+    if (fromVersion < 208) {
+        // Drop old unique constraints on name/code (Postgres syntax)
+        // and replace with a composite unique on (name, level) so the same subject can be in multiple levels
+        db.run('ALTER TABLE subjects DROP CONSTRAINT IF EXISTS subjects_name_key', [], () => {});
+        db.run('ALTER TABLE subjects DROP CONSTRAINT IF EXISTS subjects_code_key', [], () => {});
+        db.run('CREATE UNIQUE INDEX IF NOT EXISTS subjects_name_level_uidx ON subjects (name, level)', [], () => {});
+        db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "208"]);
     }
 }
 
