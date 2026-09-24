@@ -142,12 +142,20 @@ module.exports = function(app, db, io, asyncLocalStorage) {
 
         targetLevels.forEach(lv => {
             db.run(
-                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?) ON CONFLICT (name, level) DO NOTHING`,
+                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
                 [name, subjectCode, lv],
                 function(err) {
                     completed++;
-                    if (err) errors.push(`${lv}: ${err.message}`);
-                    else inserted.push({ id: this.lastID, level: lv });
+                    if (err) {
+                        // 23505 = unique_violation in Postgres — subject already exists in this level, skip silently
+                        if (err.code === '23505' || (err.message && err.message.includes('unique'))) {
+                            // treat as skipped (not an error)
+                        } else {
+                            errors.push(`${lv}: ${err.message}`);
+                        }
+                    } else {
+                        inserted.push({ id: this.lastID, level: lv });
+                    }
 
                     if (completed === targetLevels.length) {
                         if (inserted.length === 0 && errors.length > 0) {
