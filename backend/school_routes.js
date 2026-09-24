@@ -223,6 +223,23 @@ module.exports = function(app, db, io, asyncLocalStorage) {
     });
 
     // =====================================================
+    // ACTIVE TERM (auto-fill for marks form)
+    // Returns the most recently configured term & year from term_fees
+    // =====================================================
+    app.get("/api/school/active-term", (req, res) => {
+        db.get(
+            `SELECT term, year FROM term_fees ORDER BY year DESC, CASE term WHEN 'Term 3' THEN 3 WHEN 'Term 2' THEN 2 WHEN 'Term 1' THEN 1 ELSE 0 END DESC LIMIT 1`,
+            [],
+            (err, row) => {
+                if (err || !row) {
+                    return res.json({ term: 'Term 1', year: new Date().getFullYear().toString() });
+                }
+                res.json({ term: row.term, year: row.year.toString() });
+            }
+        );
+    });
+
+    // =====================================================
     // CLASS ATTENDANCE (ROLL CALL)
     // =====================================================
 

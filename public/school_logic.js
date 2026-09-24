@@ -465,6 +465,17 @@ window.loadTeacherClassesForMarks = async function() {
 
     document.getElementById('t-subject-id').disabled = true;
     document.getElementById('t-student-id').disabled = true;
+
+    // Auto-fill term and year from the most recently configured term (secretary timetable)
+    try {
+        const activeTerm = await apiGet('/active-term');
+        const termEl = document.getElementById('t-term');
+        const yearEl = document.getElementById('t-year');
+        if (termEl && activeTerm && activeTerm.term) termEl.value = activeTerm.term;
+        if (yearEl && activeTerm && activeTerm.year) yearEl.value = activeTerm.year;
+    } catch(e) {
+        // fallback: leave blank for manual entry
+    }
 };
 
 window.onTeacherClassChange = async function() {
@@ -490,25 +501,30 @@ window.onTeacherClassChange = async function() {
         }
     });
 
-    uniqueSubjects.forEach(s => {
-        subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-    });
+    if (uniqueSubjects.size === 0) {
+        subjectSelect.innerHTML += '<option disabled>No subjects assigned to this class</option>';
+    } else {
+        uniqueSubjects.forEach(s => {
+            subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        });
+    }
 
     subjectSelect.disabled = false;
 };
 
 window.onTeacherSubjectChange = async function() {
     const class_id = document.getElementById('t-class-id').value;
+    const subject_id = document.getElementById('t-subject-id').value;
     const studentSelect = document.getElementById('t-student-id');
     studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
     studentSelect.disabled = true;
 
-    if (!class_id) return;
+    if (!class_id || !subject_id) return;
 
-    // Use the correct endpoint: /school/students?class_id=X
+    // Load students enrolled in this class
     const students = await apiGet(`/students?class_id=${class_id}`);
     if (!Array.isArray(students) || students.length === 0) {
-        studentSelect.innerHTML += '<option disabled>No students in this class</option>';
+        studentSelect.innerHTML += '<option disabled>No students found in this class</option>';
     } else {
         students.forEach(s => {
             studentSelect.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id || s.id})</option>`;
@@ -516,6 +532,7 @@ window.onTeacherSubjectChange = async function() {
     }
     studentSelect.disabled = false;
 };
+
 
 // Auto-calculate grade from score using school grade scale
 window.autoCalcGrade = function() {
