@@ -126,46 +126,44 @@ module.exports = function(app, db, io, asyncLocalStorage) {
 
     // POST add subject — supports multiple levels
     // Body: { name, code, level }  OR  { name, code, levels: ["Primary P1", "Primary P2", ...] }
-    app.post("/api/school/subjects", (req, res) => {
+    app.post("/api/school/subjects", async (req, res) => {
         const { name, code, level, levels } = req.body;
         if (!name) return res.status(400).json({ error: "Subject name is required" });
 
         const subjectCode = code || name.substring(0, 5).toUpperCase().replace(/\s/g, '');
-        // Build list of levels to add to
         const targetLevels = levels && Array.isArray(levels) && levels.length > 0
             ? levels
             : [level || "General"];
 
-        let completed = 0;
-        let errors = [];
-        let inserted = [];
+        const errors = [];
+        const inserted = [];
 
-        targetLevels.forEach(lv => {
-            db.run(
-                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
-                [name, subjectCode, lv],
-                function(err) {
-                    completed++;
-                    if (err) {
-                        // 23505 = unique_violation in Postgres — subject already exists in this level, skip silently
-                        if (err.code === '23505' || (err.message && err.message.includes('unique'))) {
-                            // treat as skipped (not an error)
+        // Run inserts sequentially to avoid asyncLocalStorage schema context race conditions
+        for (const lv of targetLevels) {
+            await new Promise(resolve => {
+                db.run(
+                    `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
+                    [name, subjectCode, lv],
+                    function(err) {
+                        if (err) {
+                            if (err.code === '23505' || (err.message && err.message.includes('unique'))) {
+                                // duplicate — skip silently
+                            } else {
+                                errors.push(`${lv}: ${err.message}`);
+                            }
                         } else {
-                            errors.push(`${lv}: ${err.message}`);
+                            inserted.push({ id: this.lastID, level: lv });
                         }
-                    } else {
-                        inserted.push({ id: this.lastID, level: lv });
+                        resolve();
                     }
+                );
+            });
+        }
 
-                    if (completed === targetLevels.length) {
-                        if (inserted.length === 0 && errors.length > 0) {
-                            return res.status(400).json({ error: errors.join("; ") });
-                        }
-                        res.json({ success: true, inserted, errors });
-                    }
-                }
-            );
-        });
+        if (inserted.length === 0 && errors.length > 0) {
+            return res.status(400).json({ error: errors.join("; ") });
+        }
+        res.json({ success: true, inserted, errors });
     });
 
     // DELETE a subject

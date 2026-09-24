@@ -349,12 +349,11 @@ window.dosSelectLevel = function(level, btnEl) {
     document.getElementById('dos-curriculum-level-title').innerText = level;
     dosLoadSubjects(level);
 
-    // Reset all checkboxes and only tick the newly selected level
+    // Tick the selected level's checkbox (leave others as-is so user can multi-select)
     const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
     if (cbContainer) {
-        cbContainer.querySelectorAll('.dos-level-cb').forEach(cb => {
-            cb.checked = (cb.value === level);
-        });
+        const cb = cbContainer.querySelector(`.dos-level-cb[value="${level.replace(/"/g, '\\"')}"]`);
+        if (cb) cb.checked = true;
     }
 };
 
