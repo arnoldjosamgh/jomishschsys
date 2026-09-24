@@ -127,7 +127,7 @@
     <script defer src="lib/qr-code-styling.js"></script>
     <script src="lib/JsBarcode.all.min.js"></script>
     <script src="lib/thermal-serial.js?v=5"></script>
-    <script defer src="school_logic.js?v=8"></script>
+    <script defer src="school_logic.js?v=9"></script>
 </head>
 <body>
     <!-- Skeleton Auth Guard Loader -->
@@ -458,9 +458,9 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                                 <div>
                                     <h3 style="margin:0 0 4px 0;"><i class="fa-solid fa-book-open" style="color:var(--primary);"></i> Subjects &mdash; <span id="dos-curriculum-level-title" style="color:var(--primary);">Select a level</span></h3>
-                                    <p id="dos-curriculum-count-label" style="color:var(--text-muted); font-size:0.8rem; margin:0;">Select a level to manage its subjects (min 4, max 30)</p>
+                                    <p id="dos-curriculum-count-label" style="color:var(--text-muted); font-size:0.8rem; margin:0;">Select a level to manage its subjects (min 4, max 100)</p>
                                 </div>
-                                <div id="dos-curriculum-count-badge" style="background:var(--background); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:0.8rem; font-weight:700; color:var(--text-muted);">0 / 30</div>
+                                <div id="dos-curriculum-count-badge" style="background:var(--background); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:0.8rem; font-weight:700; color:var(--text-muted);">0 / 100</div>
                             </div>
 
                             <!-- Add subject form -->
@@ -2392,6 +2392,8 @@
 
 </body>
 </html>
+
+
 
 
 

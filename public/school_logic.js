@@ -1,4 +1,4 @@
-// Missing API helpers required for school modules
+﻿// Missing API helpers required for school modules
 window.apiGet = async function(endpoint) {
     try {
         const res = await window.fetchAuth(window.API_URL + '/school' + endpoint);
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const accBtn = document.querySelector('.nav-btn.accounts-only');
 
 
-    // Single-hub roles — users who only need one focused area
+    // Single-hub roles â€” users who only need one focused area
     const singleHubRoles = {
         'DOS':      { btn: dosBtn,     target: 'dos-hub',      label: 'DOS Hub' },
         'Teacher':  { btn: teacherBtn, target: 'teacher-hub',  label: 'Teacher Hub' },
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 350); // slight delay so app.js init runs first
 
     } else {
-        // Admin / Headteacher — show all school hubs in the regular sidebar
+        // Admin / Headteacher â€” show all school hubs in the regular sidebar
         if (dosBtn) dosBtn.style.display = 'block';
         if (teacherBtn) teacherBtn.style.display = 'block';
         if (accBtn) accBtn.style.display = 'block';
@@ -366,7 +366,7 @@ window.dosLoadSubjects = async function(level) {
         const res = await fetchAuth(`${API_URL}/school/subjects?level=${encodeURIComponent(level)}`);
         const data = await res.json();
         
-        document.getElementById('dos-curriculum-count-badge').innerText = `${(data||[]).length} / 30`;
+        document.getElementById('dos-curriculum-count-badge').innerText = `${(data||[]).length} / 100`;
         const warnEl = document.getElementById('dos-min-warning');
         
         if ((data||[]).length < 4) {
@@ -1065,3 +1065,4 @@ window.fetchFeeReports = async function() {
         tbody.appendChild(tr);
     });
 };
+
