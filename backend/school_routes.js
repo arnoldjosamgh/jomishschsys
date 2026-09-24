@@ -100,51 +100,61 @@ module.exports = function(app, db, io, asyncLocalStorage) {
 
     // GET all subjects, optionally filtered by level
     app.get("/api/school/subjects", (req, res) => {
-        const { level } = req.query;
-        if (level) {
-            db.all(`SELECT * FROM subjects WHERE level = ? ORDER BY name`, [level], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else {
-            db.all(`SELECT * FROM subjects ORDER BY level, name`, [], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        }
+        const { level, class_id } = req.query;
+        let sql = `SELECT * FROM subjects WHERE 1=1`;
+        const params = [];
+        if (level) { sql += ` AND level = ?`; params.push(level); }
+        if (class_id) { sql += ` AND class_id = ?`; params.push(class_id); }
+        sql += ` ORDER BY name`;
+        db.all(sql, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows || []);
+        });
     });
 
     // GET subject counts grouped by level
     app.get("/api/school/subjects/by-level", (req, res) => {
         db.all(
-            `SELECT level, COUNT(*) as count FROM subjects GROUP BY level ORDER BY level`,
+            `SELECT level, COUNT(*) as count FROM subjects WHERE level IS NOT NULL GROUP BY level ORDER BY level`,
             [],
             (err, rows) => {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
+                res.json(rows || []);
             }
         );
     });
 
-    // POST add subject (with level)
+    // POST add subject — supports multiple levels
+    // Body: { name, code, level }  OR  { name, code, levels: ["Primary P1", "Primary P2", ...] }
     app.post("/api/school/subjects", (req, res) => {
-        const { name, code, level } = req.body;
+        const { name, code, level, levels } = req.body;
         if (!name) return res.status(400).json({ error: "Subject name is required" });
 
-        // Enforce max 30 subjects per level
-        const subjectLevel = level || "General";
-        db.get(`SELECT COUNT(*) as count FROM subjects WHERE level = ?`, [subjectLevel], (err, row) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (row && row.count >= 30) {
-                return res.status(400).json({ error: `Maximum 30 subjects allowed per level (${subjectLevel} already has ${row.count})` });
-            }
-            const subjectCode = code || name.substring(0, 4).toUpperCase().replace(/\s/g, '');
+        const subjectCode = code || name.substring(0, 5).toUpperCase().replace(/\s/g, '');
+        // Build list of levels to add to
+        const targetLevels = levels && Array.isArray(levels) && levels.length > 0
+            ? levels
+            : [level || "General"];
+
+        let completed = 0;
+        let errors = [];
+        let inserted = [];
+
+        targetLevels.forEach(lv => {
             db.run(
                 `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
-                [name, subjectCode, subjectLevel],
+                [name, subjectCode, lv],
                 function(err) {
-                    if (err) return res.status(500).json({ error: err.message });
-                    res.json({ success: true, subject_id: this.lastID, name, code: subjectCode, level: subjectLevel });
+                    completed++;
+                    if (err) errors.push(`${lv}: ${err.message}`);
+                    else inserted.push({ id: this.lastID, level: lv });
+
+                    if (completed === targetLevels.length) {
+                        if (inserted.length === 0) {
+                            return res.status(400).json({ error: errors.join("; ") });
+                        }
+                        res.json({ success: true, inserted, errors });
+                    }
                 }
             );
         });

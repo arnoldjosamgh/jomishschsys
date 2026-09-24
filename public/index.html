@@ -127,7 +127,7 @@
     <script defer src="lib/qr-code-styling.js"></script>
     <script src="lib/JsBarcode.all.min.js"></script>
     <script src="lib/thermal-serial.js?v=5"></script>
-    <script defer src="school_logic.js?v=7"></script>
+    <script defer src="school_logic.js?v=8"></script>
 </head>
 <body>
     <!-- Skeleton Auth Guard Loader -->
@@ -457,24 +457,30 @@
                         <div class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                                 <div>
-                                    <h3 style="margin:0 0 4px 0;"><i class="fa-solid fa-book-open" style="color:var(--primary);"></i> Subjects â€” <span id="dos-curriculum-level-title" style="color:var(--primary);">Select a level</span></h3>
+                                    <h3 style="margin:0 0 4px 0;"><i class="fa-solid fa-book-open" style="color:var(--primary);"></i> Subjects &mdash; <span id="dos-curriculum-level-title" style="color:var(--primary);">Select a level</span></h3>
                                     <p id="dos-curriculum-count-label" style="color:var(--text-muted); font-size:0.8rem; margin:0;">Select a level to manage its subjects (min 4, max 30)</p>
                                 </div>
                                 <div id="dos-curriculum-count-badge" style="background:var(--background); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:0.8rem; font-weight:700; color:var(--text-muted);">0 / 30</div>
                             </div>
 
                             <!-- Add subject form -->
-                            <div id="dos-curriculum-add-form" style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                                <input type="text" id="dos-subject-name" placeholder="Subject name (e.g. Mathematics)" style="flex:2; min-width:180px;">
-                                <input type="text" id="dos-subject-code" placeholder="Code (e.g. MATH) â€” optional" style="flex:1; min-width:120px;" maxlength="8">
-                                <button class="primary-btn" id="dos-add-subject-btn" onclick="dosAddSubject()" style="white-space:nowrap;">
-                                    <i class="fa-solid fa-plus"></i> Add Subject
+                            <div id="dos-curriculum-add-form" style="margin-bottom:20px;">
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                                    <input type="text" id="dos-subject-name" placeholder="Subject name (e.g. Mathematics)" style="flex:2; min-width:180px;">
+                                    <input type="text" id="dos-subject-code" placeholder="Code (e.g. MATH) &mdash; optional" style="flex:1; min-width:120px;" maxlength="8">
+                                </div>
+                                <label style="font-size:0.8rem; font-weight:bold; display:block; margin-bottom:5px; color:var(--text);">Add to Classes/Levels <span style="font-weight:normal; color:var(--text-muted);">(select one or more)</span>:</label>
+                                <div id="dos-subject-levels-checkboxes" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; max-height:140px; overflow-y:auto; padding:10px; background:var(--background); border:1px solid var(--border); border-radius:6px; margin-bottom:10px;">
+                                    <!-- Populated by JS on load -->
+                                </div>
+                                <button class="primary-btn" id="dos-add-subject-btn" onclick="dosAddSubject()" style="width:100%;">
+                                    <i class="fa-solid fa-plus"></i> Add Subject to Selected Classes
                                 </button>
                             </div>
 
                             <!-- Subjects list -->
                             <div id="dos-subjects-list" style="display:flex; flex-direction:column; gap:8px;">
-                                <p style="color:var(--text-muted); text-align:center; padding:20px;">â† Select a school level to view and manage subjects</p>
+                                <p style="color:var(--text-muted); text-align:center; padding:20px;">&larr; Select a school level to view and manage subjects</p>
                             </div>
 
                             <!-- Min subjects warning -->
@@ -1073,9 +1079,9 @@
                             <div>
                                 <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Levels in Charge</label>
                                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; background:var(--background); border:1px solid var(--border); border-radius:10px; padding:14px;">
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Baby Class" name="dos-level"> Nursery Ã¢â‚¬â€œ Baby Class</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Middle" name="dos-level"> Nursery Ã¢â‚¬â€œ Middle</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Top" name="dos-level"> Nursery Ã¢â‚¬â€œ Top</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery &mdash; Baby Class" name="dos-level"> Nursery &mdash; Baby Class</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery &mdash; Middle" name="dos-level"> Nursery &mdash; Middle</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery &mdash; Top" name="dos-level"> Nursery &mdash; Top</label>
                                     <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P1" name="dos-level"> Primary P1</label>
                                     <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P2" name="dos-level"> Primary P2</label>
                                     <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P3" name="dos-level"> Primary P3</label>
@@ -2386,6 +2392,10 @@
 
 </body>
 </html>
+
+
+
+
 
 
 

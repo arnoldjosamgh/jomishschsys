@@ -68,7 +68,7 @@ if (process.env.DATABASE_URL) {
 }
 
 let db;
-const CURRENT_VERSION = 202;
+const CURRENT_VERSION = 207;
 
 if (config.dbType === 'postgres') {
     const poolConfig = { ...config.postgres, max: 100, idleTimeoutMillis: 30000 };
@@ -282,7 +282,7 @@ if (config.dbType === 'postgres') {
                     const safePrefix = prefix.toLowerCase();
                     const schemaName = 't_' + safePrefix;
 
-                    // Open (or create) the company .db file — this registers it in sqliteDbCache
+                    // Open (or create) the company .db file â€” this registers it in sqliteDbCache
                     openSqliteDb(schemaName);
 
                     // Run initDb() and checkMigrations() within the context of the new company db
@@ -434,7 +434,7 @@ const schema = [
         levels_in_charge TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS subjects (
-        id SERIAL PRIMARY KEY, name TEXT UNIQUE, code TEXT UNIQUE
+        id SERIAL PRIMARY KEY, name TEXT, code TEXT, level TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS marks (
         id SERIAL PRIMARY KEY, student_id INTEGER, subject_id INTEGER, teacher_id INTEGER,
@@ -557,7 +557,14 @@ function runMigrations(fromVersion) {
         db.run('ALTER TABLE classes ADD COLUMN level_category TEXT', [], () => {});
         db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "202"]);
     }
+    if (fromVersion < 207) {
+        db.run('ALTER TABLE subjects ADD COLUMN level TEXT', [], () => {});
+        db.run('ALTER TABLE subjects ADD COLUMN class_id INTEGER', [], () => {});
+        db.run('INSERT INTO system_info (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', ["version", "207"]);
+    }
 }
 
 module.exports = db;
 module.exports.asyncLocalStorage = asyncLocalStorage;
+
+

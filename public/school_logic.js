@@ -311,7 +311,7 @@ window.dosInitCurriculum = async function() {
         const res = await fetchAuth(`${API_URL}/school/subjects/by-level`);
         if (res.ok) {
             const data = await res.json();
-            data.forEach(d => counts[d.level] = d.count);
+            (data || []).forEach(d => counts[d.level] = d.count);
         }
     } catch (e) {
         console.error("Failed to fetch subject counts", e);
@@ -322,12 +322,23 @@ window.dosInitCurriculum = async function() {
         const color = count < 4 ? 'var(--danger)' : 'var(--success)';
         return `
             <button class="nav-btn" style="text-align:left; justify-content:space-between; width:100%; padding:10px 14px;" 
-                onclick="dosSelectLevel('${level}', this)">
+                onclick="dosSelectLevel('${level.replace(/'/g,"\\'")}', this)">
                 <span>${level}</span>
                 <span style="background:rgba(0,0,0,0.05); border-radius:12px; padding:2px 8px; font-size:0.75rem; color:${color}; font-weight:bold;">${count}</span>
             </button>
         `;
     }).join('');
+
+    // Also populate the multi-level checkboxes in the Add Subject form
+    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
+    if (cbContainer) {
+        cbContainer.innerHTML = DOS_SCHOOL_LEVELS.map(level => `
+            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; cursor:pointer; color:var(--text);">
+                <input type="checkbox" class="dos-level-cb" value="${level.replace(/"/g,'&quot;')}" style="accent-color:var(--primary);">
+                ${level}
+            </label>
+        `).join('');
+    }
 };
 
 window.dosSelectLevel = function(level, btnEl) {
@@ -337,6 +348,14 @@ window.dosSelectLevel = function(level, btnEl) {
     
     document.getElementById('dos-curriculum-level-title').innerText = level;
     dosLoadSubjects(level);
+
+    // Also tick this level's checkbox in the Add Subject panel
+    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
+    if (cbContainer) {
+        cbContainer.querySelectorAll('.dos-level-cb').forEach(cb => {
+            if (cb.value === level) cb.checked = true;
+        });
+    }
 };
 
 window.dosLoadSubjects = async function(level) {
@@ -347,16 +366,16 @@ window.dosLoadSubjects = async function(level) {
         const res = await fetchAuth(`${API_URL}/school/subjects?level=${encodeURIComponent(level)}`);
         const data = await res.json();
         
-        document.getElementById('dos-curriculum-count-badge').innerText = `${data.length} / 30`;
+        document.getElementById('dos-curriculum-count-badge').innerText = `${(data||[]).length} / 30`;
         const warnEl = document.getElementById('dos-min-warning');
         
-        if (data.length < 4) {
+        if ((data||[]).length < 4) {
             warnEl.style.display = 'block';
         } else {
             warnEl.style.display = 'none';
         }
         
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">No subjects added to this level yet.</p>';
             return;
         }
@@ -365,25 +384,21 @@ window.dosLoadSubjects = async function(level) {
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--background); border:1px solid var(--border); border-radius:8px;">
                 <div>
                     <h4 style="margin:0 0 4px 0;">${sub.name}</h4>
-                    <span style="font-size:0.75rem; color:var(--text-muted); background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">${sub.code}</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted); background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">${sub.code || ''}</span>
                 </div>
-                <button class="secondary-btn" style="color:#EF4444; border-color:transparent; padding:6px 10px;" onclick="dosDeleteSubject(${sub.id}, '${sub.name}')">
+                <button class="secondary-btn" style="color:#EF4444; border-color:transparent; padding:6px 10px;" onclick="dosDeleteSubject(${sub.id}, '${(sub.name||'').replace(/'/g,"\\'")}')">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `).join('');
         
     } catch (e) {
-        list.innerHTML = '<p style="color:#EF4444; padding:20px;">Failed to load subjects.</p>';
+        list.innerHTML = '<p style="color:#EF4444; padding:20px;">Failed to load subjects. Please check your connection.</p>';
+        console.error("dosLoadSubjects error:", e);
     }
 };
 
 window.dosAddSubject = async function() {
-    if (!currentCurriculumLevel) {
-        showToast("Please select a school level first", "warning");
-        return;
-    }
-    
     const nameInput = document.getElementById('dos-subject-name');
     const codeInput = document.getElementById('dos-subject-code');
     const name = nameInput.value.trim();
@@ -393,26 +408,45 @@ window.dosAddSubject = async function() {
         showToast("Subject name is required", "warning");
         return;
     }
+
+    // Gather selected levels from checkboxes
+    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
+    let selectedLevels = [];
+    if (cbContainer) {
+        cbContainer.querySelectorAll('.dos-level-cb:checked').forEach(cb => selectedLevels.push(cb.value));
+    }
+    // Fallback: use currentCurriculumLevel if no checkbox is checked
+    if (selectedLevels.length === 0) {
+        if (!currentCurriculumLevel) {
+            showToast("Please select at least one school level", "warning");
+            return;
+        }
+        selectedLevels = [currentCurriculumLevel];
+    }
     
     try {
         const res = await fetchAuth(`${API_URL}/school/subjects`, {
             method: 'POST',
-            body: JSON.stringify({ name, code, level: currentCurriculumLevel })
+            body: JSON.stringify({ name, code, levels: selectedLevels })
         });
         
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (!data.success && data.error) throw new Error(data.error);
         
         nameInput.value = '';
         codeInput.value = '';
-        showToast("Subject added!", "success");
+        const addedCount = (data.inserted || []).length;
+        showToast(`Subject added to ${addedCount} level${addedCount !== 1 ? 's' : ''}!`, "success");
         
-        // Refresh both lists to update counts
+        // Refresh counts and current level's subjects
         dosInitCurriculum().then(() => {
-            const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn')).find(b => b.innerText.includes(currentCurriculumLevel));
-            if (activeBtn) activeBtn.classList.add('active');
+            if (currentCurriculumLevel) {
+                const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
+                    .find(b => b.textContent.trim().startsWith(currentCurriculumLevel));
+                if (activeBtn) activeBtn.classList.add('active');
+            }
         });
-        dosLoadSubjects(currentCurriculumLevel);
+        if (currentCurriculumLevel) dosLoadSubjects(currentCurriculumLevel);
         
     } catch (e) {
         showToast(e.message || "Failed to add subject", "danger");
@@ -431,13 +465,17 @@ window.dosDeleteSubject = async function(id, name) {
         
         // Refresh both lists to update counts
         dosInitCurriculum().then(() => {
-            const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn')).find(b => b.innerText.includes(currentCurriculumLevel));
-            if (activeBtn) activeBtn.classList.add('active');
+            if (currentCurriculumLevel) {
+                const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
+                    .find(b => b.textContent.trim().startsWith(currentCurriculumLevel));
+                if (activeBtn) activeBtn.classList.add('active');
+            }
         });
-        dosLoadSubjects(currentCurriculumLevel);
+        if (currentCurriculumLevel) dosLoadSubjects(currentCurriculumLevel);
         
     } catch (e) {
         showToast(e.message || "Failed to delete subject", "danger");
+
     }
 };
 // ==========================================
