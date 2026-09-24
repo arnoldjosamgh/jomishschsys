@@ -6096,16 +6096,24 @@ app.post("/api/students", authenticateToken, (req, res) => {
   if (!first_name || !last_name)
     return res.status(400).json({ error: "First name and last name are required." });
 
-  const studentId = "STU" + Date.now();
-  db.run(
-    `INSERT INTO students (first_name, last_name, email, phone, grade, student_id, parent_name, parent_phone, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')`,
-    [first_name, last_name, email || null, phone || null, grade || null, studentId, parent_name || null, parent_phone || null],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ success: true, id: this.lastID, student_id: studentId });
-    }
-  );
+  const prefix = (req.user.prefix || "SCH").toUpperCase();
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+  
+  db.get("SELECT COUNT(*) as count FROM students WHERE student_id LIKE ?", [`${prefix}-${dateStr}-%`], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const count = row && row.count ? row.count + 1 : 1;
+    const studentId = `${prefix}-${dateStr}-${count.toString().padStart(3, '0')}`;
+    
+    db.run(
+      `INSERT INTO students (first_name, last_name, email, phone, grade, student_id, parent_name, parent_phone, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')`,
+      [first_name, last_name, email || null, phone || null, grade || null, studentId, parent_name || null, parent_phone || null],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, id: this.lastID, student_id: studentId });
+      }
+    );
+  });
 });
 
 // PUT approve or reject a pending student application

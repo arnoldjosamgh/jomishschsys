@@ -279,7 +279,7 @@
                     <button class="nav-btn" id="btn-dos-marks" onclick="switchDOSView('marks')">Marks</button>
                     <button class="nav-btn" id="btn-dos-notes" onclick="switchDOSView('notes')">Teacher Notes</button>
                     <button class="nav-btn" id="btn-dos-missing" onclick="switchDOSView('missing')"><i class="fa-solid fa-user-slash"></i> Missing</button>
-                    <button class="nav-btn dos-invite-btn" id="btn-dos-invite" onclick="switchDOSView('invite')"><i class="fa-solid fa-link"></i> Invite Link</button>
+                    
                 </div>
 
                 <!-- TEACHER MANAGEMENT VIEW -->
@@ -349,50 +349,6 @@
                                 <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Parent</th><th>Phone</th><th>Status</th></tr></thead>
                                 <tbody id="dos-students-tbody"></tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DOS INVITE LINK VIEW -->
-                <div id="dos-invite-view" class="dos-sub-view hidden">
-                    <div class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border); max-width:620px;">
-                        <h3 style="margin-bottom:6px;"><i class="fa-solid fa-link" style="color:var(--primary);"></i> Generate DOS Invite Link</h3>
-                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Create a one-time link to onboard a DOS. Select the levels they will be in charge of.</p>
-                        <div style="display:flex; flex-direction:column; gap:14px;">
-                            <div>
-                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">DOS Email</label>
-                                <input type="email" id="dos-invite-email" placeholder="dos@school.com" style="width:100%;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Levels in Charge</label>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; background:var(--background); border:1px solid var(--border); border-radius:10px; padding:14px;">
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Baby Class" name="dos-level"> Nursery â€“ Baby Class</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Middle" name="dos-level"> Nursery â€“ Middle</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Top" name="dos-level"> Nursery â€“ Top</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P1" name="dos-level"> Primary P1</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P2" name="dos-level"> Primary P2</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P3" name="dos-level"> Primary P3</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P4" name="dos-level"> Primary P4</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P5" name="dos-level"> Primary P5</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P6" name="dos-level"> Primary P6</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P7" name="dos-level"> Primary P7</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S1 (O-Level)" name="dos-level"> S1 (O-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S2 (O-Level)" name="dos-level"> S2 (O-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S3 (O-Level)" name="dos-level"> S3 (O-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S4 (O-Level)" name="dos-level"> S4 (O-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S5 (A-Level)" name="dos-level"> S5 (A-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S6 (A-Level)" name="dos-level"> S6 (A-Level)</label>
-                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="University" name="dos-level"> University</label>
-                                </div>
-                            </div>
-                            <button class="primary-btn" onclick="generateDOSInviteLink()"><i class="fa-solid fa-paper-plane"></i> Generate Link</button>
-                            <div id="dos-invite-result" style="display:none; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:10px; padding:16px;">
-                                <p style="margin:0 0 8px 0; font-size:0.85rem; color:var(--text-muted);">Share this link with the DOS:</p>
-                                <div style="display:flex; gap:8px; align-items:center;">
-                                    <input type="text" id="dos-invite-link-text" readonly style="flex:1; font-size:0.8rem; padding:8px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
-                                    <button class="secondary-btn" onclick="copyDOSLink()"><i class="fa-solid fa-copy"></i></button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1037,7 +993,51 @@
                     </div>
 
 
-                    <!-- ====== DOS / Admin Password Reset ====== -->
+                    <!-- DOS INVITE LINK VIEW -->
+                <div id="dos-invite-view" class="scheduler-section" style="margin-bottom: 30px;">
+                    <div class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border); max-width:620px;">
+                        <h3 style="margin-bottom:6px;"><i class="fa-solid fa-link" style="color:var(--primary);"></i> Generate DOS Invite Link</h3>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Create a one-time link to onboard a DOS. Select the levels they will be in charge of.</p>
+                        <div style="display:flex; flex-direction:column; gap:14px;">
+                            <div>
+                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">DOS Email</label>
+                                <input type="email" id="dos-invite-email" placeholder="dos@school.com" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Levels in Charge</label>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; background:var(--background); border:1px solid var(--border); border-radius:10px; padding:14px;">
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Baby Class" name="dos-level"> Nursery â€“ Baby Class</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Middle" name="dos-level"> Nursery â€“ Middle</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Nursery - Top" name="dos-level"> Nursery â€“ Top</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P1" name="dos-level"> Primary P1</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P2" name="dos-level"> Primary P2</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P3" name="dos-level"> Primary P3</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P4" name="dos-level"> Primary P4</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P5" name="dos-level"> Primary P5</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P6" name="dos-level"> Primary P6</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Primary P7" name="dos-level"> Primary P7</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S1 (O-Level)" name="dos-level"> S1 (O-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S2 (O-Level)" name="dos-level"> S2 (O-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S3 (O-Level)" name="dos-level"> S3 (O-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S4 (O-Level)" name="dos-level"> S4 (O-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S5 (A-Level)" name="dos-level"> S5 (A-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="Secondary S6 (A-Level)" name="dos-level"> S6 (A-Level)</label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="University" name="dos-level"> University</label>
+                                </div>
+                            </div>
+                            <button class="primary-btn" onclick="generateDOSInviteLink()"><i class="fa-solid fa-paper-plane"></i> Generate Link</button>
+                            <div id="dos-invite-result" style="display:none; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:10px; padding:16px;">
+                                <p style="margin:0 0 8px 0; font-size:0.85rem; color:var(--text-muted);">Share this link with the DOS:</p>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <input type="text" id="dos-invite-link-text" readonly style="flex:1; font-size:0.8rem; padding:8px; background:var(--background); border:1px solid var(--border); border-radius:8px; color:var(--text);">
+                                    <button class="secondary-btn" onclick="copyDOSLink()"><i class="fa-solid fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+<!-- ====== DOS / Admin Password Reset ====== -->
                     <div class="scheduler-section" id="tech-dos-reset-container" style="margin-bottom: 30px;">
                         <header>
                             <h2><i class="fa-solid fa-key"></i> Emergency Password Reset</h2>

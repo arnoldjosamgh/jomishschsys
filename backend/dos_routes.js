@@ -9,19 +9,19 @@ const router = express.Router();
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const jwt = require('jsonwebtoken');
     jwt.verify(token, process.env.JWT_SECRET || 'CHANGE_ME_TO_A_LONG_RANDOM_SECRET', (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) return res.status(403).json({ error: "Forbidden" });
         req.user = user;
         next();
     });
 };
 
-// 1. Generate DOS Invite Link (Admin only)
+// 1. Generate DOS Invite Link (Admin or Tech only)
 router.post('/invite-link', authenticateToken, (req, res) => {
-    if (req.user.role !== 'Admin' && req.user.role !== 'Headteacher') {
+    if (req.user.role !== 'Admin' && req.user.role !== 'Headteacher' && req.user.role !== 'System Technician' && req.user.role !== 'Tech') {
         return res.status(403).json({ error: 'Forbidden' });
     }
     const { levels_in_charge, email } = req.body;
