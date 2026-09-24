@@ -530,18 +530,33 @@ window.onTeacherClassChange = async function() {
     if (!class_id) return;
 
     const teacher_id = localStorage.getItem('jomish_user_id') || 1;
-    const assignments = await apiGet(`/teacher-assignments?teacher_id=${teacher_id}&class_id=${class_id}`);
+    let assignments = [];
+    if (window.USER_ROLE === 'Teacher') {
+        assignments = await apiGet(`/teacher-assignments?teacher_id=${teacher_id}&class_id=${class_id}`);
+    }
     
     // Unique subjects for this class and teacher
     const uniqueSubjects = new Map();
-    assignments.forEach(a => {
-        if (a.subject_id && !uniqueSubjects.has(a.subject_id)) {
-            uniqueSubjects.set(a.subject_id, { id: a.subject_id, name: a.subject_name });
+    if (Array.isArray(assignments) && assignments.length > 0) {
+        assignments.forEach(a => {
+            if (a.subject_id && !uniqueSubjects.has(a.subject_id)) {
+                uniqueSubjects.set(a.subject_id, { id: a.subject_id, name: a.subject_name });
+            }
+        });
+    }
+
+    // Fallback: If not a teacher or no assignments, load all subjects (so DOS/Admin can enter marks)
+    if (uniqueSubjects.size === 0) {
+        const allSubjects = await apiGet('/subjects');
+        if (Array.isArray(allSubjects)) {
+            allSubjects.forEach(s => {
+                uniqueSubjects.set(s.id, { id: s.id, name: s.name });
+            });
         }
-    });
+    }
 
     if (uniqueSubjects.size === 0) {
-        subjectSelect.innerHTML += '<option disabled>No subjects assigned to this class</option>';
+        subjectSelect.innerHTML += '<option disabled>No subjects found</option>';
     } else {
         uniqueSubjects.forEach(s => {
             subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;

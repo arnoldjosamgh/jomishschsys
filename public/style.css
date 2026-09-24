@@ -3,16 +3,17 @@
     Neumorphic soft-UI design with flexbox layout
 */
 :root {
-    /* Base Colors - Soft Silver/Blue (Light Mode) */
-    --primary: #3b82f6; 
-    --primary-hover: #2563eb;
-    /* Soft light background for glossy neumorphism */
-    --background: #e2e8f0;
-    --surface: rgba(255, 255, 255, 0.25);
-    --surface-hover: rgba(255, 255, 255, 0.4);
-    --surface-glass: rgba(255, 255, 255, 0.35);
-    --text: #0f172a; 
-    --text-muted: #475569;
+    /* Base Colors - Vibrant Liquid Glass (Light/Bright Mode) */
+    --primary: #8b5cf6; /* vibrant purple */
+    --primary-hover: #7c3aed;
+    
+    /* Beautiful Fluid Gradient */
+    --background: linear-gradient(145deg, #e0c3fc 0%, #8ec5fc 50%, #4facfe 100%);
+    --surface: rgba(255, 255, 255, 0.35); /* Liquid glass */
+    --surface-hover: rgba(255, 255, 255, 0.5);
+    --surface-glass: rgba(255, 255, 255, 0.45);
+    --text: #1e1b4b; /* deep violet text */
+    --text-muted: #4c1d95;
     --border: rgba(255, 255, 255, 0.7);
     
     /* Accents */
@@ -20,36 +21,36 @@
     --success-glow: rgba(16, 185, 129, 0.4);
     --danger: #ef4444;
     
-    /* Shadows - 3D Glossy Software Style */
-    --shadow-out: 8px 8px 24px rgba(0, 0, 0, 0.08), -8px -8px 24px rgba(255, 255, 255, 0.8);
-    --shadow-in: inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -3px -3px 7px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 4px 4px 12px rgba(0, 0, 0, 0.05), -4px -4px 12px rgba(255, 255, 255, 0.5);
+    /* Liquid Glass Shadows */
+    --shadow-out: 0 15px 35px rgba(30, 27, 75, 0.15), 0 5px 15px rgba(255, 255, 255, 0.8) inset;
+    --shadow-in: inset 0 2px 10px rgba(255, 255, 255, 0.9), inset 0 -4px 15px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 8px 20px rgba(30, 27, 75, 0.1);
     
-    /* Layout */
-    --radius: 24px;
-    --radius-pill: 50px;
+    /* Ultimate Capsule Radius */
+    --radius: 36px;
+    --radius-pill: 60px;
 }
 
 /* Dark mode — Deep Modern Dark */
 [data-theme="dark"] {
-    --primary: #22c55e;
-    --primary-hover: #16a34a;
-    /* Dark smooth background */
-    --background: #111827;
-    --surface: rgba(30, 41, 59, 0.5);
-    --surface-hover: rgba(30, 41, 59, 0.7);
-    --surface-glass: rgba(15, 23, 42, 0.6);
+    --primary: #c084fc;
+    --primary-hover: #d8b4fe;
+    /* Dark Liquid Background */
+    --background: linear-gradient(145deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%);
+    --surface: rgba(255, 255, 255, 0.1);
+    --surface-hover: rgba(255, 255, 255, 0.15);
+    --surface-glass: rgba(255, 255, 255, 0.08);
     --text: #ffffff; 
-    --text-muted: #94a3b8;
-    --border: rgba(255, 255, 255, 0.1);
-    --success: #22c55e;
-    --success-glow: rgba(34, 197, 94, 0.4);
-    --danger: #ef4444;
+    --text-muted: #e0e7ff;
+    --border: rgba(255, 255, 255, 0.2);
+    --success: #34d399;
+    --success-glow: rgba(52, 211, 153, 0.4);
+    --danger: #f87171;
     
-    /* Dark Glossy 3D Shadows */
-    --shadow-out: 8px 8px 24px rgba(0,0,0,0.6), -4px -4px 16px rgba(255,255,255,0.03);
-    --shadow-in: inset 1px 1px 2px rgba(255,255,255,0.15), inset -2px -2px 5px rgba(0,0,0,0.5);
-    --shadow-sm: 4px 4px 12px rgba(0,0,0,0.4), -2px -2px 8px rgba(255,255,255,0.02);
+    /* Dark Liquid Glass Shadows */
+    --shadow-out: 0 15px 35px rgba(0, 0, 0, 0.4), 0 5px 15px rgba(255, 255, 255, 0.05) inset;
+    --shadow-in: inset 0 2px 10px rgba(255, 255, 255, 0.15), inset 0 -4px 15px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .stat-card, [data-theme="dark"] .product-card, [data-theme="dark"] .modal-content, [data-theme="dark"] .sidebar {
@@ -89,7 +90,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--background);
     background-attachment: fixed;
     background-size: cover;
@@ -1426,7 +1427,7 @@ tr:hover td {
     flex-direction: column;
     gap: 20px;
     padding: 20px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .id-card.landscape {
@@ -1922,3 +1923,51 @@ tr:hover td {
     font-size: 0.9rem;
     color: var(--text);
 }
+
+
+/* === GLOBAL LIQUID CAPSULE ENFORCEMENT === */
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea, .sm-input, .sm-select {
+    border-radius: var(--radius-pill) !important;
+    background: var(--surface) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border) !important;
+    border-top: 1.5px solid rgba(255,255,255,0.7) !important;
+    padding: 12px 20px !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05), 0 4px 12px rgba(255,255,255,0.3) inset !important;
+    color: var(--text) !important;
+    outline: none !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] input[type="email"], [data-theme="dark"] input[type="number"], [data-theme="dark"] select, [data-theme="dark"] textarea {
+    border-top: 1.5px solid rgba(255,255,255,0.2) !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 4px 12px rgba(255,255,255,0.05) inset !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px var(--success-glow), inset 0 2px 6px rgba(0,0,0,0.05) !important;
+    border-color: var(--primary) !important;
+}
+
+button, .sm-btn, .btn {
+    border-radius: var(--radius-pill) !important;
+}
+
+/* Ensure backdrop blur on everything */
+.card, .stat-card, .product-card, .modal-content, .login-glass {
+    border-radius: var(--radius) !important;
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(255,255,255,0) 100%) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border: 1px solid var(--border) !important;
+    border-top: 1.5px solid rgba(255,255,255,0.6) !important;
+    border-left: 1.5px solid rgba(255,255,255,0.4) !important;
+    box-shadow: var(--shadow-out), var(--shadow-in) !important;
+}
+
+[data-theme="dark"] .card, [data-theme="dark"] .stat-card, [data-theme="dark"] .product-card, [data-theme="dark"] .modal-content, [data-theme="dark"] .login-glass {
+    border-top: 1.5px solid rgba(255,255,255,0.15) !important;
+    border-left: 1.5px solid rgba(255,255,255,0.08) !important;
+}
+

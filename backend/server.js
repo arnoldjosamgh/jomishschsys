@@ -3649,8 +3649,8 @@ app.get("/api/devices", authenticateToken, (req, res) => {
 });
 
 app.post("/api/devices/logout", authenticateToken, (req, res) => {
-  if (!["HR", "CEO"].includes(req.user.role)) {
-    return res.status(403).json({ error: "Access denied. HR only." });
+  if (!["HR", "CEO", "Admin", "admin", "Tech", "System Technician", "Manager"].includes(req.user.role)) {
+    return res.status(403).json({ error: "Access denied." });
   }
   const { device_id } = req.body;
   const userPrefix = req.user.prefix;
