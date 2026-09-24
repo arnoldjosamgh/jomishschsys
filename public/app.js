@@ -1487,8 +1487,7 @@ function registerDevice() {
     localStorage.setItem("jomish_device_id", devId);
   }
 
-  const devName =
-    navigator.platform + " (" + (navigator.vendor || "Generic") + ")";
+  const devName = USER_NAME || (navigator.platform + " (" + (navigator.vendor || "Generic") + ")");
   const devType = /Mobile|Android|iPhone/i.test(navigator.userAgent)
     ? "MOBILE"
     : "TERMINAL";
