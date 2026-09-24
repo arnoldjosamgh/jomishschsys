@@ -188,14 +188,14 @@
             </div>
             <nav class="nav-menu">
 
-                <button class="nav-btn active" data-target="dashboard">Dashboard</button>
-                <button class="nav-btn" data-target="secretary-hub"><i class="fa-solid fa-clipboard-list"></i> Secretary Hub <span id="sec-global-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none; box-shadow:0 0 5px rgba(239,68,68,0.5);">0</span></button>
-                <button class="nav-btn accounts-only" data-target="accounts-hub" style="display:none;"><i class="fa-solid fa-file-invoice-dollar"></i> Accounts Hub</button>
-                <button class="nav-btn dos-only" data-target="dos-hub" style="display:none;"><i class="fa-solid fa-graduation-cap"></i> DOS Hub</button>
-                <button class="nav-btn teacher-only" data-target="teacher-hub" style="display:none;"><i class="fa-solid fa-chalkboard-user"></i> Teacher Hub</button>
-                <button class="nav-btn tech-only hidden" data-target="tech-hub"><i class="fa-solid fa-wrench"></i> Tech Hub</button>
-                <button class="nav-btn mobile-only" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> Theme</button>
-                <button class="nav-btn mobile-only" style="color:var(--danger)" onclick="document.getElementById('btn-logout').click()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                <button class="nav-btn active" data-target="dashboard"><i class="fa-solid fa-house"></i> <span class="tab-text">Dashboard</span></button>
+                <button class="nav-btn" data-target="secretary-hub"><i class="fa-solid fa-clipboard-list"></i> <span class="tab-text">Secretary</span> <span id="sec-global-badge" style="background:var(--danger); color:white; font-size:0.65rem; padding:2px 7px; border-radius:10px; margin-left:4px; display:none; box-shadow:0 0 5px rgba(239,68,68,0.5);">0</span></button>
+                <button class="nav-btn accounts-only" data-target="accounts-hub" style="display:none;"><i class="fa-solid fa-file-invoice-dollar"></i> <span class="tab-text">Accounts</span></button>
+                <button class="nav-btn dos-only" data-target="dos-hub" style="display:none;"><i class="fa-solid fa-graduation-cap"></i> <span class="tab-text">DOS</span></button>
+                <button class="nav-btn teacher-only" data-target="teacher-hub" style="display:none;"><i class="fa-solid fa-chalkboard-user"></i> <span class="tab-text">Teacher</span></button>
+                <button class="nav-btn tech-only hidden" data-target="tech-hub"><i class="fa-solid fa-wrench"></i> <span class="tab-text">Tech</span></button>
+                <button class="nav-btn " onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> <span class="tab-text">Theme</span></button>
+                <button class="nav-btn " style="color:var(--danger)" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span class="tab-text">Logout</span></button>
             </nav>
             <div class="user-info">
                 <p>Admin Mode</p>
@@ -290,7 +290,7 @@
         
 <section id="dos-hub" class="view-section hidden">
                 <header>
-                    <h1><i class="fa-solid fa-graduation-cap"></i> DOS Hub</h1>
+                    <h1><i class="fa-solid fa-graduation-cap"></i> <span class="tab-text">DOS</span></h1>
                 </header>
 
                 <div class="tab-scroller no-print">
@@ -495,7 +495,7 @@
 
 <section id="teacher-hub" class="view-section hidden">
                 <header>
-                    <h1><i class="fa-solid fa-chalkboard-user"></i> Teacher Hub</h1>
+                    <h1><i class="fa-solid fa-chalkboard-user"></i> <span class="tab-text">Teacher</span></h1>
                 </header>
 
                 <div class="tab-scroller no-print">
@@ -635,7 +635,7 @@
 
 <section id="accounts-hub" class="view-section hidden">
                 <header>
-                    <h1><i class="fa-solid fa-file-invoice-dollar"></i> Accounts Hub</h1>
+                    <h1><i class="fa-solid fa-file-invoice-dollar"></i> <span class="tab-text">Accounts</span></h1>
                 </header>
 
                 <div class="tab-scroller no-print">
@@ -720,7 +720,7 @@
 
 <section id="secretary-hub" class="view-section" style="position:relative;">
                 <header>
-                    <h1><i class="fa-solid fa-clipboard-list"></i> Secretary Hub</h1>
+                    <h1><i class="fa-solid fa-clipboard-list"></i> <span class="tab-text">Secretary</span></h1>
                     <div style="display:flex; gap:10px;">
                         <button class="primary-btn" id="btn-add-calendar-event">+ New Event</button>
                     </div>
@@ -1324,7 +1324,7 @@
                                     <input type="checkbox" id="mod-pos" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-cart-shopping"></i> Point of Sale
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: var(--text);">
-                                    <input type="checkbox" id="mod-secretary" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-clipboard-list"></i> Secretary Hub
+                                    <input type="checkbox" id="mod-secretary" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-clipboard-list"></i> <span class="tab-text">Secretary</span>
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: var(--text);">
                                     <input type="checkbox" id="mod-transport" checked style="width:16px; height:16px; accent-color: var(--primary);"> <i class="fa-solid fa-truck"></i> Transport
