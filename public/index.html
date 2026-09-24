@@ -241,10 +241,13 @@
                 <div class="card" style="background: var(--surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px;">
                     <header style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <h3 style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-satellite-dish"></i>? Hardware Radar</h3>
+                            <h3 style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-satellite-dish"></i> Hardware Radar</h3>
                             <p style="font-size: 0.8rem; color: #94A3B8;">Detects every phone, tablet, and terminal accessing the suite.</p>
                         </div>
-                        <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">LIVE SCANNING</div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-circle fa-beat" style="font-size:0.55rem;margin-right:5px;"></i>LIVE SCANNING</div>
+                            <button class="secondary-btn" onclick="loadDevices()" style="padding:6px 14px;font-size:0.8rem;"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                        </div>
                     </header>
                     <div class="stats-grid" style="margin-bottom: 20px;">
                         <div class="stat-card" style="padding: 15px; display: flex; align-items: center; gap: 15px;">
@@ -261,6 +264,24 @@
                                 <p id="total-staff-status" style="font-weight: bold;">--</p>
                             </div>
                         </div>
+                    </div>
+                    <!-- Connected Devices Table -->
+                    <div style="overflow-x:auto;">
+                        <table id="connected-devices-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border); color:var(--text-muted); text-align:left;">
+                                    <th style="padding:8px 12px;">Device</th>
+                                    <th style="padding:8px 12px;">Type</th>
+                                    <th style="padding:8px 12px;">IP Address</th>
+                                    <th style="padding:8px 12px;">Status</th>
+                                    <th style="padding:8px 12px;">Last Seen</th>
+                                    <th style="padding:8px 12px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" style="text-align:center; padding:20px; color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Scanning network...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>

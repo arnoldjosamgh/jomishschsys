@@ -2223,15 +2223,17 @@ function enforceRBAC() {
     ].forEach((n) => {
       if (n) n.style.display = "block";
     });
-    if (navTechHub) navTechHub.style.display = "block";
-    if (isDemo) {
-      document
-        .querySelectorAll(".tech-only")
-        .forEach((el) => el.classList.add("hidden"));
-    } else {
+    if (navTechHub) { navTechHub.style.display = "block"; navTechHub.classList.remove("hidden"); }
+    if (isTech) {
+      // Tech users always see tech-only elements
       document
         .querySelectorAll(".tech-only")
         .forEach((el) => el.classList.remove("hidden"));
+    } else if (isDemo) {
+      // Demo non-tech users don't see tech-only elements
+      document
+        .querySelectorAll(".tech-only")
+        .forEach((el) => el.classList.add("hidden"));
     }
     document
       .querySelectorAll(".admin-only")
@@ -7250,30 +7252,37 @@ async function loadSystemStatus() {
       troubleshootUrl.innerText = window.location.origin;
     }
 
-    // Staff count — use /api/users (school schema) instead of /api/employees (business suite)
+    // Staff count — use /api/school/users (school schema) or /api/employees (business suite)
     try {
       const staffCount = document.getElementById("total-staff-status");
       if (staffCount) {
         const token = localStorage.getItem("jomish_token");
         const prefix = localStorage.getItem("jomish_prefix") || "";
-        // Try /api/users first (school system), fall back to /api/employees (business suite)
+        const headers = { Authorization: `Bearer ${token}`, "x-company-prefix": prefix };
         let count = null;
-        const usersRes = await fetch(`${API_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}`, "x-company-prefix": prefix },
-        });
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-          count = (usersData.users?.length || usersData.length || 0);
-        } else {
-          const empRes = await fetch(`${API_URL}/employees`, {
-            headers: { Authorization: `Bearer ${token}`, "x-company-prefix": prefix },
-          });
-          if (empRes.ok) {
-            const empData = await empRes.json();
-            count = (empData.employees?.length || 0);
+        // Try school users endpoint first
+        const schoolUsersRes = await fetch(`${API_URL}/school/users`, { headers });
+        if (schoolUsersRes.ok) {
+          const d = await schoolUsersRes.json();
+          count = Array.isArray(d) ? d.length : (d.users?.length || d.total || 0);
+        }
+        // Fall back to general /api/users
+        if (count === null) {
+          const usersRes = await fetch(`${API_URL}/users`, { headers });
+          if (usersRes.ok) {
+            const d = await usersRes.json();
+            count = Array.isArray(d) ? d.length : (d.users?.length || 0);
           }
         }
-        if (count !== null) staffCount.innerText = count + " Members";
+        // Fall back to /api/employees (business suite)
+        if (count === null) {
+          const empRes = await fetch(`${API_URL}/employees`, { headers });
+          if (empRes.ok) {
+            const d = await empRes.json();
+            count = d.employees?.length || 0;
+          }
+        }
+        staffCount.innerText = count !== null ? count + " Members" : "--";
       }
     } catch (staffErr) {
       console.warn("Staff count fetch skipped:", staffErr.message);

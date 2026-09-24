@@ -398,10 +398,23 @@ module.exports = function(app, db, io, asyncLocalStorage) {
         );
     });
 
+
     app.delete("/api/school/events/:id", (req, res) => {
         db.run(`DELETE FROM school_events WHERE id = ?`, [req.params.id], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true });
         });
+    });
+
+    // GET /api/school/users — staff count for Hardware Radar and other stats
+    app.get("/api/school/users", (req, res) => {
+        db.all(
+            `SELECT id, first_name, last_name, email, role, username, is_active FROM users ORDER BY id`,
+            [],
+            (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows || []);
+            }
+        );
     });
 };
