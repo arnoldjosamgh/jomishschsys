@@ -300,6 +300,7 @@
                     <button class="nav-btn" id="btn-dos-marks" onclick="switchDOSView('marks')">Marks</button>
                     <button class="nav-btn" id="btn-dos-notes" onclick="switchDOSView('notes')">Teacher Notes</button>
                     <button class="nav-btn" id="btn-dos-missing" onclick="switchDOSView('missing')"><i class="fa-solid fa-user-slash"></i> Missing</button>
+                    <button class="nav-btn" id="btn-dos-curriculum" onclick="switchDOSView('curriculum')"><i class="fa-solid fa-book-open"></i> Curriculum</button>
                     
                 </div>
 
@@ -439,6 +440,51 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- CURRICULUM VIEW -->
+                <div id="dos-curriculum-view" class="dos-sub-view hidden">
+                    <div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">
+
+                        <!-- LEFT: Level Selector -->
+                        <div class="card" style="background:var(--surface); padding:20px; border-radius:12px; border:1px solid var(--border); position:sticky; top:80px;">
+                            <h3 style="margin:0 0 14px 0; font-size:0.95rem;"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> School Levels</h3>
+                            <div id="dos-level-list" style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- dynamically rendered -->
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: Subjects panel -->
+                        <div class="card" style="background:var(--surface); padding:25px; border-radius:12px; border:1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+                                <div>
+                                    <h3 style="margin:0 0 4px 0;"><i class="fa-solid fa-book-open" style="color:var(--primary);"></i> Subjects — <span id="dos-curriculum-level-title" style="color:var(--primary);">Select a level</span></h3>
+                                    <p id="dos-curriculum-count-label" style="color:var(--text-muted); font-size:0.8rem; margin:0;">Select a level to manage its subjects (min 4, max 30)</p>
+                                </div>
+                                <div id="dos-curriculum-count-badge" style="background:var(--background); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:0.8rem; font-weight:700; color:var(--text-muted);">0 / 30</div>
+                            </div>
+
+                            <!-- Add subject form -->
+                            <div id="dos-curriculum-add-form" style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                                <input type="text" id="dos-subject-name" placeholder="Subject name (e.g. Mathematics)" style="flex:2; min-width:180px;">
+                                <input type="text" id="dos-subject-code" placeholder="Code (e.g. MATH) — optional" style="flex:1; min-width:120px;" maxlength="8">
+                                <button class="primary-btn" id="dos-add-subject-btn" onclick="dosAddSubject()" style="white-space:nowrap;">
+                                    <i class="fa-solid fa-plus"></i> Add Subject
+                                </button>
+                            </div>
+
+                            <!-- Subjects list -->
+                            <div id="dos-subjects-list" style="display:flex; flex-direction:column; gap:8px;">
+                                <p style="color:var(--text-muted); text-align:center; padding:20px;">← Select a school level to view and manage subjects</p>
+                            </div>
+
+                            <!-- Min subjects warning -->
+                            <div id="dos-min-warning" style="display:none; margin-top:12px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px; font-size:0.82rem; color:#F59E0B;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> This level has fewer than <b>4 subjects</b>. Add at least 4 subjects before teachers can be assigned.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
 <section id="teacher-hub" class="view-section hidden">

@@ -137,6 +137,11 @@ function runSchemaMigrations(db, asyncLocalStorage, schemaName, isPostgres, reso
                 tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','203') ON CONFLICT (key) DO UPDATE SET value='203'", [], () => cb(null)));
             }
 
+            if (v < 204) {
+                tasks.push(cb => db.run("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'General'", [], () => cb(null)));
+                tasks.push(cb => db.run("INSERT INTO system_info (key,value) VALUES ('version','204') ON CONFLICT (key) DO UPDATE SET value='204'", [], () => cb(null)));
+            }
+
             if (tasks.length === 0) {
                 console.log(`[SEED] "${schemaName}" is fully migrated.`);
                 return resolve();

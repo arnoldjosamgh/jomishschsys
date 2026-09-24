@@ -98,18 +98,64 @@ module.exports = function(app, db, io, asyncLocalStorage) {
     // SUBJECTS
     // =====================================================
 
+    // GET all subjects, optionally filtered by level
     app.get("/api/school/subjects", (req, res) => {
-        db.all(`SELECT * FROM subjects ORDER BY name`, [], (err, rows) => {
+        const { level } = req.query;
+        if (level) {
+            db.all(`SELECT * FROM subjects WHERE level = ? ORDER BY name`, [level], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else {
+            db.all(`SELECT * FROM subjects ORDER BY level, name`, [], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        }
+    });
+
+    // GET subject counts grouped by level
+    app.get("/api/school/subjects/by-level", (req, res) => {
+        db.all(
+            `SELECT level, COUNT(*) as count FROM subjects GROUP BY level ORDER BY level`,
+            [],
+            (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            }
+        );
+    });
+
+    // POST add subject (with level)
+    app.post("/api/school/subjects", (req, res) => {
+        const { name, code, level } = req.body;
+        if (!name) return res.status(400).json({ error: "Subject name is required" });
+
+        // Enforce max 30 subjects per level
+        const subjectLevel = level || "General";
+        db.get(`SELECT COUNT(*) as count FROM subjects WHERE level = ?`, [subjectLevel], (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json(rows);
+            if (row && row.count >= 30) {
+                return res.status(400).json({ error: `Maximum 30 subjects allowed per level (${subjectLevel} already has ${row.count})` });
+            }
+            const subjectCode = code || name.substring(0, 4).toUpperCase().replace(/\s/g, '');
+            db.run(
+                `INSERT INTO subjects (name, code, level) VALUES (?, ?, ?)`,
+                [name, subjectCode, subjectLevel],
+                function(err) {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.json({ success: true, subject_id: this.lastID, name, code: subjectCode, level: subjectLevel });
+                }
+            );
         });
     });
 
-    app.post("/api/school/subjects", (req, res) => {
-        const { name, code } = req.body;
-        db.run(`INSERT INTO subjects (name, code) VALUES (?, ?)`, [name, code], function(err) {
+    // DELETE a subject
+    app.delete("/api/school/subjects/:id", (req, res) => {
+        db.run(`DELETE FROM subjects WHERE id = ?`, [req.params.id], function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true, subject_id: this.lastID });
+            if (this.changes === 0) return res.status(404).json({ error: "Subject not found" });
+            res.json({ success: true });
         });
     });
 

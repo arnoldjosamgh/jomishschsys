@@ -285,8 +285,161 @@ window.switchDOSView = function(viewName) {
     if (viewName === 'marks') loadAllMarks();
     if (viewName === 'notes') loadTeacherNotes();
     if (viewName === 'missing') loadMissingStudents();
+    if (viewName === 'curriculum') window.dosInitCurriculum();
 };
 
+// ==========================================
+// DOS CURRICULUM MANAGEMENT
+// ==========================================
+
+const DOS_SCHOOL_LEVELS = [
+    "Nursery - Baby Class", "Nursery - Middle", "Nursery - Top",
+    "Primary P1", "Primary P2", "Primary P3", "Primary P4", "Primary P5", "Primary P6", "Primary P7",
+    "S1 (O-Level)", "S2 (O-Level)", "S3 (O-Level)", "S4 (O-Level)", 
+    "S5 (A-Level)", "S6 (A-Level)", "University"
+];
+
+let currentCurriculumLevel = null;
+
+window.dosInitCurriculum = async function() {
+    const list = document.getElementById('dos-level-list');
+    list.innerHTML = '<p style="text-align:center; padding:10px;"><i class="fa-solid fa-spinner fa-spin"></i></p>';
+    
+    // Fetch counts to show badges on levels
+    let counts = {};
+    try {
+        const res = await fetchAuth(`${API_URL}/school/subjects/by-level`);
+        if (res.ok) {
+            const data = await res.json();
+            data.forEach(d => counts[d.level] = d.count);
+        }
+    } catch (e) {
+        console.error("Failed to fetch subject counts", e);
+    }
+    
+    list.innerHTML = DOS_SCHOOL_LEVELS.map(level => {
+        const count = counts[level] || 0;
+        const color = count < 4 ? 'var(--danger)' : 'var(--success)';
+        return `
+            <button class="nav-btn" style="text-align:left; justify-content:space-between; width:100%; padding:10px 14px;" 
+                onclick="dosSelectLevel('${level}', this)">
+                <span>${level}</span>
+                <span style="background:rgba(0,0,0,0.05); border-radius:12px; padding:2px 8px; font-size:0.75rem; color:${color}; font-weight:bold;">${count}</span>
+            </button>
+        `;
+    }).join('');
+};
+
+window.dosSelectLevel = function(level, btnEl) {
+    currentCurriculumLevel = level;
+    document.querySelectorAll('#dos-level-list .nav-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    
+    document.getElementById('dos-curriculum-level-title').innerText = level;
+    dosLoadSubjects(level);
+};
+
+window.dosLoadSubjects = async function(level) {
+    const list = document.getElementById('dos-subjects-list');
+    list.innerHTML = '<p style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading subjects...</p>';
+    
+    try {
+        const res = await fetchAuth(`${API_URL}/school/subjects?level=${encodeURIComponent(level)}`);
+        const data = await res.json();
+        
+        document.getElementById('dos-curriculum-count-badge').innerText = `${data.length} / 30`;
+        const warnEl = document.getElementById('dos-min-warning');
+        
+        if (data.length < 4) {
+            warnEl.style.display = 'block';
+        } else {
+            warnEl.style.display = 'none';
+        }
+        
+        if (data.length === 0) {
+            list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">No subjects added to this level yet.</p>';
+            return;
+        }
+        
+        list.innerHTML = data.map(sub => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--background); border:1px solid var(--border); border-radius:8px;">
+                <div>
+                    <h4 style="margin:0 0 4px 0;">${sub.name}</h4>
+                    <span style="font-size:0.75rem; color:var(--text-muted); background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">${sub.code}</span>
+                </div>
+                <button class="secondary-btn" style="color:#EF4444; border-color:transparent; padding:6px 10px;" onclick="dosDeleteSubject(${sub.id}, '${sub.name}')">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+        
+    } catch (e) {
+        list.innerHTML = '<p style="color:#EF4444; padding:20px;">Failed to load subjects.</p>';
+    }
+};
+
+window.dosAddSubject = async function() {
+    if (!currentCurriculumLevel) {
+        showToast("Please select a school level first", "warning");
+        return;
+    }
+    
+    const nameInput = document.getElementById('dos-subject-name');
+    const codeInput = document.getElementById('dos-subject-code');
+    const name = nameInput.value.trim();
+    const code = codeInput.value.trim();
+    
+    if (!name) {
+        showToast("Subject name is required", "warning");
+        return;
+    }
+    
+    try {
+        const res = await fetchAuth(`${API_URL}/school/subjects`, {
+            method: 'POST',
+            body: JSON.stringify({ name, code, level: currentCurriculumLevel })
+        });
+        
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        
+        nameInput.value = '';
+        codeInput.value = '';
+        showToast("Subject added!", "success");
+        
+        // Refresh both lists to update counts
+        dosInitCurriculum().then(() => {
+            const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn')).find(b => b.innerText.includes(currentCurriculumLevel));
+            if (activeBtn) activeBtn.classList.add('active');
+        });
+        dosLoadSubjects(currentCurriculumLevel);
+        
+    } catch (e) {
+        showToast(e.message || "Failed to add subject", "danger");
+    }
+};
+
+window.dosDeleteSubject = async function(id, name) {
+    if (!confirm(`Are you sure you want to delete ${name} from ${currentCurriculumLevel}?`)) return;
+    
+    try {
+        const res = await fetchAuth(`${API_URL}/school/subjects/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        
+        if (data.error) throw new Error(data.error);
+        showToast("Subject deleted", "success");
+        
+        // Refresh both lists to update counts
+        dosInitCurriculum().then(() => {
+            const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn')).find(b => b.innerText.includes(currentCurriculumLevel));
+            if (activeBtn) activeBtn.classList.add('active');
+        });
+        dosLoadSubjects(currentCurriculumLevel);
+        
+    } catch (e) {
+        showToast(e.message || "Failed to delete subject", "danger");
+    }
+};
 // ==========================================
 // Teacher - Upload Marks
 // ==========================================
