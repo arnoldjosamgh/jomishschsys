@@ -3621,8 +3621,8 @@ app.post("/api/devices/ping", (req, res) => {
     `INSERT INTO devices (device_id, device_name, device_type, ip_address, status, last_seen, company_schema) 
             VALUES (?, ?, ?, ?, 'ONLINE', datetime('now'), ?)
             ON CONFLICT(device_id) DO UPDATE SET 
-            last_seen=datetime('now'), status='ONLINE', ip_address=?, company_schema=?`,
-    [device_id, device_name, device_type, ip, schema, ip, schema],
+            last_seen=datetime('now'), status='ONLINE', ip_address=?, company_schema=?, device_name=?`,
+    [device_id, device_name, device_type, ip, schema, ip, schema, device_name],
     (err) => {
       if (err) return res.status(500).json({ error: err.message });
       io.emit("db_updated", { module: "devices" });
