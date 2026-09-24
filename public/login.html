@@ -8,6 +8,25 @@ window.onerror = function(msg, url, line, col, error) {
 window.onunhandledrejection = function(e) {
     document.body.innerHTML += '<div style="color:red;z-index:9999;position:relative;">PROMISE REJECTION: ' + e.reason + '</div>';
 };
+
+        // Auto-Trigger Passkey on Load if previously logged in
+        window.addEventListener('DOMContentLoaded', async () => {
+            const lastPrefix = localStorage.getItem('jomish_last_prefix');
+            if (lastPrefix && window.PublicKeyCredential) {
+                // Check if conditional mediation is available
+                const isCMA = await window.PublicKeyCredential.isConditionalMediationAvailable?.();
+                if (isCMA) {
+                    _loginPrefixForPasskey = lastPrefix;
+                    // Conditional UI auto-triggers silently until user focuses input, but for aggressive auth we can just call loginWithPasskey manually.
+                    // The user requested: "as soon as openned app shouldnt even show login just look if passkey available if yes ask for face id"
+                    loginWithPasskey(lastPrefix);
+                } else {
+                    // Just prompt aggressively
+                    loginWithPasskey(lastPrefix);
+                }
+            }
+        });
+
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +55,26 @@ window.onunhandledrejection = function(e) {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SchoolSystem">
     <link rel="apple-touch-icon" href="/favicon.png">
-    <script src="kiosk-lock.js"></script>
+    <script src="kiosk-lock.js">
+        // Auto-Trigger Passkey on Load if previously logged in
+        window.addEventListener('DOMContentLoaded', async () => {
+            const lastPrefix = localStorage.getItem('jomish_last_prefix');
+            if (lastPrefix && window.PublicKeyCredential) {
+                // Check if conditional mediation is available
+                const isCMA = await window.PublicKeyCredential.isConditionalMediationAvailable?.();
+                if (isCMA) {
+                    _loginPrefixForPasskey = lastPrefix;
+                    // Conditional UI auto-triggers silently until user focuses input, but for aggressive auth we can just call loginWithPasskey manually.
+                    // The user requested: "as soon as openned app shouldnt even show login just look if passkey available if yes ask for face id"
+                    loginWithPasskey(lastPrefix);
+                } else {
+                    // Just prompt aggressively
+                    loginWithPasskey(lastPrefix);
+                }
+            }
+        });
+
+</script>
     <style>
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
         :root{--cyan:#00e5ff;--magenta:#e040fb;--dark:#0c0c1a;--card:#161628;--input-bg:#1e1e35;--border:rgba(255,255,255,0.06);--text:#eee;--muted:#7a7a9a;--radius:14px}
@@ -150,6 +188,21 @@ window.onunhandledrejection = function(e) {
             </form>
 
             <!-- Passkey registration prompt shown after password login -->
+            
+            <div id="pwa-install-prompt" style="display:none; text-align:center;">
+                <div style="margin-bottom:20px;">
+                    <div style="width:60px; height:60px; background:var(--primary); color:white; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; font-size:24px;">
+                        <i class="fa-solid fa-download"></i>
+                    </div>
+                    <h3 style="margin-bottom:8px;">Install Web App</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.5;">
+                        Install this application on your device for quick access, offline mode, and full-screen experience.
+                    </p>
+                </div>
+                <button onclick="installPWA()" class="btn" style="width:100%; margin-bottom:12px; height:48px;">Install App</button>
+                <button onclick="skipPWA()" class="btn" style="width:100%; height:48px; background:var(--surface); color:var(--text-muted);">Skip for now</button>
+            </div>
+
             <div id="passkey-register-prompt">
                 <p>🔐 <strong>Set up a Passkey</strong> for instant, passwordless login next time</p>
                 <button class="passkey-btn" onclick="registerPasskey()">
@@ -262,28 +315,9 @@ window.onunhandledrejection = function(e) {
                         permissions: data.permissions, user_id: data.user_id, prefix: data.prefix
                     });
 
-                    // Check if user already has a passkey — if not, prompt to register
-                    if (window.PublicKeyCredential) {
-                        try {
-                            const pkRes = await fetch(`${BASE}/api/passkey/has-passkey`, {
-                                headers: { 'Authorization': `Bearer ${data.token}` }
-                            });
-                            const pkData = await pkRes.json();
-                            if (!pkData.hasPasskey && !localStorage.getItem('jomish_skip_passkey_' + data.user_id)) {
-                                // Show registration prompt — store token temporarily
-                                window._pendingPasskeyToken = data.token;
-                                window._pendingPasskeyData = data;
-                                window._pendingPasswordLogin = { usernameVal, passwordVal };
-                                document.getElementById('login-form').style.display = 'none';
-                                document.getElementById('passkey-section').style.display = 'none';
-                                document.getElementById('passkey-register-prompt').style.display = 'block';
-                                btn.disabled = false;
-                                btn.innerHTML = 'Sign In';
-                                return;
-                            }
-                        } catch(e) { /* passkey check failed, just redirect */ }
-                    }
-                    window.location.href = 'index.html';
+                    // Trigger Onboarding Sequence
+                    saveLastPrefix(data.prefix, usernameVal);
+                    runOnboardingSequence(data, usernameVal);
                 } else {
                     const terminatedEl = document.getElementById('terminated-msg');
                     const isTerminated = res.status === 403 && data.error && data.error.includes('terminated');
@@ -357,6 +391,24 @@ window.onunhandledrejection = function(e) {
             }
         })();
 
+        
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        // Store last prefix on successful login for auto-auth
+        function saveLastPrefix(prefix, username) {
+            if (prefix) localStorage.setItem('jomish_last_prefix', prefix);
+            else if (username) {
+                const u = username.trim().toLowerCase();
+                const m = u.match(/^([a-z]+)(\d+)$/);
+                const p = m ? m[1] : (u === 'tech' ? 'public' : u.split('-')[0] || 'public');
+                localStorage.setItem('jomish_last_prefix', p);
+            }
+        }
+
         let _loginPrefixForPasskey = '';
 
         // Detect prefix from username field to use in passkey auth-options
@@ -366,11 +418,11 @@ window.onunhandledrejection = function(e) {
             _loginPrefixForPasskey = m ? m[1] : (u === 'tech' ? 'public' : u.split('-')[0] || 'public');
         });
 
-        async function loginWithPasskey() {
+        async function loginWithPasskey(autoPrefix = null) {
             const btn = document.getElementById('btn-passkey');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Authenticating...';
-            const prefix = _loginPrefixForPasskey || (document.getElementById('username').value.trim().toLowerCase().match(/^([a-z]+)\d+$/) || ['','public'])[1] || 'public';
+            const prefix = autoPrefix || _loginPrefixForPasskey || (document.getElementById('username').value.trim().toLowerCase().match(/^([a-z]+)\d+$/) || ['','public'])[1] || 'public';
             try {
                 // Get challenge from server
                 const optRes = await fetch(`${BASE}/api/passkey/auth-options`, {
@@ -424,6 +476,64 @@ window.onunhandledrejection = function(e) {
             }
         }
 
+        
+        async function runOnboardingSequence(data, username) {
+            // 1. Notification Permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                try {
+                    await Notification.requestPermission();
+                } catch(e) {}
+            }
+            
+            // 2. Passkey Prompt
+            if (window.PublicKeyCredential) {
+                try {
+                    const pkRes = await fetch(`${BASE}/api/passkey/has-passkey`, {
+                        headers: { 'Authorization': `Bearer ${data.token}` }
+                    });
+                    const pkData = await pkRes.json();
+                    if (!pkData.hasPasskey && !localStorage.getItem('jomish_skip_passkey_' + data.user_id)) {
+                        window._pendingPasskeyToken = data.token;
+                        window._pendingPasskeyData = data;
+                        document.getElementById('login-form').style.display = 'none';
+                        document.getElementById('passkey-section').style.display = 'none';
+                        document.getElementById('passkey-register-prompt').style.display = 'block';
+                        return; // stops here, registerPasskey or skipPasskey will call continueOnboardingStep3
+                    }
+                } catch(e) {}
+            }
+            
+            continueOnboardingStep3();
+        }
+
+        function continueOnboardingStep3() {
+            document.getElementById('passkey-register-prompt').style.display = 'none';
+            if (deferredInstallPrompt) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('passkey-section').style.display = 'none';
+                document.getElementById('pwa-install-prompt').style.display = 'block';
+            } else {
+                finishLogin();
+            }
+        }
+
+        async function installPWA() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+            }
+            finishLogin();
+        }
+
+        function skipPWA() {
+            finishLogin();
+        }
+
+        function finishLogin() {
+            window.location.href = 'index.html';
+        }
+
         async function registerPasskey() {
             const token = window._pendingPasskeyToken;
             const d = window._pendingPasskeyData;
@@ -470,11 +580,32 @@ window.onunhandledrejection = function(e) {
 
         function skipPasskey() {
             if (window._pendingPasskeyData) {
-                localStorage.setItem('jomish_skip_passkey_' + window._pendingPasskeyData.user_id, '1');
+                localStorage.setItem('jomish_skip_passkey_' + window._pendingPasskeyData.user_id, 'true');
             }
+            continueOnboardingStep3();
+        }
             window.location.href = 'index.html';
         }
-    </script>
+    
+        // Auto-Trigger Passkey on Load if previously logged in
+        window.addEventListener('DOMContentLoaded', async () => {
+            const lastPrefix = localStorage.getItem('jomish_last_prefix');
+            if (lastPrefix && window.PublicKeyCredential) {
+                // Check if conditional mediation is available
+                const isCMA = await window.PublicKeyCredential.isConditionalMediationAvailable?.();
+                if (isCMA) {
+                    _loginPrefixForPasskey = lastPrefix;
+                    // Conditional UI auto-triggers silently until user focuses input, but for aggressive auth we can just call loginWithPasskey manually.
+                    // The user requested: "as soon as openned app shouldnt even show login just look if passkey available if yes ask for face id"
+                    loginWithPasskey(lastPrefix);
+                } else {
+                    // Just prompt aggressively
+                    loginWithPasskey(lastPrefix);
+                }
+            }
+        });
+
+</script>
 </body>
 </html>
 
