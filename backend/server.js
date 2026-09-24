@@ -780,6 +780,95 @@ app.get("/api/verify", authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
+// ==== PASSKEY (WebAuthn) FLOW ====
+// In-memory challenge store (per prefix+userId), cleared after use
+const passkeyChallengePending = {};
+
+// GET /api/passkey/register-options – generates a challenge to register a new passkey
+app.get("/api/passkey/register-options", authenticateToken, async (req, res) => {
+  const challenge = crypto.randomBytes(32).toString("base64url");
+  const key = `${req.user.prefix}:${req.user.id}`;
+  passkeyChallengePending[key] = { challenge, expires: Date.now() + 120_000, type: "register" };
+  res.json({ challenge, userId: req.user.id, username: req.user.name, rpId: req.hostname.split(":")[0] || "localhost" });
+});
+
+// POST /api/passkey/register – save the new credential
+app.post("/api/passkey/register", authenticateToken, async (req, res) => {
+  const { id: credId, rawId, response: authResp, type } = req.body;
+  const key = `${req.user.prefix}:${req.user.id}`;
+  const pending = passkeyChallengePending[key];
+  if (!pending || pending.expires < Date.now()) return res.status(400).json({ error: "Challenge expired" });
+  delete passkeyChallengePending[key];
+
+  // Store credential – decode clientDataJSON to verify challenge
+  const clientDataStr = Buffer.from(authResp.clientDataJSON, "base64url").toString();
+  const clientData = JSON.parse(clientDataStr);
+  if (clientData.challenge !== pending.challenge) return res.status(400).json({ error: "Challenge mismatch" });
+
+  const credJson = JSON.stringify({ credId, rawId, publicKey: authResp.attestationObject || null, counter: 0 });
+  const schema = asyncLocalStorage.getStore() || "public";
+  asyncLocalStorage.run(schema, () => {
+    db.run(
+      `CREATE TABLE IF NOT EXISTS passkey_credentials (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, cred_id TEXT NOT NULL UNIQUE, cred_json TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+      [], () => {
+        db.run(
+          `INSERT INTO passkey_credentials (user_id, cred_id, cred_json) VALUES (?,?,?) ON CONFLICT (cred_id) DO UPDATE SET cred_json=excluded.cred_json`,
+          [req.user.id, credId, credJson],
+          (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+          }
+        );
+      }
+    );
+  });
+});
+
+// POST /api/passkey/auth-options – generates challenge for authentication (login)
+app.post("/api/passkey/auth-options", async (req, res) => {
+  const { prefix } = req.body;
+  const challenge = crypto.randomBytes(32).toString("base64url");
+  const tempKey = `auth:${prefix}:${Date.now()}`;
+  passkeyChallengePending[tempKey] = { challenge, expires: Date.now() + 120_000, type: "auth", prefix };
+  res.json({ challenge, tempKey, rpId: req.hostname.split(":")[0] || "localhost" });
+});
+
+// POST /api/passkey/authenticate – verify and issue JWT
+app.post("/api/passkey/authenticate", async (req, res) => {
+  const { tempKey, id: credId, response: authResp } = req.body;
+  const pending = passkeyChallengePending[tempKey];
+  if (!pending || pending.expires < Date.now()) return res.status(400).json({ error: "Challenge expired" });
+  delete passkeyChallengePending[tempKey];
+
+  const clientDataStr = Buffer.from(authResp.clientDataJSON, "base64url").toString();
+  const clientData = JSON.parse(clientDataStr);
+  if (clientData.challenge !== pending.challenge) return res.status(400).json({ error: "Challenge mismatch" });
+
+  const schema = pending.prefix === "public" ? "public" : "t_" + pending.prefix.toLowerCase();
+  asyncLocalStorage.run(schema, () => {
+    db.get(`SELECT user_id, cred_json FROM passkey_credentials WHERE cred_id = ?`, [credId], (err, row) => {
+      if (err || !row) return res.status(401).json({ error: "Passkey not recognised" });
+      db.get(`SELECT * FROM users WHERE id = ?`, [row.user_id], async (err2, u) => {
+        if (err2 || !u) return res.status(401).json({ error: "User not found" });
+        const permissions = {};
+        const token = jwt.sign({ id: u.id, role: u.role, name: `${u.first_name} ${u.last_name}`, permissions, prefix: pending.prefix }, JWT_SECRET, { expiresIn: "8h" });
+        res.cookie("jomish_auth", token, { httpOnly: true, secure: false, sameSite: "lax", maxAge: 8 * 3600 * 1000 });
+        res.json({ token, role: u.role, name: `${u.first_name} ${u.last_name}`, permissions, user_id: u.id, prefix: pending.prefix });
+      });
+    });
+  });
+});
+
+// GET /api/passkey/has-passkey – check if current user has any registered passkeys
+app.get("/api/passkey/has-passkey", authenticateToken, (req, res) => {
+  const schema = asyncLocalStorage.getStore() || "public";
+  asyncLocalStorage.run(schema, () => {
+    db.get(`SELECT COUNT(*) as c FROM passkey_credentials WHERE user_id = ?`, [req.user.id], (err, row) => {
+      res.json({ hasPasskey: !err && row && row.c > 0 });
+    });
+  });
+});
+
 // ==== PASSWORD RESET FLOW ====
 app.post(
   "/api/employees/:id/generate-reset-link",

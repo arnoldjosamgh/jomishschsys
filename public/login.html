@@ -86,6 +86,24 @@ window.onunhandledrejection = function(e) {
         @keyframes spin-load{to{transform:rotate(360deg)}}
         .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(12,12,26,0.3);border-top-color:#0c0c1a;border-radius:50%;animation:spin-load .7s linear infinite;vertical-align:middle;margin-right:6px}
         @media(max-width:500px){.login-card{padding:32px 24px 28px}}
+
+        /* Passkey button */
+        .passkey-btn{
+            width:100%;padding:13px;margin-top:8px;
+            background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05));
+            border:1.5px solid rgba(99,102,241,0.4);
+            color:#a5b4fc;border-radius:var(--radius);font-size:.88rem;
+            font-weight:600;font-family:inherit;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            transition:all .2s;letter-spacing:.2px;
+        }
+        .passkey-btn:hover{background:rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.7);color:#c7d2fe;transform:translateY(-1px);}
+        .passkey-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+        .passkey-divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:1px;}
+        .passkey-divider::before,.passkey-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+        #passkey-register-prompt{display:none;margin-top:14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:14px;text-align:center;animation:cardIn .3s ease;}
+        #passkey-register-prompt p{font-size:.8rem;color:#a5b4fc;margin-bottom:10px;}
+        #passkey-register-prompt .passkey-btn{margin-top:0;}
     </style>
 </head>
 <body>
@@ -121,8 +139,25 @@ window.onunhandledrejection = function(e) {
                     <button type="button" class="eye-btn" id="toggle-pwd" title="Show/Hide">&#x1F441;</button>
                 </div>
                 <button type="submit" class="submit-btn" id="btn-signin">Sign In</button>
+                <div id="passkey-section">
+                    <div class="passkey-divider">or</div>
+                    <button type="button" class="passkey-btn" id="btn-passkey" onclick="loginWithPasskey()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 20c0-4-3.58-7-8-7s-8 3-8 7"/><path d="M16 11.5v5M18.5 14H14" stroke-width="1.8"/></svg>
+                        Sign in with Passkey
+                    </button>
+                </div>
                 <button type="button" class="submit-btn" id="btn-demo" style="margin-top: 10px; background: linear-gradient(135deg, #e040fb, #b020c0); color: white;">Try Demo</button>
             </form>
+
+            <!-- Passkey registration prompt shown after password login -->
+            <div id="passkey-register-prompt">
+                <p>🔐 <strong>Set up a Passkey</strong> for instant, passwordless login next time</p>
+                <button class="passkey-btn" onclick="registerPasskey()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 20c0-4-3.58-7-8-7s-8 3-8 7"/></svg>
+                    Register Passkey
+                </button>
+                <button onclick="skipPasskey()" style="background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;margin-top:8px;display:block;width:100%;">Skip for now</button>
+            </div>
 
             <div class="login-footer">
                 <strong>Jomish Enterprise Workforce Platform</strong>
@@ -227,6 +262,27 @@ window.onunhandledrejection = function(e) {
                         permissions: data.permissions, user_id: data.user_id, prefix: data.prefix
                     });
 
+                    // Check if user already has a passkey — if not, prompt to register
+                    if (window.PublicKeyCredential) {
+                        try {
+                            const pkRes = await fetch(`${BASE}/api/passkey/has-passkey`, {
+                                headers: { 'Authorization': `Bearer ${data.token}` }
+                            });
+                            const pkData = await pkRes.json();
+                            if (!pkData.hasPasskey && !localStorage.getItem('jomish_skip_passkey_' + data.user_id)) {
+                                // Show registration prompt — store token temporarily
+                                window._pendingPasskeyToken = data.token;
+                                window._pendingPasskeyData = data;
+                                window._pendingPasswordLogin = { usernameVal, passwordVal };
+                                document.getElementById('login-form').style.display = 'none';
+                                document.getElementById('passkey-section').style.display = 'none';
+                                document.getElementById('passkey-register-prompt').style.display = 'block';
+                                btn.disabled = false;
+                                btn.innerHTML = 'Sign In';
+                                return;
+                            }
+                        } catch(e) { /* passkey check failed, just redirect */ }
+                    }
                     window.location.href = 'index.html';
                 } else {
                     const terminatedEl = document.getElementById('terminated-msg');
@@ -293,6 +349,131 @@ window.onunhandledrejection = function(e) {
                 btn.innerHTML = 'Try Demo Mode';
             }
         });
+        // Check if WebAuthn is supported and hide the passkey button if not
+        (function() {
+            if (!window.PublicKeyCredential) {
+                const ps = document.getElementById('passkey-section');
+                if (ps) ps.style.display = 'none';
+            }
+        })();
+
+        let _loginPrefixForPasskey = '';
+
+        // Detect prefix from username field to use in passkey auth-options
+        document.getElementById('username').addEventListener('blur', function() {
+            const u = this.value.trim().toLowerCase();
+            const m = u.match(/^([a-z]+)(\d+)$/);
+            _loginPrefixForPasskey = m ? m[1] : (u === 'tech' ? 'public' : u.split('-')[0] || 'public');
+        });
+
+        async function loginWithPasskey() {
+            const btn = document.getElementById('btn-passkey');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Authenticating...';
+            const prefix = _loginPrefixForPasskey || (document.getElementById('username').value.trim().toLowerCase().match(/^([a-z]+)\d+$/) || ['','public'])[1] || 'public';
+            try {
+                // Get challenge from server
+                const optRes = await fetch(`${BASE}/api/passkey/auth-options`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prefix })
+                });
+                const opts = await optRes.json();
+                if (!optRes.ok) throw new Error(opts.error || 'Failed to start passkey auth');
+
+                const credential = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: Uint8Array.from(atob(opts.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
+                        rpId: opts.rpId,
+                        timeout: 60000,
+                        userVerification: 'preferred'
+                    }
+                });
+
+                const authRes = await fetch(`${BASE}/api/passkey/authenticate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tempKey: opts.tempKey,
+                        id: credential.id,
+                        response: {
+                            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
+                            authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
+                            signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')
+                        }
+                    })
+                });
+                const authData = await authRes.json();
+                if (!authRes.ok) throw new Error(authData.error || 'Passkey authentication failed');
+
+                localStorage.removeItem('jomish_demo');
+                localStorage.setItem('jomish_token', authData.token);
+                localStorage.setItem('jomish_role', authData.role);
+                localStorage.setItem('jomish_name', authData.name);
+                localStorage.setItem('jomish_permissions', JSON.stringify(authData.permissions));
+                localStorage.setItem('jomish_user_id', authData.user_id);
+                if (authData.prefix) localStorage.setItem('jomish_prefix', authData.prefix);
+                window.location.href = 'index.html';
+
+            } catch(e) {
+                const errorEl = document.getElementById('error-msg');
+                errorEl.style.display = 'block';
+                errorEl.textContent = e.message || 'Passkey login failed';
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 20c0-4-3.58-7-8-7s-8 3-8 7"/></svg> Sign in with Passkey`;
+            }
+        }
+
+        async function registerPasskey() {
+            const token = window._pendingPasskeyToken;
+            const d = window._pendingPasskeyData;
+            if (!token) return skipPasskey();
+            try {
+                const optRes = await fetch(`${BASE}/api/passkey/register-options`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const opts = await optRes.json();
+                if (!optRes.ok) throw new Error(opts.error);
+
+                const enc = new TextEncoder();
+                const credential = await navigator.credentials.create({
+                    publicKey: {
+                        challenge: Uint8Array.from(atob(opts.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
+                        rp: { name: 'School System', id: opts.rpId },
+                        user: { id: enc.encode(String(opts.userId)), name: opts.username, displayName: opts.username },
+                        pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+                        timeout: 60000,
+                        authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+                        attestation: 'none'
+                    }
+                });
+
+                const regRes = await fetch(`${BASE}/api/passkey/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        id: credential.id, rawId: credential.id, type: credential.type,
+                        response: {
+                            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''),
+                            attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')
+                        }
+                    })
+                });
+                const regData = await regRes.json();
+                if (!regRes.ok) throw new Error(regData.error);
+                window.location.href = 'index.html';
+            } catch(e) {
+                alert('Passkey registration failed: ' + e.message + '\n\nRedirecting to dashboard.');
+                window.location.href = 'index.html';
+            }
+        }
+
+        function skipPasskey() {
+            if (window._pendingPasskeyData) {
+                localStorage.setItem('jomish_skip_passkey_' + window._pendingPasskeyData.user_id, '1');
+            }
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 </html>

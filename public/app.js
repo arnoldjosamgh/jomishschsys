@@ -2067,30 +2067,61 @@ function enforceRBAC() {
   const navDOSHub = document.querySelector('[data-target="dos-hub"]');
   const navTeacherHub = document.querySelector('[data-target="teacher-hub"]');
 
-  const isTech = localStorage.getItem("jomish_name") === "System Technician" || USER_ROLE === "Tech" || USER_ROLE === "System Technician";
+  const isTech = USER_ROLE === "System Technician" || USER_ROLE === "Tech";
   const isDemo = localStorage.getItem("jomish_demo") === "true";
   const isDOS = USER_ROLE === "DOS";
   const isTeacher = USER_ROLE === "Teacher";
+  // single-tab roles get fullscreen (no sidebar)
+  const isSingleTabRole = isTeacher || isDOS;
 
   // Show DOS Hub and Teacher Hub nav buttons based on role
   if (navDOSHub) navDOSHub.style.display = (isDOS || USER_ROLE === "Admin" || isTech || USER_ROLE === "Headteacher") ? "block" : "none";
   if (navTeacherHub) navTeacherHub.style.display = (isTeacher || isTech) ? "block" : "none";
 
-  // If DOS role: hide all standard business tabs, only show DOS Hub
-  if (isDOS) {
-    [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = "none"; });
-    document.querySelectorAll(".tech-only, .admin-only").forEach(el => el.classList.add("hidden"));
-    setTimeout(() => { if (navDOSHub) navDOSHub.click(); }, 100);
-    return;
-  }
+  // ── Single-tab roles (DOS, Teacher) → fullscreen, no sidebar ──
+  if (isSingleTabRole) {
+    // Hide entire sidebar
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    if (sidebar) sidebar.style.display = 'none';
+    if (mainContent) { mainContent.style.marginLeft = '0'; mainContent.style.width = '100%'; }
 
-  // If Teacher role: hide all standard tabs, only show Teacher Hub
-  if (isTeacher) {
-    [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = "none"; });
-    document.querySelectorAll(".tech-only, .admin-only").forEach(el => el.classList.add("hidden"));
-    setTimeout(() => { if (navTeacherHub) navTeacherHub.click(); }, 100);
-    // Prompt teacher on first login
-    setTimeout(() => initTeacherFirstLogin(), 1500);
+    // Show a minimal top bar
+    let topBar = document.getElementById('minimal-top-bar');
+    if (!topBar) {
+      topBar = document.createElement('div');
+      topBar.id = 'minimal-top-bar';
+      topBar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;height:52px;';
+      topBar.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="" id="topbar-logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:none;">
+          <strong id="topbar-username" style="color:var(--text);">${USER_NAME}</strong>
+          <span style="font-size:0.75rem;color:var(--text-muted);background:var(--background);border:1px solid var(--border);padding:2px 8px;border-radius:12px;">${USER_ROLE}</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="toggleTheme()" style="background:var(--background);border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;color:var(--text);font-size:0.82rem;">
+            <i class="fa-solid fa-circle-half-stroke"></i> Theme
+          </button>
+          <button onclick="document.getElementById('btn-logout').click()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:7px 14px;cursor:pointer;color:#EF4444;font-size:0.82rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </button>
+        </div>`;
+      document.body.prepend(topBar);
+    }
+    // Offset main content below the topbar
+    if (mainContent) mainContent.style.paddingTop = '60px';
+
+    document.querySelectorAll('.tech-only, .admin-only').forEach(el => el.classList.add('hidden'));
+
+    if (isDOS) {
+      [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = 'none'; });
+      setTimeout(() => { if (navDOSHub) navDOSHub.click(); }, 100);
+    }
+    if (isTeacher) {
+      [navDashboard, navHR, navSupervision, navSME, navPOS, navTransport, navSecretary, navTechHub].forEach(n => { if (n) n.style.display = 'none'; });
+      setTimeout(() => { if (navTeacherHub) navTeacherHub.click(); }, 100);
+      setTimeout(() => initTeacherFirstLogin(), 1500);
+    }
     return;
   }
 
@@ -2223,7 +2254,9 @@ function enforceRBAC() {
     ].forEach((n) => {
       if (n) n.style.display = "block";
     });
-    if (navTechHub) { navTechHub.style.display = "block"; navTechHub.classList.remove("hidden"); }
+    if (navTechHub) { navTechHub.style.display = "block"; navTechHub.style.removeProperty('display'); navTechHub.classList.remove("hidden"); }
+    // Auto-navigate to Tech Hub
+    setTimeout(() => { if (navTechHub) navTechHub.click(); }, 150);
     if (isTech) {
       // Tech users always see tech-only elements
       document
