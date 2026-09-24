@@ -321,7 +321,7 @@ window.dosInitCurriculum = async function() {
         const count = counts[level] || 0;
         const color = count < 4 ? 'var(--danger)' : 'var(--success)';
         return `
-            <button class="nav-btn" style="text-align:left; justify-content:space-between; width:100%; padding:10px 14px;" 
+            <button class="nav-btn" data-level="${level.replace(/"/g,'&quot;')}" style="text-align:left; justify-content:space-between; width:100%; padding:10px 14px;" 
                 onclick="dosSelectLevel('${level.replace(/'/g,"\\'")}', this)">
                 <span>${level}</span>
                 <span style="background:rgba(0,0,0,0.05); border-radius:12px; padding:2px 8px; font-size:0.75rem; color:${color}; font-weight:bold;">${count}</span>
@@ -348,13 +348,7 @@ window.dosSelectLevel = function(level, btnEl) {
     
     document.getElementById('dos-curriculum-level-title').innerText = level;
     dosLoadSubjects(level);
-
-    // Tick the selected level's checkbox (leave others as-is so user can multi-select)
-    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
-    if (cbContainer) {
-        const cb = cbContainer.querySelector(`.dos-level-cb[value="${level.replace(/"/g, '\\"')}"]`);
-        if (cb) cb.checked = true;
-    }
+    // NOTE: checkboxes are NOT touched here — they are purely opt-in for multi-level adds
 };
 
 window.dosLoadSubjects = async function(level) {
@@ -407,21 +401,21 @@ window.dosAddSubject = async function() {
         showToast("Subject name is required", "warning");
         return;
     }
-
-    // Gather selected levels from checkboxes
-    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
-    let selectedLevels = [];
-    if (cbContainer) {
-        cbContainer.querySelectorAll('.dos-level-cb:checked').forEach(cb => selectedLevels.push(cb.value));
-    }
-    // Always include the currently active level if not already in the list
-    if (currentCurriculumLevel && !selectedLevels.includes(currentCurriculumLevel)) {
-        selectedLevels.unshift(currentCurriculumLevel);
-    }
-    if (selectedLevels.length === 0) {
-        showToast("Please select a school level first", "warning");
+    if (!currentCurriculumLevel) {
+        showToast("Please click a school level first", "warning");
         return;
     }
+
+    // Build target levels: always start with the currently active level.
+    // Only add extra levels if the user has EXPLICITLY checked other boxes.
+    const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
+    let extraLevels = [];
+    if (cbContainer) {
+        cbContainer.querySelectorAll('.dos-level-cb:checked').forEach(cb => {
+            if (cb.value !== currentCurriculumLevel) extraLevels.push(cb.value);
+        });
+    }
+    const selectedLevels = [currentCurriculumLevel, ...extraLevels];
     
     try {
         const res = await fetchAuth(`${API_URL}/school/subjects`, {
@@ -436,19 +430,24 @@ window.dosAddSubject = async function() {
         codeInput.value = '';
         const addedCount = (data.inserted || []).length;
         if (addedCount === 0) {
-            showToast(`"${name}" already exists in all selected levels`, "warning");
+            showToast(`"${name}" already exists in the selected level(s)`, "warning");
         } else {
             showToast(`"${name}" added to ${addedCount} level${addedCount !== 1 ? 's' : ''}!`, "success");
         }
         
-        // Refresh counts and current level's subjects
+        // Clear all checkboxes after add so next add is clean (current level only by default)
+        if (cbContainer) cbContainer.querySelectorAll('.dos-level-cb').forEach(cb => cb.checked = false);
+
+        // Refresh level list counts and reload the current level's subjects
+        const savedLevel = currentCurriculumLevel;
         await dosInitCurriculum();
-        if (currentCurriculumLevel) {
-            dosSelectLevel(currentCurriculumLevel,
-                Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
-                    .find(b => b.textContent.trim().startsWith(currentCurriculumLevel))
-            );
-        }
+        currentCurriculumLevel = savedLevel; // restore after reinit
+        const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
+            .find(b => b.dataset.level === savedLevel || b.textContent.includes(savedLevel.substring(0, 10)));
+        document.querySelectorAll('#dos-level-list .nav-btn').forEach(b => b.classList.remove('active'));
+        if (activeBtn) activeBtn.classList.add('active');
+        document.getElementById('dos-curriculum-level-title').innerText = savedLevel;
+        dosLoadSubjects(savedLevel);
         
     } catch (e) {
         showToast(e.message || "Failed to add subject", "danger");
