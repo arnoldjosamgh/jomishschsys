@@ -1,4 +1,4 @@
-﻿// Missing API helpers required for school modules
+// Missing API helpers required for school modules
 window.apiGet = async function(endpoint) {
     try {
         const res = await window.fetchAuth(window.API_URL + '/school' + endpoint);
@@ -349,11 +349,11 @@ window.dosSelectLevel = function(level, btnEl) {
     document.getElementById('dos-curriculum-level-title').innerText = level;
     dosLoadSubjects(level);
 
-    // Also tick this level's checkbox in the Add Subject panel
+    // Reset all checkboxes and only tick the newly selected level
     const cbContainer = document.getElementById('dos-subject-levels-checkboxes');
     if (cbContainer) {
         cbContainer.querySelectorAll('.dos-level-cb').forEach(cb => {
-            if (cb.value === level) cb.checked = true;
+            cb.checked = (cb.value === level);
         });
     }
 };
@@ -415,13 +415,13 @@ window.dosAddSubject = async function() {
     if (cbContainer) {
         cbContainer.querySelectorAll('.dos-level-cb:checked').forEach(cb => selectedLevels.push(cb.value));
     }
-    // Fallback: use currentCurriculumLevel if no checkbox is checked
+    // Always include the currently active level if not already in the list
+    if (currentCurriculumLevel && !selectedLevels.includes(currentCurriculumLevel)) {
+        selectedLevels.unshift(currentCurriculumLevel);
+    }
     if (selectedLevels.length === 0) {
-        if (!currentCurriculumLevel) {
-            showToast("Please select at least one school level", "warning");
-            return;
-        }
-        selectedLevels = [currentCurriculumLevel];
+        showToast("Please select a school level first", "warning");
+        return;
     }
     
     try {
@@ -436,17 +436,20 @@ window.dosAddSubject = async function() {
         nameInput.value = '';
         codeInput.value = '';
         const addedCount = (data.inserted || []).length;
-        showToast(`Subject added to ${addedCount} level${addedCount !== 1 ? 's' : ''}!`, "success");
+        if (addedCount === 0) {
+            showToast(`"${name}" already exists in all selected levels`, "warning");
+        } else {
+            showToast(`"${name}" added to ${addedCount} level${addedCount !== 1 ? 's' : ''}!`, "success");
+        }
         
         // Refresh counts and current level's subjects
-        dosInitCurriculum().then(() => {
-            if (currentCurriculumLevel) {
-                const activeBtn = Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
-                    .find(b => b.textContent.trim().startsWith(currentCurriculumLevel));
-                if (activeBtn) activeBtn.classList.add('active');
-            }
-        });
-        if (currentCurriculumLevel) dosLoadSubjects(currentCurriculumLevel);
+        await dosInitCurriculum();
+        if (currentCurriculumLevel) {
+            dosSelectLevel(currentCurriculumLevel,
+                Array.from(document.querySelectorAll('#dos-level-list .nav-btn'))
+                    .find(b => b.textContent.trim().startsWith(currentCurriculumLevel))
+            );
+        }
         
     } catch (e) {
         showToast(e.message || "Failed to add subject", "danger");
