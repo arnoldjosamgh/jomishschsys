@@ -241,6 +241,7 @@ const authenticateToken = (req, res, next) => {
 // ==== UNIFIED API ROUTES ====
 
 const dosRoutes = require('./dos_routes.js');
+dosRoutes.setAuth(authenticateToken);   // share the same JWT_SECRET — avoids 403 mismatch
 app.use('/api/dos', dosRoutes);
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -5,23 +5,22 @@ const db = require('./database.js');
 
 const router = express.Router();
 
-// Middleware to authenticate
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
+// authenticateToken is injected from server.js to use the SAME JWT_SECRET
+// This avoids the fallback-string mismatch that was causing 403 Forbidden
+let authenticateToken;
 
-    const jwt = require('jsonwebtoken');
-    jwt.verify(token, process.env.JWT_SECRET || 'CHANGE_ME_TO_A_LONG_RANDOM_SECRET', (err, user) => {
-        if (err) return res.status(403).json({ error: "Forbidden" });
-        req.user = user;
-        next();
-    });
+router.setAuth = function(fn) { authenticateToken = fn; };
+
+// Helper middleware that defers to the injected auth
+const auth = (req, res, next) => {
+    if (!authenticateToken) return res.status(500).json({ error: 'Auth not configured' });
+    authenticateToken(req, res, next);
 };
 
-// 1. Generate DOS Invite Link (Admin or Tech only)
-router.post('/invite-link', authenticateToken, (req, res) => {
-    if (req.user.role !== 'Admin' && req.user.role !== 'Headteacher' && req.user.role !== 'System Technician' && req.user.role !== 'Tech') {
+// 1. Generate DOS Invite Link (Admin, Tech, or System Technician only)
+router.post('/invite-link', auth, (req, res) => {
+    const allowed = ['Admin', 'Headteacher', 'System Technician', 'Tech'];
+    if (!allowed.includes(req.user.role)) {
         return res.status(403).json({ error: 'Forbidden' });
     }
     const { levels_in_charge, email } = req.body;
@@ -46,7 +45,7 @@ router.post('/invite-link', authenticateToken, (req, res) => {
     });
 });
 
-// 2. Register DOS with Token
+// 2. Register DOS with Token (no auth — uses invite token)
 router.post('/register', async (req, res) => {
     const { token, first_name, last_name, password } = req.body;
     
@@ -57,13 +56,12 @@ router.post('/register', async (req, res) => {
 
             const salt = await bcrypt.genSalt(10);
             const hash = await bcrypt.hash(password, salt);
-            const username = 'DOS' + Math.floor(Math.random() * 10000);
             const companySchema = row.company_prefix === "public" ? "public" : "t_" + row.company_prefix.toLowerCase();
             const prefix = row.company_prefix.toUpperCase();
 
             db.asyncLocalStorage.run(companySchema, () => {
                 db.get(`SELECT username FROM users WHERE username LIKE ? ORDER BY id DESC LIMIT 1`, [`${prefix}%`], (err, lastUser) => {
-                    let nextNum = 2; // Assuming admin is 1
+                    let nextNum = 2;
                     if (lastUser && lastUser.username) {
                         const match = lastUser.username.match(/\d+$/);
                         if (match) nextNum = parseInt(match[0]) + 1;
@@ -88,10 +86,15 @@ router.post('/register', async (req, res) => {
     });
 });
 
-// 3. Add Teacher (DOS Portal)
-router.post('/teachers', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'DOS') return res.status(403).json({ error: 'Forbidden' });
+// 3. Add Teacher (DOS or Admin)
+router.post('/teachers', auth, async (req, res) => {
+    const allowed = ['DOS', 'Admin', 'Headteacher'];
+    if (!allowed.includes(req.user.role)) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
     const { first_name, last_name, email, phone, password } = req.body;
+    if (!first_name || !last_name || !password)
+        return res.status(400).json({ error: 'Missing required fields' });
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
@@ -109,7 +112,7 @@ router.post('/teachers', authenticateToken, async (req, res) => {
         db.run(
             `INSERT INTO users (first_name, last_name, email, phone, password, role, username)
              VALUES (?, ?, ?, ?, ?, 'Teacher', ?)`,
-            [first_name, last_name, email, phone, hash, username],
+            [first_name, last_name, email || null, phone || null, hash, username],
             function(err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true, teacher_id: this.lastID, username });
@@ -119,8 +122,11 @@ router.post('/teachers', authenticateToken, async (req, res) => {
 });
 
 // 4. Assign Class and Subject to Teacher
-router.post('/teachers/:id/assignments', authenticateToken, (req, res) => {
-    if (req.user.role !== 'DOS') return res.status(403).json({ error: 'Forbidden' });
+router.post('/teachers/:id/assignments', auth, (req, res) => {
+    const allowed = ['DOS', 'Admin', 'Headteacher'];
+    if (!allowed.includes(req.user.role)) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
     const teacher_id = req.params.id;
     const { class_id, subject_id } = req.body;
 
