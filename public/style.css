@@ -2068,11 +2068,13 @@ tr:hover td { background: rgba(255,255,255,0.02) !important; }
 }
 
 
-/* Dark mode: semi-transparent dark cards so sand texture shows through */
+/* Dark mode: transparent dark cards so sand texture shows clearly through */
 .card, .stat-card, .product-card, .table-wrapper, .login-glass, .modal-content {
-    background: rgba(20,20,20,0.72) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+    background: rgba(10, 10, 10, 0.35) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255,255,255,0.05) !important;
 }
 
 /* Light mode: use pink/blue wave wallpaper with frosted white cards */
@@ -2096,6 +2098,16 @@ tr:hover td { background: rgba(255,255,255,0.02) !important; }
 }
 
 .sidebar {
-    background: rgba(20,20,20,0.7) !important;
-    backdrop-filter: blur(30px) !important;
+    background: rgba(10, 10, 10, 0.4) !important;
+    backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Also make inputs frosted in dark mode so the background is visible through them too */
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(8px) !important;
+}
+input:focus, select:focus, textarea:focus {
+    background: rgba(255, 255, 255, 0.08) !important;
 }
