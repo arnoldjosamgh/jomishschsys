@@ -571,10 +571,11 @@ window.onunhandledrejection = function(e) {
                 });
                 const regData = await regRes.json();
                 if (!regRes.ok) throw new Error(regData.error);
-                window.location.href = 'index.html';
+                // Passkey registered, continue onboarding
+                continueOnboardingStep3();
             } catch(e) {
-                alert('Passkey registration failed: ' + e.message + '\n\nRedirecting to dashboard.');
-                window.location.href = 'index.html';
+                alert('Passkey registration failed: ' + e.message);
+                continueOnboardingStep3();
             }
         }
 
@@ -583,8 +584,6 @@ window.onunhandledrejection = function(e) {
                 localStorage.setItem('jomish_skip_passkey_' + window._pendingPasskeyData.user_id, 'true');
             }
             continueOnboardingStep3();
-        }
-            window.location.href = 'index.html';
         }
     
         // Auto-Trigger Passkey on Load if previously logged in
