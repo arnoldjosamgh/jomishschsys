@@ -3,54 +3,52 @@
     Neumorphic soft-UI design with flexbox layout
 */
 :root {
-    /* Base Colors - Clean Minimalist (Light Mode) */
-    --primary: #000000; /* pure black for contrast */
-    --primary-hover: #333333;
+    /* ======= #141414 Dark Texture Theme (Default) ======= */
+    --primary: #e0e0e0;
+    --primary-hover: #ffffff;
     
-    /* Clean Solid Backgrounds */
-    --background: #f9f9fa; /* very subtle off-white */
-    --surface: #ffffff; /* pure white cards */
-    --surface-hover: #f0f0f5; /* light grey hover */
-    --surface-glass: rgba(255, 255, 255, 0.85); /* For sticky navs */
-    --text: #000000; 
-    --text-muted: #8e8e93; /* Apple standard gray */
-    --border: rgba(0, 0, 0, 0.05); /* almost invisible border */
+    /* Dark textured background */
+    --background: #141414;
+    --surface: #1e1e1e;       /* capsule/card: slightly lighter than bg */
+    --surface-hover: #252525;
+    --surface-glass: rgba(30, 30, 30, 0.9);
+    --text: #f0f0f0;
+    --text-muted: #888888;
+    --border: rgba(255, 255, 255, 0.06);
     
     /* Accents */
-    --success: #34c759; /* iOS green */
-    --success-glow: rgba(52, 199, 89, 0.2);
-    --danger: #ff3b30; /* iOS red */
+    --success: #4ade80;
+    --success-glow: rgba(74, 222, 128, 0.3);
+    --danger: #f87171;
     
-    /* Minimalist Soft Shadows */
-    --shadow-out: 0 10px 30px rgba(0, 0, 0, 0.04);
-    --shadow-in: inset 0 0 0 transparent; /* remove inset shadows */
-    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+    /* Neumorphic dark shadows (like the fitness app capsules) */
+    --shadow-out: 4px 4px 10px rgba(0,0,0,0.6), -2px -2px 6px rgba(255,255,255,0.04);
+    --shadow-in: inset 2px 2px 6px rgba(0,0,0,0.5), inset -1px -1px 4px rgba(255,255,255,0.04);
+    --shadow-sm: 2px 2px 8px rgba(0,0,0,0.5), -1px -1px 4px rgba(255,255,255,0.03);
     
-    /* Ultimate Capsule Radius */
-    --radius: 28px;
-    --radius-pill: 999px; /* absolute perfect pill */
+    /* Capsule radius */
+    --radius: 22px;
+    --radius-pill: 999px;
 }
 
 /* Dark mode — Deep Modern Dark */
 [data-theme="dark"] {
-    --primary: #ffffff; /* pure white buttons */
-    --primary-hover: #e5e5e5;
-    /* Pure Black Background */
-    --background: #000000;
-    --surface: #1c1c1e; /* iOS dark mode card color */
-    --surface-hover: #2c2c2e;
-    --surface-glass: rgba(28, 28, 30, 0.85);
-    --text: #ffffff; 
-    --text-muted: #98989d;
-    --border: rgba(255, 255, 255, 0.08);
-    --success: #32d74b;
-    --success-glow: rgba(50, 215, 75, 0.2);
-    --danger: #ff453a;
-    
-    /* Dark Shadows (often invisible on pure black) */
-    --shadow-out: 0 10px 30px rgba(0, 0, 0, 0.8);
-    --shadow-in: inset 0 0 0 transparent;
-    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.6);
+    /* Light mode is the secondary toggle - clean pale gray */
+    --primary: #1a1a1a;
+    --primary-hover: #333;
+    --background: #e8e8e8;
+    --surface: #f2f2f2;
+    --surface-hover: #ffffff;
+    --surface-glass: rgba(240, 240, 240, 0.9);
+    --text: #141414;
+    --text-muted: #777777;
+    --border: rgba(0, 0, 0, 0.06);
+    --success: #16a34a;
+    --success-glow: rgba(22, 163, 74, 0.2);
+    --danger: #dc2626;
+    --shadow-out: 4px 4px 10px rgba(0,0,0,0.12), -2px -2px 6px rgba(255,255,255,0.8);
+    --shadow-in: inset 2px 2px 6px rgba(0,0,0,0.1), inset -1px -1px 4px rgba(255,255,255,0.7);
+    --shadow-sm: 2px 2px 8px rgba(0,0,0,0.1), -1px -1px 4px rgba(255,255,255,0.6);
 }
 
 [data-theme="dark"] .stat-card, [data-theme="dark"] .product-card, [data-theme="dark"] .modal-content, [data-theme="dark"] .sidebar {
@@ -91,13 +89,15 @@ html {
 
 body {
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--background);
-    background-attachment: fixed;
+    background-color: var(--background);
+    background-image: url('texture_bg.jpg');
     background-size: cover;
+    background-attachment: fixed;
+    background-blend-mode: multiply;
     color: var(--text);
     margin: 0;
     padding: 0;
-    transition: background 0.4s ease, color 0.4s ease;
+    transition: background 0.4s ease, color 0.3s ease;
 }
 
 .app-container {
@@ -1925,87 +1925,123 @@ tr:hover td {
 }
 
 
-/* === GLOBAL MINIMALIST CAPSULE ENFORCEMENT === */
-input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea, .sm-input, .sm-select {
+
+/* === #141414 DARK TEXTURE CAPSULE ENFORCEMENT === */
+
+/* All inputs: dark neumorphic capsules */
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
     border-radius: var(--radius-pill) !important;
     background: var(--surface) !important;
     backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     border: 1px solid var(--border) !important;
-    border-top: 1px solid var(--border) !important;
-    padding: 14px 22px !important;
-    box-shadow: none !important;
+    padding: 13px 22px !important;
+    box-shadow: var(--shadow-in) !important;
     color: var(--text) !important;
     outline: none !important;
-    transition: all 0.2s ease !important;
-    font-size: 0.95rem;
+    transition: all 0.25s ease !important;
+    font-family: inherit;
+    font-size: 0.93rem;
 }
-
-[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] input[type="email"], [data-theme="dark"] input[type="number"], [data-theme="dark"] select, [data-theme="dark"] textarea {
-    background: #2c2c2e !important; /* Slightly lighter than surface for inputs */
-    border: none !important;
-    border-top: none !important;
-    box-shadow: none !important;
-}
-
 input:focus, select:focus, textarea:focus {
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.1) !important;
-    border-color: var(--text-muted) !important;
-}
-[data-theme="dark"] input:focus, [data-theme="dark"] select:focus, [data-theme="dark"] textarea:focus {
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.2) !important;
+    box-shadow: var(--shadow-in), 0 0 0 2px rgba(255,255,255,0.1) !important;
+    background: var(--surface-hover) !important;
 }
 
-button, .sm-btn, .btn {
+/* All buttons: raised neumorphic capsule */
+button, .sm-btn, .btn, .nav-btn {
     border-radius: var(--radius-pill) !important;
     font-weight: 600 !important;
-    box-shadow: none !important;
-    border: none !important;
+    font-family: inherit;
+    box-shadow: var(--shadow-out) !important;
+    border: 1px solid var(--border) !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer;
+}
+button:active, .sm-btn:active, .btn:active {
+    box-shadow: var(--shadow-in) !important;
+    transform: scale(0.98);
 }
 
-/* Primary buttons become solid high contrast */
+/* Primary action buttons */
 .btn {
+    background: var(--surface-hover) !important;
+    color: var(--text) !important;
+}
+.btn-primary, button[type="submit"], .btn.primary {
     background: var(--primary) !important;
     color: var(--background) !important;
 }
 
-/* Minimalist Cards without glass borders */
-.card, .stat-card, .product-card, .modal-content, .login-glass {
+/* Cards: dark raised surface */
+.card, .stat-card, .product-card, .modal-content, .login-glass, .table-wrapper {
     border-radius: var(--radius) !important;
     background: var(--surface) !important;
     backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     border: 1px solid var(--border) !important;
-    border-top: 1px solid var(--border) !important;
-    border-left: 1px solid var(--border) !important;
     box-shadow: var(--shadow-out) !important;
 }
+.stat-card::after, .product-card::after { display: none !important; }
 
-[data-theme="dark"] .card, [data-theme="dark"] .stat-card, [data-theme="dark"] .product-card, [data-theme="dark"] .modal-content, [data-theme="dark"] .login-glass {
-    border: 1px solid rgba(255,255,255,0.05) !important;
-    border-top: 1px solid rgba(255,255,255,0.05) !important;
-    border-left: 1px solid rgba(255,255,255,0.05) !important;
+/* Nav sidebar capsule */
+.sidebar {
+    background: var(--surface-glass) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
 }
 
-/* Fix login container specific background if it was using glass */
+/* Active nav button: inset pressed look */
+.nav-btn {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+}
+.nav-btn.active {
+    background: var(--surface-hover) !important;
+    box-shadow: var(--shadow-out) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+.nav-btn:hover {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+/* Tables */
+table { border-collapse: separate; border-spacing: 0; }
+th {
+    background: var(--surface-hover) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+td { border-bottom: 1px solid var(--border) !important; }
+tr:hover td { background: rgba(255,255,255,0.02) !important; }
+
+/* Login screen */
 .login-glass {
     background: var(--surface) !important;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
-}
-[data-theme="dark"] .login-glass {
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 8px 8px 20px rgba(0,0,0,0.8), -4px -4px 12px rgba(255,255,255,0.04) !important;
 }
 
-/* Sidebar (nav) needs the blur */
-.sidebar {
-    background-color: var(--surface-glass) !important;
-    backdrop-filter: blur(25px) !important;
-    -webkit-backdrop-filter: blur(25px) !important;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
+/* Modals */
+.modal-content {
+    background: var(--surface) !important;
+}
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+/* Tags, pills, badges */
+.badge, .tag, .pill {
+    border-radius: var(--radius-pill) !important;
+    box-shadow: var(--shadow-in) !important;
+    background: var(--surface-hover) !important;
     border: 1px solid var(--border) !important;
 }
-[data-theme="dark"] .sidebar {
-    background-color: rgba(28, 28, 30, 0.7) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-}
-
