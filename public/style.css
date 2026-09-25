@@ -80,18 +80,7 @@
     color: #000 !important;
     box-shadow: 4px 4px 10px rgba(0,0,0,0.08), -2px -2px 6px rgba(255,255,255,1) !important;
 }
-[data-theme="dark"] body {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #141414;
-    background-image: url('wp_dark_sand.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: var(--text);
-    margin: 0;
-    padding: 0;
-    transition: background 0.4s ease, color 0.3s ease;
-}
+
 
 [data-theme="dark"] .hamburger-btn span {
     background: var(--text);
@@ -108,18 +97,34 @@ html {
     height: 100%;
 }
 
+
+
+
+
+/* === BACKGROUNDS === */
+/* Default (Dark Mode) */
 body {
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--background);
-    background-image: url('texture_bg.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-blend-mode: multiply;
+    background-color: #141414 !important;
+    background-image: url('wp_dark_sand.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
     color: var(--text);
     margin: 0;
     padding: 0;
     transition: background 0.4s ease, color 0.3s ease;
 }
+
+/* Toggled (Light Mode) */
+[data-theme="dark"] body {
+    background-image: url('wp_light_waves.jpg') !important;
+    background-color: transparent !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
 
 .app-container {
     display: flex;
@@ -1036,7 +1041,34 @@ tr:hover td {
     }
 
     /* ── TIMETABLE PRINT MODE ── */
-    body.print-mode-timetable > .app-container {
+    body.print-mode-timetable > 
+
+/* === BACKGROUNDS === */
+/* Default (Dark Mode) */
+body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #141414 !important;
+    background-image: url('wp_dark_sand.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    transition: background 0.4s ease, color 0.3s ease;
+}
+
+/* Toggled (Light Mode) */
+[data-theme="dark"] body {
+    background-image: url('wp_light_waves.jpg') !important;
+    background-color: transparent !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
+
+.app-container {
         display: block !important;
         width: 100% !important;
         height: auto !important;
@@ -1288,7 +1320,34 @@ tr:hover td {
     }
 
     /* --- App container stacks, leaves room for top bar --- */
-    .app-container {
+    
+
+/* === BACKGROUNDS === */
+/* Default (Dark Mode) */
+body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #141414 !important;
+    background-image: url('wp_dark_sand.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    transition: background 0.4s ease, color 0.3s ease;
+}
+
+/* Toggled (Light Mode) */
+[data-theme="dark"] body {
+    background-image: url('wp_light_waves.jpg') !important;
+    background-color: transparent !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
+
+.app-container {
         flex-direction: column;
         padding-top: 56px; /* height of .mobile-topbar */
     }
@@ -2078,13 +2137,7 @@ tr:hover td { background: rgba(255,255,255,0.02) !important; }
 }
 
 /* Light mode: use pink/blue wave wallpaper with frosted white cards */
-[data-theme="dark"] body {
-    background-image: url('wp_light_waves.jpg') !important;
-    background-color: transparent !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
-}
+
 
 [data-theme="dark"] .card, [data-theme="dark"] .stat-card, [data-theme="dark"] .product-card, [data-theme="dark"] .table-wrapper, [data-theme="dark"] .login-glass, [data-theme="dark"] .modal-content {
     background: rgba(255,255,255,0.55) !important;
