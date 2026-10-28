@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jomish School Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================
+       COLOR PALETTE SYSTEM (Inspired by JomishPOS Ecosystem)
+       Alignment & layout structures are 100% preserved.
+       ========================================================= */
+    :root {
+      --bg-canvas: #f8fafc;
+      --app-bg: #ffffff;
+      
+      /* Brand & Accent Colors */
+      --brand-primary: #0284c7;        /* Jomish Vibrant Blue */
+      --brand-primary-dark: #0369a1;
+      --brand-primary-glow: rgba(2, 132, 199, 0.35);
+      --accent-orange: #f97316;        /* Warm energetic orange */
+      --accent-cyan: #38bdf8;          /* Luminous cyan */
+      --accent-red: #ff4757;           /* Coral Reminders Red */
+      --badge-green: #10b981;          /* Status green */
+      
+      /* Dark Containers */
+      --dark-banner-top: #0f172a;
+      --dark-banner-bot: #1e293b;
+      --dark-pill-bg: #090d16;
+      --search-pill-bg: #1e293b;
+
+      /* Neutral & Input Colors */
+      --input-bg: #f1f5f9;
+      --input-border: #cbd5e1;
+      --input-text: #0f172a;
+      --card-inactive: #f8fafc;
+      --card-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-canvas);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Aspect Device / Viewport */
+    .app-viewport {
+      width: 100%;
+      max-width: 620px;
+      min-height: 100vh;
+      background: var(--app-bg);
+      box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.15), 0 0 1px 1px rgba(15, 23, 42, 0.05);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ---------------- TOP BANNER (PHOTO 1) ---------------- */
+    .top-hero-banner {
+      background: linear-gradient(160deg, var(--dark-banner-top) 0%, var(--dark-banner-bot) 100%);
+      border-bottom-left-radius: 42px;
+      border-bottom-right-radius: 42px;
+      padding: 30px 20px 38px 20px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .title-school {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 40px;
+      line-height: 1;
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transform: rotate(-3deg);
+      display: block;
+      text-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+    }
+
+    .title-management {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 44px;
+      line-height: 1.05;
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      transform: rotate(-4deg);
+      display: block;
+      margin-top: -2px;
+      text-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+    }
+
+    .title-systems {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 48px;
+      line-height: 0.9;
+      color: var(--accent-cyan);
+      transform: rotate(-7deg);
+      display: inline-block;
+      margin-top: -14px;
+      margin-left: 70px;
+      text-shadow: 0 4px 16px rgba(56, 189, 248, 0.5);
+    }
+
+    /* ---------------- BOTTOM NEWS & REMINDERS BANNER ---------------- */
+    .news-reminders-banner {
+      position: relative;
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
+      padding: 24px 15px;
+      text-align: center;
+      margin: auto 15px 18px 15px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+      border-top: 1px solid rgba(255, 71, 87, 0.2);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+    }
+
+    .news-reminders-banner:hover {
+      transform: translateY(-2px) scale(1.015);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+    }
+
+    .news-faded-bg {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 52px;
+      color: rgba(148, 163, 184, 0.25);
+      line-height: 0.8;
+      transform: rotate(-6deg);
+      display: block;
+      margin-bottom: -15px;
+      letter-spacing: 1px;
+    }
+
+    .reminders-fg {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 60px;
+      color: var(--accent-red);
+      transform: rotate(-6deg);
+      display: block;
+      text-shadow: 0 4px 18px rgba(255, 71, 87, 0.5);
+      line-height: 1;
+    }
+
+    /* ---------------- PAGE SWITCHING ---------------- */
+    .page-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .page-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== PAGE 1: LOGIN ==================== */
+    .login-content {
+      padding: 50px 30px 20px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .login-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 440px;
+      justify-content: space-between;
+    }
+
+    .login-row label {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.6px;
+      color: #0f172a;
+      width: 130px;
+    }
+
+    .login-input {
+      flex: 1;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      outline: none;
+      height: 46px;
+      border-radius: 8px;
+      padding: 0 16px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--input-text);
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .login-input:focus {
+      background: #ffffff;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px var(--brand-primary-glow);
+    }
+
+    .btn-login {
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      padding: 12px 50px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 8px 18px var(--brand-primary-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(2, 132, 199, 0.45);
+    }
+
+    /* ==================== PAGE 2: CLASS COVERFLOW ==================== */
+    .p2-header-badge {
+      align-self: center;
+      background: #ffffff;
+      border: 1.5px solid var(--card-border);
+      border-radius: 26px;
+      padding: 26px 48px;
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 25px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .p2-header-badge:hover {
+      border-color: var(--brand-primary);
+      transform: translateY(-2px);
+    }
+
+    .coverflow-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 25px;
+      position: relative;
+      width: 100%;
+    }
+
+    /* Centered Black Diamond (PICK CLASS) */
+    .diamond-badge {
+      width: 105px;
+      height: 105px;
+      background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
+      transform: rotate(45deg);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.35);
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      z-index: 20;
+      margin-bottom: -40px;
+    }
+
+    .diamond-text {
+      transform: rotate(-45deg);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: 0.8px;
+    }
+
+    /* Coverflow Track & Responsive Sizing */
+    .coverflow-carousel-wrapper {
+      width: 100%;
+      overflow: hidden;
+      padding: 40px 0 20px 0;
+      position: relative;
+    }
+
+    .coverflow-track {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 14px;
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+      padding: 0 90px;
+    }
+
+    /* Classes Cards */
+    .class-card {
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    /* Inactive Side Cards: Compact & Reduced */
+    .class-card.side-far {
+      width: 82px;
+      height: 82px;
+      background: var(--card-inactive);
+      border: 1.5px solid var(--card-border);
+      color: #64748b;
+      font-size: 16px;
+      font-weight: 700;
+      opacity: 0.65;
+    }
+
+    .class-card.side-near {
+      width: 105px;
+      height: 135px;
+      background: #ffffff;
+      border: 1.5px solid var(--card-border);
+      color: #334155;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+      opacity: 0.9;
+    }
+
+    /* Center Card: Dramatically Expanded & Radiant Blue */
+    .class-card.center-active {
+      width: 148px;
+      height: 198px;
+      background: linear-gradient(145deg, var(--brand-primary) 0%, #1d4ed8 100%);
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 16px 32px var(--brand-primary-glow);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      z-index: 10;
+      transform: translateY(-8px);
+    }
+
+    .class-card.center-active::after {
+      content: 'SELECT';
+      font-size: 10px;
+      letter-spacing: 1px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.25);
+      padding: 3px 10px;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+
+    .carousel-nav-arrows {
+      display: flex;
+      gap: 18px;
+      margin-top: 10px;
+    }
+
+    .arrow-btn {
+      background: var(--dark-banner-top);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+      transition: all 0.2s;
+    }
+
+    .arrow-btn:hover {
+      background: var(--brand-primary);
+      color: #fff;
+      transform: scale(1.08);
+    }
+
+    /* ==================== PAGE 3: CLASS TABLE VIEW ==================== */
+    .p3-top-container {
+      background: linear-gradient(160deg, var(--dark-banner-top) 0%, var(--dark-banner-bot) 100%);
+      border-radius: 36px;
+      margin: 15px 15px 0 15px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+    }
+
+    .nav-btn-row-1 {
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-back-to-class {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 10px 24px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.6px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-back-to-class:hover {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+    }
+
+    .nav-btn-grid {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill-btn {
+      background: var(--dark-pill-bg);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 25px;
+      padding: 9px 18px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .pill-btn.white-text {
+      color: #ffffff;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .pill-btn:hover, .pill-btn.active-tab {
+      background: var(--brand-primary);
+      color: #ffffff;
+      border-color: var(--brand-primary);
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px var(--brand-primary-glow);
+    }
+
+    /* Search section */
+    .search-section {
+      display: flex;
+      align-items: center;
+      margin: 22px 25px 16px 25px;
+      gap: 15px;
+    }
+
+    .search-pill-box {
+      background: var(--search-pill-bg);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 25px;
+      flex: 0 1 200px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.25);
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .search-label-orange {
+      font-weight: 900;
+      font-size: 22px;
+      color: var(--accent-orange);
+      letter-spacing: 1px;
+    }
+
+    /* Students Grid Table */
+    .table-container {
+      margin: 0 20px 20px 20px;
+      overflow-x: auto;
+    }
+
+    .student-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #0f172a;
+    }
+
+    .student-table th {
+      border: 2px solid #0f172a;
+      padding: 12px 6px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .student-table td {
+      border: 2px solid #0f172a;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      color: #1e293b;
+      transition: background 0.15s;
+    }
+
+    .student-table tbody tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    .student-table tbody tr:hover td {
+      background: rgba(2, 132, 199, 0.08);
+    }
+
+    /* Badges inside table cells */
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .badge-good { background: #dcfce7; color: #15803d; }
+    .badge-warn { background: #fef3c7; color: #b45309; }
+
+    /* ==================== PAGE 4: STUDENT DETAILS ==================== */
+    .p4-top-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 25px 25px 10px 25px;
+    }
+
+    .back-arrow-btn {
+      background: none;
+      border: none;
+      font-size: 38px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
+      color: #0f172a;
+      transition: transform 0.2s;
+    }
+
+    .back-arrow-btn:hover {
+      transform: translateX(-4px);
+    }
+
+    .pill-attendance-dark {
+      background: var(--search-pill-bg);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .pill-student-large {
+      background: #000000;
+      color: var(--accent-cyan);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      border-radius: 35px;
+      padding: 14px 42px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    }
+
+    .student-form {
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .form-row label {
+      font-weight: 800;
+      font-size: 14px;
+      color: #0f172a;
+      width: 170px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      flex: 1;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      outline: none;
+      height: 44px;
+      border-radius: 6px;
+      padding: 0 14px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #0f172a;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      background: #fff;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px var(--brand-primary-glow);
+    }
+
+    .form-input.small-gender {
+      flex: 0 0 90px;
+      font-weight: 700;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .btn-action-save {
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      color: #fff;
+      font-weight: 800;
+      padding: 12px 38px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 16px var(--brand-primary-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-action-save:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Modal / Drawer for News & Reminders */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      z-index: 100;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-drawer {
+      background: #ffffff;
+      width: 100%;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      padding: 26px;
+      box-shadow: 0 -12px 35px rgba(0,0,0,0.3);
+      border-top: 3px solid var(--accent-red);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport">
+
+    <!-- ==================== PAGE 1: LOGIN ==================== -->
+    <div id="page-login" class="page-view active">
+      <div class="top-hero-banner">
+        <span class="title-school">SCHOOL</span>
+        <span class="title-management">MANAGEMENT</span>
+        <span class="title-systems">systems</span>
+      </div>
+
+      <div class="login-content">
+        <div class="login-row">
+          <label for="login-username">USER NAME</label>
+          <input type="text" id="login-username" class="login-input" placeholder="admin" value="admin">
+        </div>
+
+        <div class="login-row">
+          <label for="login-password">PASSWORD</label>
+          <input type="password" id="login-password" class="login-input" placeholder="••••••••" value="1234">
+        </div>
+
+        <button class="btn-login" onclick="navigateTo('page-classes')">Login</button>
+      </div>
+
+      <div class="news-reminders-banner" onclick="openNewsModal()">
+        <span class="news-faded-bg">NEWS &</span>
+        <span class="reminders-fg">REMINDERS</span>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE 2: PICK CLASS (COVERFLOW) ==================== -->
+    <div id="page-classes" class="page-view">
+      <div class="p2-header-badge" onclick="alert('School Budget: $148,250 | Operating Surplus: +14.2% | Term 2')">
+        <span>📊 school budge</span>
+        <span style="font-size:11px; color:#10b981; font-weight:800; background:#dcfce7; padding:2px 8px; border-radius:10px;">ACTIVE</span>
+      </div>
+
+      <div class="coverflow-section">
+        <div class="diamond-badge">
+          <div class="diamond-text">
+            PICK<br>CLASS
+          </div>
+        </div>
+
+        <div class="coverflow-carousel-wrapper" id="carousel-wrapper">
+          <div class="coverflow-track" id="coverflow-track">
+            <!-- Dynamic Coverflow Cards injected by JS -->
+          </div>
+        </div>
+
+        <div class="carousel-nav-arrows">
+          <button class="arrow-btn" onclick="shiftCarousel(-1)">◀</button>
+          <button class="arrow-btn" onclick="shiftCarousel(1)">▶</button>
+        </div>
+      </div>
+
+      <div class="news-reminders-banner" onclick="openNewsModal()">
+        <span class="news-faded-bg">NEWS &</span>
+        <span class="reminders-fg">REMINDERS</span>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE 3: CLASS DASHBOARD / TABLE ==================== -->
+    <div id="page-class-table" class="page-view">
+      <div class="p3-top-container">
+        <div class="nav-btn-row-1">
+          <button class="btn-back-to-class" onclick="navigateTo('page-classes')">
+            BACK TO<br>CLASS
+          </button>
+        </div>
+
+        <div class="nav-btn-grid">
+          <button class="pill-btn white-text">PERFOMANCE</button>
+          <button class="pill-btn">TEACHERS</button>
+          <button class="pill-btn">ACCOUNTS</button>
+          <button class="pill-btn">ATTENDANCE</button>
+          <button class="pill-btn active-tab" onclick="openAddStudent()">STUDENT</button>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <div class="search-pill-box">
+          <input type="text" id="student-search" class="search-input" placeholder="Search by name or ID..." oninput="filterStudents()">
+        </div>
+        <span class="search-label-orange">SEARCH</span>
+      </div>
+
+      <div class="table-container">
+        <table class="student-table" id="student-table">
+          <thead>
+            <tr>
+              <th>ID NUMBER</th>
+              <th>NAME</th>
+              <th>GENDER</th>
+              <th>ATTENDANCE</th>
+              <th>FEES%</th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody">
+            <!-- Injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="news-reminders-banner" onclick="openNewsModal()">
+        <span class="news-faded-bg">NEWS &</span>
+        <span class="reminders-fg">REMINDERS</span>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE 4: STUDENT DETAILS ==================== -->
+    <div id="page-student-form" class="page-view">
+      <div class="p4-top-nav">
+        <button class="back-arrow-btn" onclick="navigateTo('page-class-table')">⬅</button>
+        <button class="pill-attendance-dark">ATTENDANCE</button>
+        <button class="pill-student-large">STUDENT</button>
+      </div>
+
+      <div class="student-form">
+        <div class="form-row">
+          <label>NAME</label>
+          <input type="text" id="form-name" class="form-input">
+        </div>
+
+        <div class="form-row">
+          <label>CLASS/ GRADE</label>
+          <input type="text" id="form-class" class="form-input" readonly>
+        </div>
+
+        <div class="form-row">
+          <label>ID NUMBER AUTO FILL</label>
+          <input type="text" id="form-id" class="form-input" readonly>
+        </div>
+
+        <div class="form-row">
+          <label>GENDER</label>
+          <select id="form-gender" class="form-input small-gender">
+            <option value="M">M</option>
+            <option value="F">F</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-action-save" onclick="saveStudent()">SAVE</button>
+          <button class="btn-action-save" style="background:#64748b; box-shadow:none;" onclick="navigateTo('page-class-table')">CANCEL</button>
+        </div>
+      </div>
+
+      <div class="news-reminders-banner" onclick="openNewsModal()">
+        <span class="news-faded-bg">NEWS &</span>
+        <span class="reminders-fg">REMINDERS</span>
+      </div>
+    </div>
+
+    <!-- NEWS & REMINDERS DRAWER -->
+    <div id="news-modal" class="modal-overlay" onclick="closeNewsModal(event)">
+      <div class="modal-drawer">
+        <h3 style="margin-bottom:12px; font-weight:900; color:var(--accent-red);">📢 NEWS & REMINDERS</h3>
+        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Mid-term examinations schedule has been uploaded.</p>
+        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Fee clearance deadline for Term 2 is this Friday.</p>
+        <p style="margin-bottom:18px; font-weight:600; color:#334155;">• Parents & Teachers Annual Assembly at 2:00 PM.</p>
+        <button class="btn-action-save" style="width:100%;" onclick="document.getElementById('news-modal').classList.remove('open')">Dismiss</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(pageId);
+      if (target) target.classList.add('active');
+    }
+
+    function openNewsModal() {
+      document.getElementById('news-modal').classList.add('open');
+    }
+    function closeNewsModal(e) {
+      if (e.target.id === 'news-modal') {
+        document.getElementById('news-modal').classList.remove('open');
+      }
+    }
+
+    /* ---------------- COVERFLOW CAROUSEL (PAGE 2) ---------------- */
+    const classesList = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    let activeClassIndex = 2; // Default to S3 in center like Photo 2
+
+    function renderCoverflow() {
+      const track = document.getElementById('coverflow-track');
+      track.innerHTML = '';
+
+      classesList.forEach((cls, idx) => {
+        const card = document.createElement('div');
+        const diff = Math.abs(idx - activeClassIndex);
+
+        if (diff === 0) {
+          card.className = 'class-card center-active';
+        } else if (diff === 1) {
+          card.className = 'class-card side-near';
+        } else {
+          card.className = 'class-card side-far';
+        }
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = cls;
+        card.appendChild(titleSpan);
+
+        card.onclick = () => {
+          if (idx === activeClassIndex) {
+            selectClass(cls);
+          } else {
+            activeClassIndex = idx;
+            renderCoverflow();
+          }
+        };
+
+        track.appendChild(card);
+      });
+    }
+
+    function shiftCarousel(direction) {
+      activeClassIndex = Math.max(0, Math.min(classesList.length - 1, activeClassIndex + direction));
+      renderCoverflow();
+    }
+
+    const carouselWrapper = document.getElementById('carousel-wrapper');
+    carouselWrapper.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY > 0 || e.deltaX > 0) shiftCarousel(1);
+      else shiftCarousel(-1);
+    }, { passive: false });
+
+    let touchStartX = 0;
+    carouselWrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    carouselWrapper.addEventListener('touchend', (e) => {
+      let diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) shiftCarousel(diff > 0 ? 1 : -1);
+    });
+
+    /* ---------------- STUDENT RECORDS (PAGE 3 & 4) ---------------- */
+    let currentSelectedClass = 'S3';
+    let studentsDatabase = {
+      'S1': [
+        { id: '10101', name: 'James Kato', gender: 'M', attendance: '96%', fees: '100%' },
+        { id: '10102', name: 'Brenda Akech', gender: 'F', attendance: '92%', fees: '85%' },
+        { id: '10103', name: 'David Ochieng', gender: 'M', attendance: '88%', fees: '70%' },
+        { id: '10104', name: 'Grace Namutebi', gender: 'F', attendance: '94%', fees: '100%' }
+      ],
+      'S2': [
+        { id: '20201', name: 'Brian Mukasa', gender: 'M', attendance: '90%', fees: '95%' },
+        { id: '20202', name: 'Fiona Nabirye', gender: 'F', attendance: '95%', fees: '100%' },
+        { id: '20203', name: 'Kevin Tumusiime', gender: 'M', attendance: '85%', fees: '60%' },
+        { id: '20204', name: 'Sandra Nakato', gender: 'F', attendance: '99%', fees: '100%' }
+      ],
+      'S3': [
+        { id: '30301', name: 'Paul Kigozi', gender: 'M', attendance: '92%', fees: '100%' },
+        { id: '30302', name: 'Sarah Nalwanga', gender: 'F', attendance: '89%', fees: '80%' },
+        { id: '30303', name: 'Daniel Mutua', gender: 'M', attendance: '97%', fees: '100%' },
+        { id: '30304', name: 'Rebecca Alupo', gender: 'F', attendance: '91%', fees: '75%' }
+      ],
+      'S4': [
+        { id: '40401', name: 'Joshua Ssemwanga', gender: 'M', attendance: '98%', fees: '100%' },
+        { id: '40402', name: 'Mary Babirye', gender: 'F', attendance: '93%', fees: '90%' }
+      ],
+      'S5': [
+        { id: '50501', name: 'Emmanuel Wanyama', gender: 'M', attendance: '94%', fees: '100%' }
+      ],
+      'S6': [
+        { id: '60601', name: 'Arthur Mugisha', gender: 'M', attendance: '96%', fees: '100%' }
+      ]
+    };
+
+    function selectClass(className) {
+      currentSelectedClass = className;
+      renderTable(studentsDatabase[className] || []);
+      navigateTo('page-class-table');
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById('student-tbody');
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px; color:#64748b;">No students found in this class.</td></tr>';
+        return;
+      }
+
+      list.forEach(std => {
+        const tr = document.createElement('tr');
+        const feesNum = parseInt(std.fees) || 0;
+        const feesClass = feesNum >= 100 ? 'badge-good' : 'badge-warn';
+
+        tr.innerHTML = `
+          <td><strong>${std.id}</strong></td>
+          <td style="text-align:left; padding-left:14px;">${std.name}</td>
+          <td>${std.gender}</td>
+          <td><span class="badge-pill badge-good">${std.attendance}</span></td>
+          <td><span class="badge-pill ${feesClass}">${std.fees}</span></td>
+        `;
+        tr.onclick = () => openStudentForm(std);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterStudents() {
+      const q = document.getElementById('student-search').value.toLowerCase();
+      const list = studentsDatabase[currentSelectedClass] || [];
+      const filtered = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    function openAddStudent() {
+      document.getElementById('form-name').value = '';
+      document.getElementById('form-class').value = currentSelectedClass;
+      document.getElementById('form-id').value = `${currentSelectedClass}-${Math.floor(1000 + Math.random() * 9000)}`;
+      document.getElementById('form-gender').value = 'M';
+      navigateTo('page-student-form');
+    }
+
+    function openStudentForm(std) {
+      document.getElementById('form-name').value = std.name;
+      document.getElementById('form-class').value = currentSelectedClass;
+      document.getElementById('form-id').value = std.id;
+      document.getElementById('form-gender').value = std.gender;
+      navigateTo('page-student-form');
+    }
+
+    function saveStudent() {
+      const name = document.getElementById('form-name').value.trim();
+      const id = document.getElementById('form-id').value;
+      const gender = document.getElementById('form-gender').value;
+
+      if (!name) {
+        alert('Please enter student name');
+        return;
+      }
+
+      if (!studentsDatabase[currentSelectedClass]) {
+        studentsDatabase[currentSelectedClass] = [];
+      }
+
+      const existingIndex = studentsDatabase[currentSelectedClass].findIndex(s => s.id === id);
+      if (existingIndex >= 0) {
+        studentsDatabase[currentSelectedClass][existingIndex].name = name;
+        studentsDatabase[currentSelectedClass][existingIndex].gender = gender;
+      } else {
+        studentsDatabase[currentSelectedClass].push({
+          id: id,
+          name: name,
+          gender: gender,
+          attendance: '100%',
+          fees: '100%'
+        });
+      }
+
+      renderTable(studentsDatabase[currentSelectedClass]);
+      navigateTo('page-class-table');
+    }
+
+    // Initialize Coverflow
+    renderCoverflow();
+  </script>
+</body>
+</html>
