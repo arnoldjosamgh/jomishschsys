@@ -43,19 +43,19 @@
       display: flex;
       justify-content: center;
       min-height: 100vh;
+      width: 100vw;
       overflow-x: hidden;
     }
 
+    /* FULL-SCREEN APP VIEWPORT */
     .app-viewport {
-      width: 100%;
-      max-width: 620px;
+      width: 100vw;
       min-height: 100vh;
       background: var(--app-bg);
-      box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.15), 0 0 1px 1px rgba(15, 23, 42, 0.05);
       display: flex;
       flex-direction: column;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     /* TOP LOGOUT / PROFILE CHIP */
@@ -63,9 +63,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 12px 40px;
       background: #f1f5f9;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       color: #64748b;
       border-bottom: 1px solid #e2e8f0;
@@ -75,54 +75,61 @@
       background: #ef4444;
       color: #fff;
       border: none;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 6px 18px;
+      border-radius: 14px;
+      font-size: 12px;
       font-weight: 800;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout-chip:hover {
+      background: #dc2626;
+      transform: scale(1.05);
     }
 
-    /* ---------------- BOTTOM NEWS & REMINDERS BANNER ---------------- */
+    /* BOTTOM NEWS & REMINDERS BANNER - FULL SCREEN WIDE */
     .news-reminders-banner {
       position: relative;
+      width: calc(100% - 80px);
+      max-width: 1400px;
       background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-      clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
-      padding: 24px 15px;
+      clip-path: polygon(4% 0%, 96% 0%, 100% 50%, 96% 100%, 4% 100%, 0% 50%);
+      padding: 28px 20px;
       text-align: center;
-      margin: auto 15px 18px 15px;
+      margin: auto auto 25px auto;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
-      border-top: 1px solid rgba(255, 71, 87, 0.2);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+      border-top: 1px solid rgba(255, 71, 87, 0.25);
       transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
     }
 
     .news-reminders-banner:hover {
-      transform: translateY(-2px) scale(1.015);
-      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.35);
     }
 
     .news-faded-bg {
       font-family: 'Permanent Marker', cursive;
-      font-size: 52px;
+      font-size: clamp(52px, 6vw, 76px);
       color: rgba(148, 163, 184, 0.25);
       line-height: 0.8;
-      transform: rotate(-6deg);
+      transform: rotate(-5deg);
       display: block;
-      margin-bottom: -15px;
-      letter-spacing: 1px;
+      margin-bottom: -18px;
+      letter-spacing: 2px;
     }
 
     .reminders-fg {
       font-family: 'Permanent Marker', cursive;
-      font-size: 60px;
+      font-size: clamp(62px, 7vw, 92px);
       color: var(--accent-red);
-      transform: rotate(-6deg);
+      transform: rotate(-5deg);
       display: block;
-      text-shadow: 0 4px 18px rgba(255, 71, 87, 0.5);
+      text-shadow: 0 5px 22px rgba(255, 71, 87, 0.55);
       line-height: 1;
     }
 
-    /* ---------------- PAGE SWITCHING ---------------- */
+    /* PAGE VIEWS */
     .page-view {
       display: none;
       flex-direction: column;
@@ -145,17 +152,17 @@
       align-self: center;
       background: #ffffff;
       border: 1.5px solid var(--card-border);
-      border-radius: 26px;
-      padding: 26px 48px;
-      font-size: 17px;
+      border-radius: 28px;
+      padding: 26px 54px;
+      font-size: 19px;
       font-weight: 700;
       color: #0f172a;
-      margin-top: 25px;
+      margin-top: 30px;
       cursor: pointer;
       box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       transition: all 0.2s;
     }
 
@@ -168,42 +175,42 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 25px;
+      margin-top: 30px;
       position: relative;
       width: 100%;
     }
 
     /* Centered Black Diamond (PICK CLASS) */
     .diamond-badge {
-      width: 105px;
-      height: 105px;
+      width: 120px;
+      height: 120px;
       background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
       transform: rotate(45deg);
-      border-radius: 16px;
+      border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.35);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
       border: 2px solid rgba(56, 189, 248, 0.4);
       z-index: 20;
-      margin-bottom: -40px;
+      margin-bottom: -50px;
     }
 
     .diamond-text {
       transform: rotate(-45deg);
       color: #ffffff;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 15px;
       text-align: center;
       line-height: 1.25;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
     }
 
-    /* Coverflow Track */
+    /* Full-Screen Coverflow Carousel Track */
     .coverflow-carousel-wrapper {
       width: 100%;
       overflow: hidden;
-      padding: 40px 0 20px 0;
+      padding: 50px 0 30px 0;
       position: relative;
     }
 
@@ -211,13 +218,13 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      gap: 14px;
+      gap: 22px;
       transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
-      padding: 0 90px;
+      padding: 0 100px;
     }
 
     .class-card {
-      border-radius: 24px;
+      border-radius: 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -229,90 +236,93 @@
     }
 
     .class-card.side-far {
-      width: 82px;
-      height: 82px;
+      width: 130px;
+      height: 160px;
       background: var(--card-inactive);
       border: 1.5px solid var(--card-border);
       color: #64748b;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 700;
       opacity: 0.65;
     }
 
     .class-card.side-near {
-      width: 105px;
-      height: 135px;
+      width: 170px;
+      height: 230px;
       background: #ffffff;
       border: 1.5px solid var(--card-border);
       color: #334155;
-      font-size: 20px;
+      font-size: 28px;
       font-weight: 800;
-      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
       opacity: 0.9;
     }
 
+    /* Expanded Middle Card on Full Screen! */
     .class-card.center-active {
-      width: 148px;
-      height: 198px;
+      width: 240px;
+      height: 320px;
       background: linear-gradient(145deg, var(--brand-primary) 0%, #1d4ed8 100%);
       color: #ffffff;
-      font-size: 28px;
+      font-size: 44px;
       font-weight: 900;
-      box-shadow: 0 16px 32px var(--brand-primary-glow);
-      border: 3px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 20px 45px var(--brand-primary-glow);
+      border: 4px solid rgba(255, 255, 255, 0.35);
       z-index: 10;
-      transform: translateY(-8px);
+      transform: translateY(-12px);
     }
 
     .class-card.center-active::after {
-      content: 'SELECT';
-      font-size: 10px;
-      letter-spacing: 1px;
+      content: 'SELECT CLASS';
+      font-size: 12px;
+      letter-spacing: 1.5px;
       font-weight: 800;
       background: rgba(255,255,255,0.25);
-      padding: 3px 10px;
-      border-radius: 12px;
-      margin-top: 8px;
+      padding: 5px 16px;
+      border-radius: 14px;
+      margin-top: 14px;
     }
 
     .carousel-nav-arrows {
       display: flex;
-      gap: 18px;
-      margin-top: 10px;
+      gap: 24px;
+      margin-top: 15px;
     }
 
     .arrow-btn {
       background: var(--dark-banner-top);
       color: var(--accent-cyan);
       border: 1px solid rgba(56, 189, 248, 0.2);
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
       transition: all 0.2s;
     }
 
     .arrow-btn:hover {
       background: var(--brand-primary);
       color: #fff;
-      transform: scale(1.08);
+      transform: scale(1.1);
     }
 
-    /* ==================== PAGE 3: CLASS TABLE VIEW ==================== */
+    /* ==================== PAGE 3: CLASS TABLE VIEW (FULL SCREEN) ==================== */
     .p3-top-container {
+      width: calc(100% - 80px);
+      max-width: 1400px;
+      margin: 20px auto 0 auto;
       background: linear-gradient(160deg, var(--dark-banner-top) 0%, var(--dark-banner-bot) 100%);
-      border-radius: 36px;
-      margin: 15px 15px 0 15px;
-      padding: 16px 14px;
+      border-radius: 40px;
+      padding: 20px 25px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+      gap: 14px;
+      box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.25);
       border: 1px solid rgba(56, 189, 248, 0.15);
     }
 
@@ -325,12 +335,12 @@
       background: #000000;
       color: #ffffff;
       border: 1px solid rgba(255,255,255,0.25);
-      padding: 10px 24px;
-      border-radius: 14px;
-      font-size: 12px;
+      padding: 12px 32px;
+      border-radius: 16px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.8px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       transition: all 0.2s;
@@ -346,19 +356,19 @@
       justify-content: space-around;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
     }
 
     .pill-btn {
       background: var(--dark-pill-bg);
       color: var(--accent-cyan);
       border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 25px;
-      padding: 9px 18px;
-      font-size: 12px;
+      border-radius: 30px;
+      padding: 11px 26px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       transition: all 0.2s;
     }
 
@@ -372,25 +382,27 @@
       color: #ffffff;
       border-color: var(--brand-primary);
       transform: scale(1.05);
-      box-shadow: 0 4px 12px var(--brand-primary-glow);
+      box-shadow: 0 6px 16px var(--brand-primary-glow);
     }
 
     .search-section {
+      width: calc(100% - 80px);
+      max-width: 1400px;
+      margin: 25px auto 18px auto;
       display: flex;
       align-items: center;
-      margin: 22px 25px 16px 25px;
-      gap: 15px;
+      gap: 18px;
     }
 
     .search-pill-box {
       background: var(--search-pill-bg);
       border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 25px;
-      flex: 0 1 200px;
-      height: 44px;
+      border-radius: 30px;
+      flex: 0 1 320px;
+      height: 48px;
       display: flex;
       align-items: center;
-      padding: 0 16px;
+      padding: 0 20px;
       box-shadow: inset 0 2px 5px rgba(0,0,0,0.25);
     }
 
@@ -400,19 +412,21 @@
       outline: none;
       color: #ffffff;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
       width: 100%;
     }
 
     .search-label-orange {
       font-weight: 900;
-      font-size: 22px;
+      font-size: 24px;
       color: var(--accent-orange);
       letter-spacing: 1px;
     }
 
     .table-container {
-      margin: 0 20px 20px 20px;
+      width: calc(100% - 80px);
+      max-width: 1400px;
+      margin: 0 auto 30px auto;
       overflow-x: auto;
     }
 
@@ -424,8 +438,8 @@
 
     .student-table th {
       border: 2px solid #0f172a;
-      padding: 12px 6px;
-      font-size: 12px;
+      padding: 14px 12px;
+      font-size: 13px;
       font-weight: 900;
       text-transform: uppercase;
       text-align: center;
@@ -435,8 +449,8 @@
 
     .student-table td {
       border: 2px solid #0f172a;
-      padding: 10px 8px;
-      font-size: 13px;
+      padding: 12px 14px;
+      font-size: 14px;
       font-weight: 600;
       text-align: center;
       cursor: pointer;
@@ -454,26 +468,28 @@
 
     .badge-pill {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 12px;
       font-weight: 800;
     }
     .badge-good { background: #dcfce7; color: #15803d; }
     .badge-warn { background: #fef3c7; color: #b45309; }
 
-    /* ==================== PAGE 4: STUDENT DETAILS ==================== */
+    /* ==================== PAGE 4: STUDENT DETAILS (FULL SCREEN) ==================== */
     .p4-top-nav {
+      width: calc(100% - 80px);
+      max-width: 850px;
+      margin: 20px auto 0 auto;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 25px 25px 10px 25px;
+      gap: 20px;
     }
 
     .back-arrow-btn {
       background: none;
       border: none;
-      font-size: 38px;
+      font-size: 42px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -485,16 +501,16 @@
     }
 
     .back-arrow-btn:hover {
-      transform: translateX(-4px);
+      transform: translateX(-5px);
     }
 
     .pill-attendance-dark {
       background: var(--search-pill-bg);
       color: var(--accent-cyan);
       border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 20px;
-      padding: 8px 18px;
-      font-size: 12px;
+      border-radius: 24px;
+      padding: 10px 22px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
     }
@@ -503,47 +519,49 @@
       background: #000000;
       color: var(--accent-cyan);
       border: 1.5px solid rgba(56, 189, 248, 0.4);
-      border-radius: 35px;
-      padding: 14px 42px;
-      font-size: 14px;
+      border-radius: 40px;
+      padding: 16px 52px;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: 1px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.25);
     }
 
     .student-form {
-      padding: 40px 30px;
+      width: calc(100% - 80px);
+      max-width: 850px;
+      margin: 40px auto;
       display: flex;
       flex-direction: column;
-      gap: 26px;
+      gap: 30px;
     }
 
     .form-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 15px;
+      gap: 25px;
     }
 
     .form-row label {
       font-weight: 800;
-      font-size: 14px;
+      font-size: 15px;
       color: #0f172a;
-      width: 170px;
+      width: 220px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     .form-input {
       flex: 1;
       background: var(--input-bg);
-      border: 1.5px solid var(--input-border);
+      border: 2px solid var(--input-border);
       outline: none;
-      height: 44px;
-      border-radius: 6px;
-      padding: 0 14px;
+      height: 48px;
+      border-radius: 8px;
+      padding: 0 18px;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
       color: #0f172a;
       transition: all 0.2s;
     }
@@ -551,30 +569,31 @@
     .form-input:focus {
       background: #fff;
       border-color: var(--brand-primary);
-      box-shadow: 0 0 0 3px var(--brand-primary-glow);
+      box-shadow: 0 0 0 4px var(--brand-primary-glow);
     }
 
     .form-input.small-gender {
-      flex: 0 0 90px;
+      flex: 0 0 110px;
       font-weight: 700;
     }
 
     .form-actions {
       display: flex;
       justify-content: center;
-      gap: 15px;
-      margin-top: 15px;
+      gap: 20px;
+      margin-top: 20px;
     }
 
     .btn-action-save {
       background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
       color: #fff;
       font-weight: 800;
-      padding: 12px 38px;
-      border-radius: 20px;
+      font-size: 16px;
+      padding: 14px 50px;
+      border-radius: 25px;
       border: none;
       cursor: pointer;
-      box-shadow: 0 6px 16px var(--brand-primary-glow);
+      box-shadow: 0 8px 20px var(--brand-primary-glow);
       transition: all 0.2s;
     }
 
@@ -596,11 +615,13 @@
     .modal-drawer {
       background: #ffffff;
       width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
       border-top-left-radius: 28px;
       border-top-right-radius: 28px;
-      padding: 26px;
+      padding: 30px;
       box-shadow: 0 -12px 35px rgba(0,0,0,0.3);
-      border-top: 3px solid var(--accent-red);
+      border-top: 4px solid var(--accent-red);
     }
   </style>
 </head>
@@ -617,7 +638,7 @@
     <div id="page-classes" class="page-view active">
       <div class="p2-header-badge" onclick="alert('School Budget: $148,250 | Operating Surplus: +14.2% | Term 2')">
         <span>📊 school budge</span>
-        <span style="font-size:11px; color:#10b981; font-weight:800; background:#dcfce7; padding:2px 8px; border-radius:10px;">ACTIVE</span>
+        <span style="font-size:12px; color:#10b981; font-weight:800; background:#dcfce7; padding:3px 10px; border-radius:12px;">ACTIVE</span>
       </div>
 
       <div class="coverflow-section">
@@ -740,10 +761,10 @@
     <!-- NEWS & REMINDERS DRAWER -->
     <div id="news-modal" class="modal-overlay" onclick="closeNewsModal(event)">
       <div class="modal-drawer">
-        <h3 style="margin-bottom:12px; font-weight:900; color:var(--accent-red);">📢 NEWS & REMINDERS</h3>
-        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Mid-term examinations schedule has been uploaded.</p>
-        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Fee clearance deadline for Term 2 is this Friday.</p>
-        <p style="margin-bottom:18px; font-weight:600; color:#334155;">• Parents & Teachers Annual Assembly at 2:00 PM.</p>
+        <h3 style="margin-bottom:14px; font-weight:900; color:var(--accent-red); font-size:20px;">📢 NEWS & REMINDERS</h3>
+        <p style="margin-bottom:10px; font-weight:600; color:#334155; font-size:15px;">• Mid-term examinations schedule has been uploaded.</p>
+        <p style="margin-bottom:10px; font-weight:600; color:#334155; font-size:15px;">• Fee clearance deadline for Term 2 is this Friday.</p>
+        <p style="margin-bottom:20px; font-weight:600; color:#334155; font-size:15px;">• Parents & Teachers Annual Assembly at 2:00 PM.</p>
         <button class="btn-action-save" style="width:100%;" onclick="document.getElementById('news-modal').classList.remove('open')">Dismiss</button>
       </div>
     </div>
@@ -780,7 +801,7 @@
       }
     }
 
-    /* ---------------- COVERFLOW CAROUSEL (PAGE 2) ---------------- */
+    /* ---------------- FULL-SCREEN COVERFLOW CAROUSEL (PAGE 2) ---------------- */
     const classesList = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
     let activeClassIndex = 2; // Default to S3 in center
 
@@ -869,33 +890,6 @@
       ]
     };
 
-    // Load from backend if available
-    async function loadStudentsFromAPI() {
-      try {
-        const res = await fetch('/api/students', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            // Group by class
-            data.forEach(std => {
-              const cls = std.class_name || std.grade || 'S3';
-              if (!studentsDatabase[cls]) studentsDatabase[cls] = [];
-              studentsDatabase[cls].push({
-                id: std.id_number || std.student_id || String(std.id),
-                name: `${std.first_name || ''} ${std.last_name || ''}`.trim() || std.name,
-                gender: std.gender || 'M',
-                attendance: std.attendance_rate ? `${std.attendance_rate}%` : '95%',
-                fees: std.fee_percentage ? `${std.fee_percentage}%` : '100%'
-              });
-            });
-          }
-        }
-      } catch (e) {}
-    }
-    loadStudentsFromAPI();
-
     function selectClass(className) {
       currentSelectedClass = className;
       renderTable(studentsDatabase[className] || []);
@@ -907,7 +901,7 @@
       tbody.innerHTML = '';
 
       if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px; color:#64748b;">No students found in this class.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:28px; color:#64748b; font-size:15px;">No students found in this class.</td></tr>';
         return;
       }
 
@@ -918,7 +912,7 @@
 
         tr.innerHTML = `
           <td><strong>${std.id}</strong></td>
-          <td style="text-align:left; padding-left:14px;">${std.name}</td>
+          <td style="text-align:left; padding-left:20px;">${std.name}</td>
           <td>${std.gender}</td>
           <td><span class="badge-pill badge-good">${std.attendance}</span></td>
           <td><span class="badge-pill ${feesClass}">${std.fees}</span></td>

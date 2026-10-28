@@ -38,107 +38,112 @@
       display: flex;
       justify-content: center;
       min-height: 100vh;
+      width: 100vw;
       overflow-x: hidden;
     }
 
+    /* FULL SCREEN VIEWPORT */
     .app-viewport {
-      width: 100%;
-      max-width: 620px;
+      width: 100vw;
       min-height: 100vh;
       background: var(--app-bg);
-      box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.15), 0 0 1px 1px rgba(15, 23, 42, 0.05);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
-    /* TOP BANNER (PHOTO 1) */
+    /* TOP BANNER (PHOTO 1) - FULL SCREEN */
     .top-hero-banner {
+      width: 100%;
       background: linear-gradient(160deg, var(--dark-banner-top) 0%, var(--dark-banner-bot) 100%);
-      border-bottom-left-radius: 42px;
-      border-bottom-right-radius: 42px;
-      padding: 30px 20px 38px 20px;
+      border-bottom-left-radius: 60px;
+      border-bottom-right-radius: 60px;
+      padding: 40px 20px 48px 20px;
       text-align: center;
       position: relative;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
-      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.35);
+      border-bottom: 3px solid rgba(56, 189, 248, 0.25);
     }
 
     .title-school {
       font-family: 'Permanent Marker', cursive;
-      font-size: 40px;
+      font-size: clamp(42px, 5vw, 64px);
       line-height: 1;
       color: var(--accent-orange);
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       transform: rotate(-3deg);
       display: block;
-      text-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+      text-shadow: 0 5px 18px rgba(249, 115, 22, 0.45);
     }
 
     .title-management {
       font-family: 'Permanent Marker', cursive;
-      font-size: 44px;
+      font-size: clamp(46px, 5.5vw, 72px);
       line-height: 1.05;
       color: var(--accent-orange);
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 2px;
       transform: rotate(-4deg);
       display: block;
-      margin-top: -2px;
-      text-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+      margin-top: -4px;
+      text-shadow: 0 5px 18px rgba(249, 115, 22, 0.45);
     }
 
     .title-systems {
       font-family: 'Permanent Marker', cursive;
-      font-size: 48px;
+      font-size: clamp(52px, 6vw, 80px);
       line-height: 0.9;
       color: var(--accent-cyan);
       transform: rotate(-7deg);
       display: inline-block;
-      margin-top: -14px;
-      margin-left: 70px;
-      text-shadow: 0 4px 16px rgba(56, 189, 248, 0.5);
+      margin-top: -18px;
+      margin-left: 110px;
+      text-shadow: 0 5px 22px rgba(56, 189, 248, 0.55);
     }
 
-    /* LOGIN FORM (PHOTO 1) */
+    /* LOGIN FORM (PHOTO 1) - FULL SCREEN CENTERED */
     .login-content {
-      padding: 40px 30px;
+      padding: 50px 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 28px;
       flex: 1;
       justify-content: center;
+      width: 100%;
+      max-width: 620px;
+      margin: 0 auto;
     }
 
     .login-row {
       display: flex;
       align-items: center;
       width: 100%;
-      max-width: 440px;
       justify-content: space-between;
+      gap: 20px;
     }
 
     .login-row label {
       font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 0.6px;
+      font-size: 17px;
+      letter-spacing: 0.8px;
       color: #0f172a;
-      width: 130px;
+      width: 160px;
+      flex-shrink: 0;
     }
 
     .login-input {
       flex: 1;
       background: var(--input-bg);
-      border: 1.5px solid var(--input-border);
+      border: 2px solid var(--input-border);
       outline: none;
-      height: 46px;
-      border-radius: 8px;
-      padding: 0 16px;
-      font-size: 15px;
+      height: 52px;
+      border-radius: 10px;
+      padding: 0 18px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--input-text);
       transition: all 0.2s ease;
@@ -148,27 +153,27 @@
     .login-input:focus {
       background: #ffffff;
       border-color: var(--brand-primary);
-      box-shadow: 0 0 0 3px var(--brand-primary-glow);
+      box-shadow: 0 0 0 4px var(--brand-primary-glow);
     }
 
     .btn-login {
       background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
       color: #ffffff;
       font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-      padding: 12px 55px;
-      border-radius: 25px;
+      font-size: 17px;
+      letter-spacing: 0.8px;
+      padding: 14px 75px;
+      border-radius: 35px;
       border: none;
       cursor: pointer;
       margin-top: 15px;
-      box-shadow: 0 8px 18px var(--brand-primary-glow);
+      box-shadow: 0 10px 25px var(--brand-primary-glow);
       transition: all 0.2s;
     }
 
     .btn-login:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 22px rgba(2, 132, 199, 0.45);
+      box-shadow: 0 14px 28px rgba(2, 132, 199, 0.45);
     }
 
     .error-box {
@@ -176,52 +181,53 @@
       color: #ef4444;
       background: #fee2e2;
       border: 1px solid #f87171;
-      padding: 8px 16px;
+      padding: 10px 20px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
-      max-width: 440px;
       width: 100%;
       text-align: center;
     }
 
-    /* BOTTOM NEWS & REMINDERS BANNER (PHOTO 1) */
+    /* BOTTOM NEWS & REMINDERS BANNER (PHOTO 1) - FULL SCREEN WIDE */
     .news-reminders-banner {
       position: relative;
+      width: calc(100% - 60px);
+      max-width: 1300px;
       background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-      clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
-      padding: 24px 15px;
+      clip-path: polygon(4% 0%, 96% 0%, 100% 50%, 96% 100%, 4% 100%, 0% 50%);
+      padding: 30px 20px;
       text-align: center;
-      margin: 15px 15px 18px 15px;
+      margin: 20px auto 25px auto;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
-      border-top: 1px solid rgba(255, 71, 87, 0.2);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+      border-top: 1px solid rgba(255, 71, 87, 0.25);
       transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
     }
 
     .news-reminders-banner:hover {
-      transform: translateY(-2px) scale(1.015);
-      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.35);
     }
 
     .news-faded-bg {
       font-family: 'Permanent Marker', cursive;
-      font-size: 52px;
+      font-size: clamp(52px, 6vw, 76px);
       color: rgba(148, 163, 184, 0.25);
       line-height: 0.8;
-      transform: rotate(-6deg);
+      transform: rotate(-5deg);
       display: block;
-      margin-bottom: -15px;
-      letter-spacing: 1px;
+      margin-bottom: -20px;
+      letter-spacing: 2px;
     }
 
     .reminders-fg {
       font-family: 'Permanent Marker', cursive;
-      font-size: 60px;
+      font-size: clamp(62px, 7vw, 92px);
       color: var(--accent-red);
-      transform: rotate(-6deg);
+      transform: rotate(-5deg);
       display: block;
-      text-shadow: 0 4px 18px rgba(255, 71, 87, 0.5);
+      text-shadow: 0 5px 22px rgba(255, 71, 87, 0.55);
       line-height: 1;
     }
 
@@ -239,11 +245,13 @@
     .modal-drawer {
       background: #ffffff;
       width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
       border-top-left-radius: 28px;
       border-top-right-radius: 28px;
-      padding: 26px;
+      padding: 30px;
       box-shadow: 0 -12px 35px rgba(0,0,0,0.3);
-      border-top: 3px solid var(--accent-red);
+      border-top: 4px solid var(--accent-red);
     }
   </style>
 </head>
@@ -272,7 +280,7 @@
       </div>
 
       <button type="submit" class="btn-login" id="btn-login">Login</button>
-      <button type="button" onclick="tryDemo()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; font-weight:700; margin-top:-10px;">Try Demo Mode</button>
+      <button type="button" onclick="tryDemo()" style="background:none; border:none; color:#64748b; font-size:13px; cursor:pointer; font-weight:700; margin-top:-5px;">Try Demo Mode</button>
     </form>
 
     <!-- BOTTOM BANNER -->
@@ -284,11 +292,11 @@
     <!-- NEWS & REMINDERS DRAWER -->
     <div id="news-modal" class="modal-overlay" onclick="closeNewsModal(event)">
       <div class="modal-drawer">
-        <h3 style="margin-bottom:12px; font-weight:900; color:var(--accent-red);">📢 NEWS & REMINDERS</h3>
-        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Mid-term examinations schedule has been uploaded.</p>
-        <p style="margin-bottom:8px; font-weight:600; color:#334155;">• Fee clearance deadline for Term 2 is this Friday.</p>
-        <p style="margin-bottom:18px; font-weight:600; color:#334155;">• Parents & Teachers Annual Assembly at 2:00 PM.</p>
-        <button class="btn-login" style="width:100%; padding:10px;" onclick="document.getElementById('news-modal').classList.remove('open')">Dismiss</button>
+        <h3 style="margin-bottom:14px; font-weight:900; color:var(--accent-red); font-size:20px;">📢 NEWS & REMINDERS</h3>
+        <p style="margin-bottom:10px; font-weight:600; color:#334155; font-size:15px;">• Mid-term examinations schedule has been uploaded.</p>
+        <p style="margin-bottom:10px; font-weight:600; color:#334155; font-size:15px;">• Fee clearance deadline for Term 2 is this Friday.</p>
+        <p style="margin-bottom:20px; font-weight:600; color:#334155; font-size:15px;">• Parents & Teachers Annual Assembly at 2:00 PM.</p>
+        <button class="btn-login" style="width:100%; padding:12px;" onclick="document.getElementById('news-modal').classList.remove('open')">Dismiss</button>
       </div>
     </div>
   </div>
@@ -321,7 +329,6 @@
           return;
         }
       } catch (e) {}
-      // Client-side demo fallback
       localStorage.setItem('jomish_token', 'DEMO_TOKEN');
       localStorage.setItem('jomish_role', 'ADMIN');
       localStorage.setItem('jomish_name', 'Administrator');
@@ -362,7 +369,6 @@
           btn.disabled = false;
         }
       } catch (err) {
-        // Direct local or demo fallback
         if (username.toLowerCase() === 'admin' && (password === '1234' || password === 'admin' || password === '123456')) {
           localStorage.setItem('jomish_token', 'OFFLINE_DEMO');
           localStorage.setItem('jomish_role', 'ADMIN');
